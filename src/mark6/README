@@ -1,0 +1,500 @@
+  375  ls
+  376  pwd
+  377  cd mark6/
+  378  ls
+  379  make clean
+  380  ls
+  381  tree
+  382  cd test/
+  383  ls
+  384  ls *x3c*
+  385  rm *x3c*
+  386  ls
+  387  grep x3c *
+  388  pwd
+  389  ls
+  390  grep x3c *
+  391  grep x3c * | more
+  392  vi dummy_commands.erl 
+  393  ls
+  394  vi new_tests.erl 
+  395  ls
+  396  rm new_tests.erl 
+  397  ls
+  398  vi m6_server_tests.erl 
+  399  ls
+  400  cp /opt/src/dimino6.old/lib/dimino6/test/x3c_dummy_server.erl .
+  401  ls
+  402  mv x3c_dummy_server.erl m6_dummy_server.erl
+  403  ls
+  404  vi m6_dummy_server.erl 
+  405  ls
+  406  grep x3c *
+  407  vi dummy_commands.erl 
+  408  ls
+  409  vi m6_server_tests.erl 
+  410  ls
+  411  grep x3c *
+  412  vi m6_server_tests.erl 
+  413  ls
+  414  grep x3c *
+  415  vi m6_server_tests.erl 
+  416  ls
+  417  grep x3c *
+  418  vi m6_vsis_tests.erl 
+  419  ls
+  420  grep x3c *
+  421  rm m6_server_tests.erl 
+  422  ls
+  423  grep x3c *
+  424  ls
+  425  cd ..
+  426  ls
+  427  make 
+  428  mak
+  429  make test
+  430  cd test/
+  431  vi m6_dummy_server.erl 
+  432  ls
+  433  vi ../include/main.hrl 
+  434  make 
+  435  cd ..
+  436  ls
+  437  make clean
+  438  make
+  439  cd src
+  440  vi x3c_server.erl 
+  441  ls
+  442  cd ..
+  443  ls
+  444  make 
+  445  make test
+  446  ls
+  447  cd test
+  448  grep XCUBE *
+  449  vi m6_dummy_server.erl 
+  450  ls
+  451  make
+  452  ls
+  453  cd ..
+  454  ls
+  455  make test
+  456  ls
+  457  cd src
+  458  ls
+  459  more m6_x3c.erl 
+  460     
+  461  ls
+  462  ls
+  463  cd ..
+  464  ls
+  465  cd bin
+  466  ls
+  467  mkdir bin
+  468  cd bin
+  469  ls
+  470  ls
+  471  ls
+  472  cd .
+  473  .ls
+  474  cd ..
+  475  rm -fr bin
+  476  ls
+  477  vi Makefile 
+  478  ls
+  479  cd src
+  480  ls
+  481  vi reltool.config.src 
+  482  pwd
+  483  cd ..
+  484  ls
+  485  make generate
+  486  vi Makefile 
+  487  make
+  488  make generate
+  489  vi Makefile 
+  490  make
+  491  make generate
+  492  ./rebar generate
+  493  ./rebar -help
+  494  ./rebar -c
+  495  ./rebar generate
+  496  `pwd`/rebar generate
+  497  ./rebar generate 
+  498  ./rebar generate 
+  499  ls ebin
+  500  bc -l
+  501  ssh franklin.haystack.mit.edu
+  502  ls
+  503  history 
+  504  ls
+  505  pwd
+  506  make node
+  507  export PATH=/opt/local/bin:$PATH
+  508  make node
+  509  make generate
+  510  ls
+  511  ls src
+  512  vi Makefiel
+  513  vi Makefile
+  514  ls
+  515  vi reltool.config 
+  516  make generate
+  517  vi reltool.config 
+  518  vi reltool.config 
+  519  make generate
+  520  vi reltool.config 
+  521  ls
+  522  mdkir old
+  523  ls
+  524  mkdir old 
+  525  mv * .old
+  526  mv * old
+  527  mv old/rebar .
+  528  ls
+  529  ./rebar  -h
+  530  ./rebar  -c
+  531  ./rebar  create-app appid=mark6
+  532  tree
+  533  ls
+  534  rm -fr src
+  535  mv old/* .
+  536  ls
+  537  rm -fr old
+  538  mkdir lib
+  539  ls
+  540  make clean
+  541  make
+  542  make generate
+  543  make node
+  544  make generate
+  545  ls
+  546  grep mark6 *
+  547  ls
+  548  cd src
+  549  ls
+  550  vi reltool.config.src 
+  551  ls
+  552  vi mark6.app.src 
+  553  ls
+  554  cd ..
+  555  ls
+  556  pwd
+  557  cd ..
+  558  ls
+  559  cd ..
+  560  ls
+  561  pwd
+  562  ls
+  563  make clean
+  564  make
+  565  ls
+  566  pwd
+  567  cd src
+  568  ls
+  569  cd mark6/
+  570  ls
+  571  make clean
+  572  make
+  573  make node
+  574  make generate
+  575  ls
+  576  vi src/*.app.src
+  577  ls
+  578  vi src/reltool.config.src 
+  579  ls
+  580  vi reltool.config 
+  581  make generate
+  582  ls
+  583  vi rebar.config 
+  584  make 
+  585  make clean
+  586  make 
+  587  make generate
+  588  ls
+  589  make
+  590  ls
+  591  ls ebin
+  592  ls
+  593  ./rebar generate
+  594  ls
+  595  vi src/mark6.app.src 
+  596  ls
+  597  make compile
+  598  make clean
+  599  make
+  600  ls
+  601  ls ebin
+  602  more ebin/mark6.app 
+  603  ls
+  604  rm -f rel
+  605  ls
+  606  mkdir rel
+  607  cd rel
+  608  ls
+  609  ../rebar create-node nodeid=mark6
+  610  ls
+  611  ls
+  612  cd ..
+  613  ls
+  614  cd rel
+  615  ls
+  616  vi reltool.config 
+  617  pwd
+  618  cd ..
+  619  las
+  620  ls
+  621  ./rebar generate
+  622  vi rel/reltool.config 
+  623  ./rebar generate
+  624  /ls
+  625  pwd
+  626  ls
+  627  vi /opt/src/dimino6.old/Makefile.dimino6 
+  628  ls
+  629  cp /opt/src/dimino6.old/Makefile.dimino6 .
+  630  ls
+  631  mv Makefile.dimino6 Makefile
+  632  ls
+  633  mkdir lib/mark6
+  634  mv src lib/mark6/
+  635  ls
+  636  rm -fr rel
+  637  ls
+  638  vi Makefiel
+  639  vi Makefile
+  640  ls
+  641  make clean
+  642  ls
+  643  mv include lib/mark6
+  644  ls
+  645  rm -fr ebin/*
+  646  ls
+  647  make
+  648  vi Makefile 
+  649  make
+  650  vi Makefile 
+  651  ls
+  652  make clean
+  653  ls
+  654  make
+  655  ls lib/mark6/src/mark6.app.src 
+  656  ls lib/mark6/ebin/mark6.ap
+  657  vi Makefile 
+  658  make
+  659  vi Makefile 
+  660  ls
+  661  mkdir -p lib/mark6/ebin
+  662  ls
+  663  make generate
+  664  ls
+  665  grep ark6 *
+  666  ls
+  667  cd lib
+  668  cd src
+  669  ls
+  670  cd mark6/
+  671  ls
+  672  cd src
+  673  ls
+  674  grep ark6 *
+  675  vi mark6_app.erl 
+  676  ls
+  677  grep ark6 *
+  678  vi reltool.config.src 
+  679  make
+  680  cd ..
+  681  cd ..
+  682  ls
+  683  cd ..
+  684  ls
+  685  make generate
+  686  make clean
+  687  ls
+  688  ls ebin
+  689  rm -fr ebin
+  690  ls
+  691  ls src
+  692  mv test/ lib/mark6/
+  693  ls
+  694  make
+  695  make node
+  696  make generate
+  697  ls
+  698  make clean
+  699  ls
+  700  vi Makefile
+  701  make
+  702  ls
+  703  vi rebar.config 
+  704  make
+  705  make clean
+  706  make
+  707  vi rebar.config 
+  708  ls
+  709  make clean
+  710  make
+  711  vi rebar.config 
+  712  ls
+  713  vi /opt/src/mark6/src/mark6/lib/mark6/src/mark6.app.sr
+  714  vi /opt/src/mark6/src/mark6/lib/mark6/src/mark6.app.src 
+  715  pushd lib/mark6/src
+  716  ls
+  717  vi *.app.src
+  718  make
+  719  cd ..
+  720  pwd
+  721  ls
+  722  cd ..
+  723  cd ..
+  724  ls
+  725  make generaae
+  726  make generate
+  727  vi /opt/src/mark6/src/mark6/lib/mark6/src/mark6.app.src 
+  728  make
+  729  cd /opt/src/mark6/src/mark6/lib/mark6/src/
+  730  ls
+  731  vi mark6.app.src 
+  732  ls
+  733  cp /opt/src/dimino6.old/lib/dimino6/src/dimino6.app.src .
+  734  mv dimino6.app.src mark6.app.src
+  735  vi mark6.app.src 
+  736  pwd
+  737  cd ..
+  738  cd ..
+  739  cd ..
+  740  ls
+  741  pwd
+  742  ls
+  743  make generate
+  744  make node
+  745  make generate
+  746  ls
+  747  vi reltool.config 
+  748  ls
+  749  vi reltool.config 
+  750  ls
+  751  vi Makefile 
+  752  vi lib/mark6/src/reltool.config.src
+  753  ls
+  754  rm reltool.config 
+  755  ls
+  756  vi lib/mark6/src/reltool.config.src
+  757  make node
+  758  pwd
+  759  ls
+  760  make generate
+  761  tree lib
+  762  ls
+  763  make
+  764  ls
+  765  vi lib/mark6/src/reltool.config.src 
+  766  ls
+  767  rm reltool.config 
+  768  ls
+  769  vi Makefile 
+  770  vi Makefile 
+  771  make
+  772  vi Makefile 
+  773  ./rebar -c
+  774  ls
+  775  vi Makefile 
+  776  ls
+  777  vi rebar.config 
+  778  ./rebar generate
+  779  vi Makefile 
+  780  maek
+  781  make
+  782  vi Makefile 
+  783  ls
+  784  mkdir rel
+  785  vi Makefile 
+  786  ls
+  787  make
+  788  cd rel
+  789  ls
+  790  rm *
+  791  ../rebar create-node nodeid=mark6
+  792  ls
+  793  cd ..
+  794  ls
+  795  make
+  796  ./rebar generate
+  797  ./rebar compile
+  798  ls
+  799  ./rebar generate
+  800  ls
+  801  cd rel/
+  802  ls
+  803  vi reltool.config 
+  804  vi rebar.config
+  805  ls
+  806  pwd
+  807  cd ..
+  808  ls
+  809  vi rebar.config
+  810  make
+  811  ls
+  812  mv lib/mark6/src .
+  813  mv lib/mark6/test/ .
+  814  tree lib
+  815  mv lib/mark6/include/ .
+  816  ls
+  817  tere lib
+  818  tree lib
+  819  rm -fr lib
+  820  ls
+  821  mdkir ebin
+  822  ls
+  823  cd src
+  824  ls
+  825  vi reltool.config.src 
+  826  ls
+  827  ls
+  828  cd ..
+  829  ls
+  830  ./rebar compile
+  831  ls
+  832  ls ebin
+  833  rm ebin/*
+  834  ./rebar compile
+  835  /ls ebin
+  836  ls
+  837  ls ebin
+  838  ls
+  839  cd src
+  840  ls
+  841  mv mark6.app.src ../ebin/mark6.app
+  842  cd ../ebin
+  843  ls
+  844  vi mark6.app 
+  845  ls
+  846  ./rebar compile
+  847  cd ..
+  848  ls
+  849  ./rebar  clean
+  850  tree ebin
+  851  ./rebar compile
+  852  vi ebin/mark6.app 
+  853  ls
+  854  ./rebar compile
+  855  tree ebin
+  856  ls
+  857  cd rel
+  858  ls
+  859  rm *
+  860  ls
+  861  ../rebar create-node nodeid=mark6
+  862  ls
+  863  vi reltool.config 
+  864  ls
+  865  cd ..
+  866  ls
+  867  vi rebar.config 
+  868  ls
+  869  ./rebar generate
+  870  ls
+  871  chmod u+x rel/mark6/bin/mark6 
+  872   rel/mark6/bin/mark6 
+  873  ls
+  874  history >> README
