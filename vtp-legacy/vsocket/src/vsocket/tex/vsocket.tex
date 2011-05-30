@@ -1,0 +1,5119 @@
+\documentclass{article}
+\usepackage{docxx}
+\begin{document}
+\pagebreak
+\sloppy
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename File.h}\strut\\
+\hbox{/*}
+
+ *  File.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Fri Feb 20 2004.
+ *  Copyright (c) 2004 MyCompanyName. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{12} #ifndef FILE_H
+\\
+\cxxCodeLine{13} #define FILE_H
+\\
+\cxxCodeLine{14} 
+\\
+\cxxCodeLine{15} #ifdef LINUX
+\\
+\cxxCodeLine{16} #endif 
+\hbox{// LINUX}\strut\\
+\cxxCodeLine{17} 
+\\
+\cxxCodeLine{18} using namespace std;
+\strut\\\strut\\* File class.
+  * This class encapsulates a C file. I wanted a way to do non-blocking I/O
+  * but could not find one using C++. So this class has been designed to
+  * do that. It can switch between blocking and non-blocking using the
+  * set_blocking() method. Everything else is reasonably straightforward.
+  * @author David Lapsley (dlapsley@haystack.mit.edu)
+  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{27} class File: public Object {
+\\
+\cxxCodeLine{28} protected:
+\strut\\\strut\\* File descriptor.
+	  * This member encapsulates the file descriptor.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{32}     int _fd;
+\strut\\\strut\\* Blocking flag.
+	  * This indicated whether or not the File object is in blocking mode
+	  * or not.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{37}         int _blocking;
+\strut\\\strut\\* Blocking flags.
+	  * These are the flags returned from fcntl() prior to setting a File
+	  * non-blocking. They are stored in this member so that they can be 
+	  * restored if a request to go back to blocking mode is made.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{43}         int _blocking_flags;
+\\
+\cxxCodeLine{44} public:
+\strut\\\strut\\* Constant.
+	  * This constant is used to indicate that a new File object is
+	  * is for reading (in).
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{49}         static const int in;
+\strut\\\strut\\* Constant.
+	  * This constant is used to indicate that a new File object is
+	  * is for writing (out).
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{54}         static const int out;
+\strut\\\strut\\* Constant.
+	  * This constant is used to indicate the blocking mode of operation.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{58}         static const int blocking;
+\strut\\\strut\\* Constant.
+	  * This constant is used to indicate the nonblocking mode of operation.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{62}         static const int nonblocking;
+\strut\\\strut\\* Constructor.
+	  * The constructor opens the file with the supplied name and opens
+	  * it in the appropriate mode (File::in, File::out).
+	  * @param name The name of the file to be open.
+	  * @param mode The mode to use in opening the file.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{69}     File(const string& name, const int& mode);
+\strut\\\strut\\* Destructor. \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{71}         virtual ~File();
+\strut\\\strut\\* I/O method
+	  * Reads data from the file into the supplied buffer.
+	  * @param b Buffer to store data in.
+	  * @param n Number of bytes to attempt to read.
+	  * @return Number of bytes read.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{78}         int read(char* b, const int& n);
+\strut\\\strut\\* I/O method
+	  * Writes data from the supplied buffer to the file.
+	  * @param b Buffer to read data from.
+	  * @param n Number of bytes to attempt to write.
+	  * @return Number of bytes written.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{85}         int write(const char* const b, const int& n);
+\strut\\\strut\\* Blocking method.
+	  * Sets the blocking mode of the file.
+	  * @param b Blocking mode (File::blocking, File::nonblocking).	
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{90}         int set_blocking(const int& b);
+\strut\\\strut\\* Blocking method.
+	  * Get blocking mode.
+	  * @return the blocking mode of the file.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{95}         int get_blocking() const;
+\strut\\\strut\\* File connection termination.
+	  * Closes the file.
+	  * @return 0: on success, -1 on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em File.h}\strut\nopagebreak\\
+\cxxCodeLine{100}     int close();
+\\
+\cxxCodeLine{101} };
+\\
+\cxxCodeLine{102} 
+\\
+\cxxCodeLine{103} #endif
+\\
+\cxxCodeLine{104} 
+\\
+\cxxCodeLine{105} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em PSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename PSocket.h}\strut\\
+\hbox{/*}
+
+ *  PSocket.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Fri Mar 19 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em PSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{12} #ifndef PSOCKET_H
+\\
+\cxxCodeLine{13} #define PSOCKET_H
+\\
+\cxxCodeLine{14} 
+\\
+\cxxCodeLine{15} 
+\\
+\cxxCodeLine{16} class PSocketError: public runtime_error {
+\\
+\cxxCodeLine{17} public:
+\\
+\cxxCodeLine{18}     PSocketError(const string& msg): runtime_error(msg) { }
+\\
+\cxxCodeLine{19} };
+\\
+\cxxCodeLine{20} 
+\\
+\cxxCodeLine{21} const int DEFAULT_PSOCKET_BUFFER_SIZE=9000;
+\\
+\cxxCodeLine{22} 
+\\
+\cxxCodeLine{23} 
+\\
+\cxxCodeLine{24} class PSocket: public Socket 
+\\
+\cxxCodeLine{25} {
+\\
+\cxxCodeLine{26} #if 0
+\\
+\cxxCodeLine{27}     vector<TCPSocket> _sock_list;
+\\
+\cxxCodeLine{28}     vector<SocketBufferCtrlBlk> _sock_ctrlblk_list;
+\\
+\cxxCodeLine{29}     vector<TCPSocket>::iterator _sock_list_iter;
+\\
+\cxxCodeLine{30} #else
+\\
+\cxxCodeLine{31}     list<TCPSocket> _sock_list;
+\\
+\cxxCodeLine{32}     list<SocketBufferCtrlBlk> _sock_ctrlblk_list;
+\\
+\cxxCodeLine{33}     list<TCPSocket>::iterator _sock_list_iter;
+\\
+\cxxCodeLine{34} #endif
+\\
+\cxxCodeLine{35}     TCPSocket _accept_sock;
+\\
+\cxxCodeLine{36}     int _num_ports;
+\\
+\cxxCodeLine{37}     int _mtu;
+\\
+\cxxCodeLine{38}         fd_set _read_fds;
+\\
+\cxxCodeLine{39}         fd_set _write_fds;
+\\
+\cxxCodeLine{40}         int _nfds;
+\\
+\cxxCodeLine{41} public:
+\\
+\cxxCodeLine{42}         
+\hbox{// Constructors/Destructors}\strut\\
+\cxxCodeLine{43}     PSocket(const int& num_ports, const int& mtu);
+\\
+\cxxCodeLine{44}     PSocket(const PSocket &s);
+\\
+\cxxCodeLine{45}     virtual ~PSocket();
+\\
+\cxxCodeLine{46}     PSocket& operator=(const PSocket& s);
+\\
+\cxxCodeLine{47}         
+\hbox{// Member access.}\strut\\
+\cxxCodeLine{48}     const int get_mtu() const;
+\\
+\cxxCodeLine{49}     const int get_num_ports() const;
+\\
+\cxxCodeLine{50}     
+\hbox{// Socket API.}\strut\\
+\cxxCodeLine{51}     void bind(const string& ip, const int& port);
+\\
+\cxxCodeLine{52}     void listen();
+\\
+\cxxCodeLine{53}     void accept();
+\\
+\cxxCodeLine{54}     void connect(const string& ip, const int& port);
+\\
+\cxxCodeLine{55}     int recv(SocketBuffer& s, const int& n);
+\\
+\cxxCodeLine{56}     
+\hbox{// int mrecv(vector<SocketBuffer>& sl, const int& n);}\strut\\
+\cxxCodeLine{57}     int send(const SocketBuffer& s, const int& n);
+\\
+\cxxCodeLine{58}     
+\hbox{// int msend(const vector<SocketBuffer>& sl, const int& n);}\strut\\
+\cxxCodeLine{59}     int close();
+\\
+\cxxCodeLine{60}     int shutdown(const int& howto);
+\\
+\cxxCodeLine{61}         
+\hbox{// Options.}\strut\\
+\cxxCodeLine{62}     int set_so_reuseaddr(const int& yes);
+\\
+\cxxCodeLine{63}     int get_so_reuseaddr() const;
+\\
+\cxxCodeLine{64}     int set_so_linger(const int& onoff, const int& time);
+\\
+\cxxCodeLine{65}     const struct linger& get_so_linger() const;
+\\
+\cxxCodeLine{66}     int set_so_rcvbuf(const int& sz);
+\\
+\cxxCodeLine{67}     int get_so_rcvbuf() const;
+\\
+\cxxCodeLine{68}     int set_so_sndbuf(const int& sz);
+\\
+\cxxCodeLine{69}     int get_so_sndbuf() const;
+\\
+\cxxCodeLine{70}     int set_so_rcvlowat(const int& m);
+\\
+\cxxCodeLine{71}     int get_so_rcvlowat() const;
+\\
+\cxxCodeLine{72}     int set_so_sndlowat(const int& m);
+\\
+\cxxCodeLine{73}     int get_so_sndlowat() const;
+\\
+\cxxCodeLine{74}         int set_tcp_nodelay(const int& m);
+\\
+\cxxCodeLine{75}     int get_tcp_nodelay() const;
+\\
+\cxxCodeLine{76}         int set_blocking(const int& b);
+\\
+\cxxCodeLine{77}     int get_blocking() const;
+\\
+\cxxCodeLine{78}     static bool test();
+\\
+\cxxCodeLine{79} };
+\\
+\cxxCodeLine{80} 
+\\
+\cxxCodeLine{81} #endif
+\\
+\cxxCodeLine{82} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em PSocketThread.h}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename PSocketThread.h}\strut\\
+\hbox{/*}
+
+ *  Thread.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Sun Feb 29 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em PSocketThread.h}\strut\nopagebreak\\
+\cxxCodeLine{12} #ifndef PSOCKET_THREAD_H
+\\
+\cxxCodeLine{13} #define PSOCKET_THREAD_H
+\\
+\cxxCodeLine{14} 
+\\
+\cxxCodeLine{15} 
+\\
+\cxxCodeLine{16} class PSocketThread: public Thread {
+\\
+\cxxCodeLine{17} protected:
+\\
+\cxxCodeLine{18}         SocketBuffer& _sbuf;
+\\
+\cxxCodeLine{19}         int _mtu;
+\\
+\cxxCodeLine{20}         Mutex& _mutex;
+\\
+\cxxCodeLine{21}         TCPSocket& _sock;
+\\
+\cxxCodeLine{22}         int _mode;                      
+\hbox{// 1. rcvr, 2. sender.}\strut\\
+\cxxCodeLine{23} public:
+\\
+\cxxCodeLine{24}     virtual void* thread_func();
+\\
+\cxxCodeLine{25}     PSocketThread(const string& s, SocketBuffer& sb,
+\\
+\cxxCodeLine{26}                                         Mutex& m, TCPSocket& _sock, int& mode);
+\\
+\cxxCodeLine{27}     virtual ~PSocketThread();
+\\
+\cxxCodeLine{28}         void thread_create();
+\\
+\cxxCodeLine{29}     void join();
+\\
+\cxxCodeLine{30} };
+\\
+\cxxCodeLine{31} 
+\\
+\cxxCodeLine{32} #endif 
+\hbox{// PSOCKET_THREAD_H}\strut\\
+\cxxCodeLine{33} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename Socket.h}\strut\\
+\hbox{/*}
+
+ *  Socket.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Fri Feb 20 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{12} #ifndef SOCKET_H
+\\
+\cxxCodeLine{13} #define SOCKET_H
+\\
+\cxxCodeLine{14} 
+\\
+\cxxCodeLine{15} #ifdef LINUX
+\\
+\cxxCodeLine{16} #endif 
+\hbox{// LINUX}\strut\\
+\cxxCodeLine{17} 
+\\
+\cxxCodeLine{18} using namespace std;
+\strut\\\strut\\* Socket module
+  * @doc This module implements base level socket functionality. It
+  * provides a number of key classes that are utilized by derived classes.
+  * @author David Lapsley (dlapsley@haystack.mit.edu)
+  * 
+  \strut\\\strut\\* Minimal implementation of a socket buffer. 
+  * This is just an STL vector. May extend this in the future.	
+  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{30} typedef vector<unsigned char> SocketBuffer;
+\strut\\\strut\\* Socket buffer control block.
+  * Used to maintain state information along with the data itself.
+  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{35} struct SocketBufferCtrlBlk {
+\strut\\\strut\\* Bytes read originally read into socket buffer(_sb). \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{37}     int _bytes_read;
+\strut\\\strut\\* Bytes that have been transmitted from the buffer(_sb). \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{39}     int _bytes_sent;
+\strut\\\strut\\* Internal storage of data. \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{41}     SocketBuffer _sb;
+\strut\\\strut\\* Constructor.
+	  * @param size maximum number of bytes to store in buffer.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{45}     SocketBufferCtrlBlk(const int size) {
+\\
+\cxxCodeLine{46}         _sb.resize(size);
+\\
+\cxxCodeLine{47}         _bytes_read=_bytes_sent=0;
+\\
+\cxxCodeLine{48}     }
+\strut\\\strut\\* Default Constructor.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{50}     SocketBufferCtrlBlk() {
+\\
+\cxxCodeLine{51}         _bytes_read=_bytes_sent=0;
+\\
+\cxxCodeLine{52}     }
+\strut\\\strut\\* Copy Constructor.  
+	  * @param s buffer to be iniitalized from. 
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{56}     SocketBufferCtrlBlk(const SocketBufferCtrlBlk& s)
+\\
+\cxxCodeLine{57}     {
+\\
+\cxxCodeLine{58}         _bytes_read=s.get_bytes_read();
+\\
+\cxxCodeLine{59}         _bytes_sent=s.get_bytes_sent();
+\\
+\cxxCodeLine{60}         _sb=s.get_sb();
+\\
+\cxxCodeLine{61}     }
+\strut\\\strut\\* Assignment operator
+	  * @param s buffer to be initialized from.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{65}     SocketBufferCtrlBlk& operator=(const SocketBufferCtrlBlk& s)
+\\
+\cxxCodeLine{66}     {
+\\
+\cxxCodeLine{67}         _bytes_read=s.get_bytes_read();
+\\
+\cxxCodeLine{68}         _bytes_sent=s.get_bytes_sent();
+\\
+\cxxCodeLine{69}         _sb=s.get_sb();
+\\
+\cxxCodeLine{70}         return(*this);
+\\
+\cxxCodeLine{71}     }
+\strut\\\strut\\* Destructor \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{73}     ~SocketBufferCtrlBlk() {}
+\strut\\\strut\\*  
+	  * @return number of bytes read. 
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{77}     int get_bytes_read() const { return(_bytes_read); }
+\strut\\\strut\\* 
+	  * @return number of bytes sent. 
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{81}     int get_bytes_sent() const { return(_bytes_sent); }
+\strut\\\strut\\* 
+	  * @return reference to socket buffer.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{85}     const SocketBuffer& get_sb() const { return(_sb); }
+\\
+\cxxCodeLine{86} };
+\strut\\\strut\\* Used for trapping errors \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{89} class SocketException {
+\\
+\cxxCodeLine{90} private:
+\\
+\cxxCodeLine{91}     string _message;
+\\
+\cxxCodeLine{92} public:
+\\
+\cxxCodeLine{93}     SocketException(const string& s):
+\\
+\cxxCodeLine{94}         _message(s) { }
+\\
+\cxxCodeLine{95}     ~SocketException()
+\\
+\cxxCodeLine{96}     {
+\\
+\cxxCodeLine{97}     }
+\\
+\cxxCodeLine{98}     const char* what() {
+\\
+\cxxCodeLine{99}         return (_message.c_str());
+\\
+\cxxCodeLine{100}     }
+\\
+\cxxCodeLine{101} };
+\strut\\\strut\\* Base level socket class.
+  * All other socket classes are derived from this one. This class inherits
+  * from the Object class.
+  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{107} class Socket: public Object {
+\\
+\cxxCodeLine{108} protected:
+\strut\\\strut\\* @doc Encapsulated socket descriptor.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{110}     int _sockd;
+\strut\\\strut\\* @doc Socket type: SOCK_DGRAM(UDP) or SOCK_STREAM(TCP). Support for
+	  * othe types may be added in the future.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{114}         int _type;
+\strut\\\strut\\* @doc Maximum Transmission Unit for this socket.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{116}         int _mtu;
+\strut\\\strut\\* @doc Total number of bytes sent during the lifetime of this socket.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{118}         int _bytes_sent;
+\strut\\\strut\\* @doc Total number of bytes received during the lifetime of this 
+	  * socket.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{122}     int _bytes_rcvd;
+\strut\\\strut\\* @doc Total number of send calls made during the lifetime of this 
+	  * socket.
+      \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{126}     int _send_calls;
+\strut\\\strut\\* @doc Total number of recv calls made during the lifetime of this socket.
+      \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{129}     int _recv_calls;
+\strut\\\strut\\* @doc Current value of socket option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{131}         int _so_reuseaddr;
+\strut\\\strut\\* @doc Current value of socket option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{133}         struct linger _so_linger;
+\strut\\\strut\\* @doc Current value of socket option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{135}         int _so_rcvbuf;
+\strut\\\strut\\* @doc Current value of socket option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{137}         int _so_sndbuf;
+\strut\\\strut\\* @doc Current value of socket option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{139}         int _so_rcvlowat;
+\strut\\\strut\\* @doc Current value of socket option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{141}         int _so_sndlowat;
+\strut\\\strut\\* @doc Current value of tcp option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{143}         int _tcp_nodelay;
+\strut\\\strut\\* @doc Current value of ip option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{145}         int _ip_tos;
+\strut\\\strut\\* @doc Current value of socket blocking option.  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{147}         int _blocking;
+\strut\\\strut\\* @doc Stored value of blocking flags. \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{149}         int _blocking_flags;
+\\
+\cxxCodeLine{150} public:
+\strut\\\strut\\* @doc Constant flag value used in set_blocking().  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{152}         static const int blocking;
+\strut\\\strut\\* @doc Constant flag value used in set_blocking().  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{154}         static const int nonblocking;
+\strut\\\strut\\* Constructor. 
+	  * This constructor will create a socket of the 
+	  * supplied type by calling the C socket() function.
+	  * @param type type of socket: currently either SOCK_STREAM or 
+	  *        SOCK_STREAM. 
+	  * @return none
+	  * @doc constructs a Socket object.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{163}     Socket(const int& type);
+\strut\\\strut\\* Constructor. 
+	  * This constructor does NOT create a socket. It assigns 
+	  * the internal socket descriptor member (_sockd) to the supplied 
+	  * socket descriptor.
+	  * @param type type of socket (as per C socket() call).
+	  * @param s pre-opened socket descriptor (e.g. as returned from 
+	  *        C socket() or accept() call). 
+      * @param m socket Maximum Transmission Unit.
+	  * @return none
+	  * @doc constructs a Socket object.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{175}         Socket(const int& type, const int& s, const int&m);
+\strut\\\strut\\* Default constructor. 
+	  * Maximum Transmission Unit is set to 1024 by 
+	  * default. Socket type is set to SOCK_STREAM.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{180}     Socket();
+\strut\\\strut\\* Destructor. Important! The destructor does not close() the socket. 
+	  * This is because there are situations when it is necessary to have an
+	  * opened socket survive the Socket object that created it.
+      * Users of the Socket class are responsible for closing the 
+      * any sockets created using the close() or shutdown() methods.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{187}         virtual ~Socket();
+\strut\\\strut\\* Access method.
+	  * @return value of sockd.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{191}         int get_sockd() const;
+\strut\\\strut\\* Access method.
+ 	  * @return value of type.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{195}         int get_type() const;
+\strut\\\strut\\*  Access method.
+	  * @return value of mtu.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{199}         int get_mtu() const;
+\strut\\\strut\\* Access method.
+	  * @return value of bytes sent.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{203}         int get_bytes_sent() const;
+\strut\\\strut\\* Access method.
+	  * @return value of bytes received.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{207}         int get_bytes_rcvd() const;
+\strut\\\strut\\* Access method.
+	  * @return value of send calls.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{211}         int get_send_calls() const;
+\strut\\\strut\\* Access method.
+	  * @return value of recv calls.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{215}         int get_recv_calls() const;
+\strut\\\strut\\* Access method.
+	  * @doc set SO_REUSEADDR socket option
+	  * @param yes 0: allow address reuse, 1: disallow address reuse.
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{221}         int set_so_reuseaddr(const int& yes);
+\strut\\\strut\\* Access method.
+	  * @return value of so_reuseaddr.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{225}         int get_so_reuseaddr() const;
+\strut\\\strut\\* Access method.
+	  * @doc set SO_LINGER socket option
+	  * @param onoff 0: disable linger option, 1: enable linger option.
+	  * @param time if linger enabled, how long to linger for. 
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{232}         int set_so_linger(const int& onoff, const int& time);
+\strut\\\strut\\* Access method.
+	  * @return value of so_linger.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{236}         const struct linger& get_so_linger() const;
+\strut\\\strut\\* Access method.
+	  * @doc set SO_RCVBUF socket option
+	  * @param sz size to set so_rcvbuf.
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{242}         int set_so_rcvbuf(const int& sz);
+\strut\\\strut\\* Access method.
+	  * @return value of so_rcvbuf.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{246}         int get_so_rcvbuf() const;
+\strut\\\strut\\* @doc set SO_SNDBUF socket option
+	  * @param sz size to set so_sndbuf
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{251}         int set_so_sndbuf(const int& sz);
+\strut\\\strut\\* Access method.
+	  * @return value of so_sndbuf.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{255}         int get_so_sndbuf() const;
+\strut\\\strut\\* Access method.
+	  * @doc set SO_RCVLOWAT socket option
+	  * @param m value to set rcv_lowat
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{261}         int set_so_rcvlowat(const int& m);
+\strut\\\strut\\* Access method.
+	  * @return value of rcv_lowat.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{265}         int get_so_rcvlowat() const;
+\strut\\\strut\\* @doc set SO_SNDLOWAT socket option
+	  * @param m size to set so_sndlowat
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{270}         int set_so_sndlowat(const int& m);
+\strut\\\strut\\* Access method.
+	  * @return value of so_sndlowat.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{274}         int get_so_sndlowat() const;
+\strut\\\strut\\* Access method.
+	  * @doc set TCP_NODELAY socket option
+	  * @param n value to set nodelay to. 0: allow delayed sending, 1: disallow
+	  * 	   delayed sending.
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{281}         int set_tcp_nodelay(const int& n);
+\strut\\\strut\\* Accessm method.
+	  * @return value of tcp_nodelay.  
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{285}         int get_tcp_nodelay() const;
+\strut\\\strut\\* Access method.
+	  * @doc set O_NONBLOCK socket option
+	  * @param b blocking mode: Socket::blocking: node is blocking (default),
+	  * Socket::nonblocking: node is non-blocking.
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{292}         int set_blocking(const int& b);
+\strut\\\strut\\* Access method.
+	  * @doc get current blocking state o fthe socket
+	  * @return current socket blocking mode.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{297}         int get_blocking() const;
+\strut\\\strut\\* Access method.
+	  * @doc shutdown connection as per standard socket library.
+	  * @param how method to use to shutdown socket: SHUT_RD, SHUT_WR, 
+	  * SHUT_RDWR.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{303}     const int shutdown(const int& how);
+\strut\\\strut\\* Access method.
+	  * @doc close socket connection.
+	  * @return 0: on success, -1: on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em Socket.h}\strut\nopagebreak\\
+\cxxCodeLine{308}     const int close();
+\\
+\cxxCodeLine{309} };
+\\
+\cxxCodeLine{310} 
+\\
+\cxxCodeLine{311} #endif
+\\
+\cxxCodeLine{312} 
+\\
+\cxxCodeLine{313} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename TCPSocket.h}\strut\\
+\hbox{/*}
+
+ *  TCPSocket.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Mon Feb 23 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{12} #ifndef TCP_SOCKET_H
+\\
+\cxxCodeLine{13} #define TCP_SOCKET_H
+\strut\\\strut\\* TCPSocket class
+  * @doc This class encapsulates a TCP stream.
+  \strut\\\strut\\* This is used in the absence of any MTU specification. \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{21} const int DEFAULT_SOCK_BUF_SIZE=9000;
+\strut\\\strut\\* TCPSocket class
+  * @doc This class encapsulates a TCP Stream. It inherits from the Socket
+  * class and provides methods that closely match those of the BSD sockets
+  * API. The main aim of this class is to simplify the creation, 
+  * connection establishment and transmission/reception procedures of TCP 
+  * sockets. This class has been deliberately designed to NOT handle errors 
+  * for the calling context. Instead, it returns error codes back to the 
+  * calling context so that it may work out how best to deal with it. The 
+  * reason for doing this is that the TCPSocket does not have the wider 
+  * context of the caller and so cannot determine if an error return is 
+  * indeed an error or expected behavior.
+  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{35} class TCPSocket: public Socket 
+\\
+\cxxCodeLine{36} {
+\\
+\cxxCodeLine{37} public:
+\strut\\\strut\\* Default constructor.
+	  * This calls the base constructor to create an opened TCP
+	  * socket (i.e. socket of type SOCK_STREAM)
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{42}     TCPSocket();
+\strut\\\strut\\* Constructor.
+	  * This constructor creates a socket and sets the internal MTU member
+	  * to be equal to the supplied parameter.
+	  * @param m MTU for this socket.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{48}     TCPSocket(const int &m);
+\strut\\\strut\\* Copy constructor.
+	  * Copies values of other TCPSocket into this object.
+	  * @param s TCPSocket to copy.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{53}     TCPSocket(const TCPSocket &s);
+\strut\\\strut\\* Constructor.
+	  * This constructor is provided two initizialization parameters.
+	  * @param s socket descriptor to encapsulate.
+	  * @param m MTU for this socket.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{59}     TCPSocket(const int& s, const int& m);
+\strut\\\strut\\* Destructor. \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{61}     virtual ~TCPSocket();
+\strut\\\strut\\* Assigment operator.
+	  * Copies supplied socket fields into this object.
+	  * @param s socket to copy.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{66}     TCPSocket& operator=(const TCPSocket& s);
+\strut\\\strut\\* Access method.
+	  * Allows setting of TCPSocket's internal socket descriptor. This is
+	  * useful for allowing a TCPSocket object to encapsulate a socket
+	  * descriptor that has been returned from another function, e.g.
+	  * accept().
+	  * @param s socket descriptor to encapsulate.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{74}     void set_sockd(const int& s);
+\strut\\\strut\\* Socket API method.
+	  * Binds socket to supplied address.
+	  * @param ip IP address to bind to.
+	  * @param port port to bind to.
+	  * @return 0: on success, -1 on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{81}     int bind(const string& ip, const int& port);
+\strut\\\strut\\* Socket API method.
+	  * Prepare a socket for accepting incoming connections.
+	  * @return 0: on success, -1 on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{86}     int listen();
+\strut\\\strut\\* Socket API method.
+	  * Wait for incoming connections on a socket. 
+	  * @return -1: on failure, positive integer on success. On succes
+	  *         the return value is a valid socket descriptor.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{92}     int accept();
+\strut\\\strut\\* Socket API method.
+	  * Attempt to establish a connection to the supplied address.
+	  * @param ip IP address to connect to.
+	  * @param port port to connect to.
+	  * @return 0: on success, -1 on failure.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{99}     int connect(const string& ip, const int& port);
+\strut\\\strut\\* Socket API method.
+	  * Attempt to receive data into supplied buffer.
+	  * @param s socket buffer to store data in.
+	  * @param n number of bytes to attempt to receive.
+	  * @return 0: on success, positive integer on success. On success
+	  *         the value returned is the number of bytes read.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{107}     int recv(SocketBuffer& s, const int& n);
+\strut\\\strut\\* Socket API method.
+	  * Attempt to recieve data into supplied buffer.
+	  * @param s socket buffer to store data in.
+	  * @param pos starting position in the supplied buffer (s) at which to
+	  *        store received data.
+	  * @param n number of bytes to atttempt to receive.
+	  * @return 0: on success, positive integer on success. On success
+	  *         the value returned is the number of bytes read.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{117}     int recv(SocketBuffer& s, const int& pos, const int& n);
+\strut\\\strut\\* Socket API method.
+	  * Attempt to send data from supplied buffer.
+	  * @param s socket buffer to from which to get data to send.
+	  * @param n number of bytes to attempt to send.
+	  * @return 0: on success, positive integer on success. On success
+	  *         the value returned is the number of bytes sent.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{125}     int send(const SocketBuffer& s, const int& n);
+\strut\\\strut\\* Socket API method.
+	  * Attempt to send data from supplied buffer.
+	  * @param s socket buffer to from which to get data to send.
+	  * @param pos starting position in the supplied buffer (s) at which to
+	  *        start transmitting data.
+	  * @param n number of bytes to attempt to send.
+	  * @return 0: on success, positive integer on success. On success
+	  *         the value returned is the number of bytes sent.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{135}     int send(const SocketBuffer& s, const int& pos, const int& n);
+\strut\\\strut\\* Socket API method.
+	  * @doc shutdown connection as per standard socket library.
+      * @param how method to use to shutdown socket: SHUT_RD, SHUT_WR, 
+      * SHUT_RDWR.
+      \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{141}     int shutdown(int howto);
+\strut\\\strut\\* Socket API method.
+      * @doc close socket connection.
+      * @return 0: on success, -1: on failure.
+      \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{146}     int close();
+\strut\\\strut\\* 
+	  * @doc Test method.
+	  \strut\goodbreak
+\noindent{\tiny\em TCPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{150}     static bool test();
+\\
+\cxxCodeLine{151} };
+\\
+\cxxCodeLine{152} 
+\\
+\cxxCodeLine{153} ostream& operator<<(ostream& os, const TCPSocket& s);
+\\
+\cxxCodeLine{154} 
+\\
+\cxxCodeLine{155} #endif
+\\
+\cxxCodeLine{156} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename UDPSocket.h}\strut\\
+\hbox{/*}
+
+ *  UDPSocket.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Tue Feb 24 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{13} #ifndef UDP_SOCKET_H
+\\
+\cxxCodeLine{14} #define UDP_SOCKET_H
+\strut\\\strut\\* UDPSocket class.
+  * @doc This class encapsulates a UDP packet stream. It inherits from the 
+  * socket class and provides methods that closely match those of the BSD 
+  * sockets API. The main aim of this class is to simplify the creation and
+  * data transmission/reception procedures of UDP sockets.  This class has been   * deliberately designed to NOT handle errors for the calling context. 
+  * Instead, it returns error codes back to the calling context so that it may 
+  * work out how best to deal with it. The reason for doing this is that the 
+  * TCPSocket does not have the wider context of the caller and so cannot 
+  * determine if an error return is indeed an error or expected behavior.
+  \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{27} class UDPSocket: public Socket 
+\\
+\cxxCodeLine{28} {
+\\
+\cxxCodeLine{29} public:
+\strut\\\strut\\* Default constructor.
+      * This calls the base constructor to create an opened UDP
+      * socket (i.e. socket of type SOCK_DGRAM)
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{34}     UDPSocket();
+\strut\\\strut\\* Constructor.
+      * This constructor is provided two initizialization parameters.
+      * @param s socket descriptor to encapsulate.
+      * @param m MTU for this socket.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{40}     UDPSocket(const int& s, const int& m);
+\strut\\\strut\\* Copy constructor.
+      * Copies values of other UDPSocket into this object.
+      * @param s UDPSocket to copy.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{45}         UDPSocket(const UDPSocket& s);
+\strut\\\strut\\* Destructor. \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{47}     virtual ~UDPSocket();
+\strut\\\strut\\* Assigment operator.
+      * Copies supplied socket fields into this object.
+      * @param s socket to copy.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{52}         UDPSocket& operator=(const UDPSocket& s);
+\strut\\\strut\\* Access method.
+      * Allows setting of TCPSocket's internal socket descriptor. This is
+      * useful for allowing a TCPSocket object to encapsulate a socket
+      * descriptor that has been returned from another function, e.g.
+      * accept().
+      * @param s socket descriptor to encapsulate.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{60}         void set_sockd(const int& s);
+\strut\\\strut\\* Socket API method.
+      * Binds socket to supplied address.
+      * @param ip IP address to bind to.
+      * @param port port to bind to.
+      * @return 0: on success, -1 on failure.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{67}     void bind(const string& ip, const int& port);
+\strut\\\strut\\* Socket API method.
+      * Attempt to establish a connection to the supplied address.
+      * Note that UDP is connectionless and that in this case "connection" 
+	  * refers to the fact that the destination address fields are 
+	  * set to the parameters supplied in order that subsequent calls to
+	  * send() use these parameters. Otherwise, an address must be supplied
+	  * with each call to sendto().
+      * @param ip IP address to connect to.
+      * @param port port to connect to.
+      * @return 0: on success, -1 on failure.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{79}     void connect(const string& ip, const int& port);
+\strut\\\strut\\* Socket API method.
+      * Attempt to receive data into supplied buffer.
+      * @param s socket buffer to store data in.
+      * @param n number of bytes to attempt to receive.
+      * @return 0: on success, positive integer on success. On success
+      *         the value returned is the number of bytes read.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{87}     int recv(SocketBuffer& s, const int& n);
+\strut\\\strut\\* Socket API method.
+      * Attempt to send data from supplied buffer. In this case, the 
+	  * destination is the address specified in the last call to connect().
+      * @param s socket buffer to from which to get data to send.
+      * @param n number of bytes to attempt to send.
+      * @return 0: on success, positive integer on success. On success
+      *         the value returned is the number of bytes sent.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{96}     int send(const SocketBuffer& s, const int& n);
+\strut\\\strut\\* Socket API method.
+      * Attempt to send data from supplied buffer to specified destination.
+      * @param ip IP address to send data to.
+      * @param port port to send data to.
+      * @param s socket buffer to from which to get data to send.
+      * @param n number of bytes to attempt to send.
+      * @return 0: on success, positive integer on success. On success
+      *         the value returned is the number of bytes sent.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{106}     int sendto(const string& ip, const int& port, const SocketBuffer& s, 
+\\
+\cxxCodeLine{107}                                 const int& n);
+\strut\\\strut\\* Socket API method.
+      * @doc close socket connection.
+      * @return 0: on success, -1: on failure.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{112}     void close();
+\strut\\\strut\\* 
+      * @doc Test method.
+      \strut\goodbreak
+\noindent{\tiny\em UDPSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{116}     static bool test();
+\\
+\cxxCodeLine{117} };
+\\
+\cxxCodeLine{118} 
+\\
+\cxxCodeLine{119} ostream& operator<<(ostream& os, const UDPSocket& s);
+\\
+\cxxCodeLine{120} 
+\\
+\cxxCodeLine{121} #endif
+\\
+\cxxCodeLine{122} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename VRSocket.h}\strut\\
+\hbox{/*}
+
+ *  VRSocket.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Mon Feb 23 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{12} #ifndef VRSOCKET_H
+\\
+\cxxCodeLine{13} #define VRSOCKET_H
+\strut\\\strut\\* A deque of socket buffer control blocks \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{17} typedef deque<SocketBufferCtrlBlk> SocketBufferCtrlBlkList;
+\strut\\\strut\\* This is used to hold SocketBufferCtrlBlks that have been transmitted
+  * but are still pending acknowledgment.
+  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{22} typedef map<int, SocketBufferCtrlBlk> SocketBufferCtrlBlkMap;
+\strut\\\strut\\* VRSocket class
+  * @doc This class encapsulates a UDP stream and implements the VLBI Real-time
+  * protocol on top of it.
+  \strut\\\strut\\* This is used in the absence of any MTU specification. \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{31} const int DEFAULT_SOCK_BUF_SIZE=9000;
+\strut\\\strut\\* VRSocket class
+  * This class encapsulates a socket processing thread. It spawns a new thread
+  * of execution for asynchronously processing send and receive requests.
+  * This class is responsible for reading from/writing to a socket. 
+  * Once "thread_create()" is called, the VRSocket object will spawn a thread, 
+  * which in turn will execute the thread_func() method. This method continually 
+  * reads/writes to a socket. Data is read from/written to the send/recv buffers.
+  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{41} class VRSocket: public UDPSocket,  public Thread
+\\
+\cxxCodeLine{42} {
+\strut\\\strut\\* Data storage.
+	  * Stores data that is to be transmitted (in "send" mode) or 
+	  * received (in "recv" mode). Note that a mutex is not required
+	  * since the object is only in one mode or another. Although
+	  * the object will be sending and receiving information, data flow
+	  * is restricted to one direction, and control the other. 
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{50}         
+\hbox{// SocketBufferCtrlBlkList _sockbuf_ctrlblk_list;}\strut\\
+\cxxCodeLine{51}         
+\hbox{/** SockProc mode.}
+
+	  * This determines which direction data is flowing: out of the object
+	  * (send) or into the object(recv). For this implementation, the mode
+	  * is fixed for the duration of the object's life. In the future, it
+	  * may be possible to dynamically change it. In any case, a full
+	  * duplex implementation is the ultimate aim.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{58}         int _mode;
+\strut\\\strut\\* MTU size.
+	  * MTU size for data transmission, receptions.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{62}         int _mtu;
+\strut\\\strut\\* Thread callback.
+	  * This function is called when the base class method "thread_create()" is
+	  * called. This results in thread_func() being executed in it's own
+	  * thread. Depending on the mode, either recv_proc() or send_proc() will
+	  * be called by thread_func(). This means that recv_proc() or send_proc()
+	  * will be running in their own thread of execution.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{70}         void* thread_func();
+\strut\\\strut\\* Processing function.
+	  * This function does all of the processing when the object is in recv
+	  * mode.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{75}         void recv_proc();
+\strut\\\strut\\* Processing function.
+	  * This function does all of the processing when the object is in send
+	  * mode.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{80}         void send_proc();
+\strut\\\strut\\* @doc Used for storing buffers containing received data. \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{82}         SocketBufferCtrlBlkList _recv_sockbufctrlblk_list;
+\strut\\\strut\\* @doc Used for storing buffers for transmission. \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{84}         SocketBufferCtrlBlkList _send_sockbufctrlblk_list;
+\strut\\\strut\\* @doc Used for storing buffers that have been transmitted, but not yet
+	  * acknowledged.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{88}         SocketBufferCtrlBlkMap _outstanding_sockbufctrlblks;
+\strut\\\strut\\* Mutex.
+	  * Controls multi-threaded access to send data members.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{92}         Mutex _send_mutex;
+\strut\\\strut\\* Mutex.
+	  * Controls multi-threaded access to rcv data members.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{96}         Mutex _recv_mutex;
+\\
+\cxxCodeLine{97} public:
+\strut\\\strut\\* Mode constant. \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{99}         static const int receiver;
+\strut\\\strut\\* Mode constant. \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{101}         static const int sender;
+\strut\\\strut\\* Default constructor.
+	  * This calls the base constructor to create a UDP socket and
+	  * initialize a thread to service it.
+	  * @param mode The mode for this socket (either send or receive).
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{107}     VRSocket(const int& mode);
+\strut\\\strut\\* Constructor.
+	  * This constructor creates a socket and sets the internal MTU member
+	  * to be equal to the supplied parameter.
+	  * @param mode The mode for this socket (either send or receive).
+	  * @param m MTU for this socket.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{114}     VRSocket(const int& mode, const int &m);
+\strut\\\strut\\* Copy constructor.
+	  * Copies values of other VRSocket into this object.
+	  * @param mode The mode for this socket (either send or receive).
+	  * @param s VRSocket to copy.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{120}     VRSocket(const VRSocket &s);
+\strut\\\strut\\* Constructor.
+	  * This constructor is provided three initialization parameters.
+	  * @param mode The mode for this socket (either send or receive).
+	  * @param s socket descriptor to encapsulate.
+	  * @param m MTU for this socket.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{127}     VRSocket(const int& mode, const int& s, const int& m);
+\strut\\\strut\\* Destructor. \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{129}     virtual ~VRSocket();
+\strut\\\strut\\* Assigment operator.
+	  * Copies supplied socket fields into this object.
+	  * @param s socket to copy.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{134}     VRSocket& operator=(const VRSocket& s);
+\strut\\\strut\\* Access method.
+	  * Allows setting of VRSocket's internal socket descriptor. This is
+	  * useful for allowing a VRSocket object to encapsulate a socket
+	  * descriptor that has been returned from another function, e.g.
+	  * accept().
+	  * @param s socket descriptor to encapsulate.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{142}     int recv(SocketBuffer& s, const int& n);
+\strut\\\strut\\* Socket API method.
+	  * Attempt to recieve data into supplied buffer.
+	  * @param s socket buffer to store data in.
+	  * @param pos starting position in the supplied buffer (s) at which to
+	  *        store received data.
+	  * @param n number of bytes to atttempt to receive.
+	  * @return 0: on success, positive integer on success. On success
+	  *         the value returned is the number of bytes read.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{152}     int send(const SocketBuffer& s, const int& n);
+\strut\\\strut\\* Access method.
+	  * Returns the size of send_buf (in number of buffers). This 
+	  * provides a method for the caller to determine the progress of their 
+	  * request.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{158}         int get_send_buf_size() const;
+\strut\\\strut\\* 
+	  * @doc Test method.
+	  \strut\goodbreak
+\noindent{\tiny\em VRSocket.h}\strut\nopagebreak\\
+\cxxCodeLine{162}     static bool test();
+\\
+\cxxCodeLine{163} };
+\\
+\cxxCodeLine{164} 
+\\
+\cxxCodeLine{165} ostream& operator<<(ostream& os, const VRSocket& s);
+\\
+\cxxCodeLine{166} 
+\\
+\cxxCodeLine{167} #endif
+\\
+\cxxCodeLine{168} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em File.cpp}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename File.cpp}\strut\\
+\hbox{/*}
+
+ *  File.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Fri Feb 20 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em File.cpp}\strut\nopagebreak\\
+\cxxCodeLine{13} const int File::in=0;
+\\
+\cxxCodeLine{14} const int File::out=1;
+\\
+\cxxCodeLine{15} const int File::blocking=0;
+\\
+\cxxCodeLine{16} const int File::nonblocking=1;
+\\
+\cxxCodeLine{17} 
+\\
+\cxxCodeLine{18} 
+\hbox{// Constructors/Destructors.}\strut\\
+\cxxCodeLine{19} File::File(const string& name, const int& mode)
+\\
+\cxxCodeLine{20} {
+\\
+\cxxCodeLine{21}         _blocking==blocking;
+\\
+\cxxCodeLine{22}         int file_mode=S_IRUSR | S_IWUSR; 
+\\
+\cxxCodeLine{23}         if (mode==in) {
+\\
+\cxxCodeLine{24}                 _fd=open(name.c_str(), O_RDONLY, file_mode);
+\\
+\cxxCodeLine{25}         } else if (mode==out) {
+\\
+\cxxCodeLine{26}                 _fd=open(name.c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, 
+\\
+\cxxCodeLine{27}                                 file_mode);
+\\
+\cxxCodeLine{28}         }
+\\
+\cxxCodeLine{29}         if (_fd==-1) {
+\\
+\cxxCodeLine{30}                 error_logger() << "File::File() unable to open file\n";
+\\
+\cxxCodeLine{31}         }
+\\
+\cxxCodeLine{32} }
+\\
+\cxxCodeLine{33} 
+\\
+\cxxCodeLine{34} 
+\\
+\cxxCodeLine{35} File::~File()
+\\
+\cxxCodeLine{36} {
+\\
+\cxxCodeLine{37}         if (_fd!=-1)
+\\
+\cxxCodeLine{38}                 ::close(_fd);
+\\
+\cxxCodeLine{39} }
+\\
+\cxxCodeLine{40} 
+\\
+\cxxCodeLine{41} 
+\\
+\cxxCodeLine{42} 
+\hbox{// Member access.}\strut\\
+\cxxCodeLine{43} int File::read(char* b, const int& n)
+\\
+\cxxCodeLine{44} {
+\\
+\cxxCodeLine{45}         if (_fd==-1) {
+\\
+\cxxCodeLine{46}                 error_logger() 
+\\
+\cxxCodeLine{47}                         << "File::read(): attempt to read unopened descriptor\n";
+\\
+\cxxCodeLine{48}                 return(-1);
+\\
+\cxxCodeLine{49}         }
+\\
+\cxxCodeLine{50}         return(::read(_fd, b, n));
+\\
+\cxxCodeLine{51} }
+\\
+\cxxCodeLine{52} 
+\\
+\cxxCodeLine{53} 
+\\
+\cxxCodeLine{54} int File::write(const char* const b, const int& n)
+\\
+\cxxCodeLine{55} {
+\\
+\cxxCodeLine{56}         if (_fd==-1) {
+\\
+\cxxCodeLine{57}                 error_logger() 
+\\
+\cxxCodeLine{58}                         << "     File::write(): attempt to write unopened descriptor\n";
+\\
+\cxxCodeLine{59}                 return(-1);
+\\
+\cxxCodeLine{60}         }
+\\
+\cxxCodeLine{61}         return(::write(_fd, b, n));
+\\
+\cxxCodeLine{62} }
+\\
+\cxxCodeLine{63} 
+\\
+\cxxCodeLine{64} 
+\\
+\cxxCodeLine{65} 
+\hbox{// Blocking.}\strut\\
+\cxxCodeLine{66} int File::set_blocking(const int& b)
+\\
+\cxxCodeLine{67} {
+\\
+\cxxCodeLine{68}     int ret=0;
+\\
+\cxxCodeLine{69}     if (_blocking==b)
+\\
+\cxxCodeLine{70}         return(0);
+\\
+\cxxCodeLine{71}         _blocking=b;
+\\
+\cxxCodeLine{72}     if (b==nonblocking) {
+\\
+\cxxCodeLine{73}         _blocking_flags=fcntl(_fd, F_GETFL, 0);
+\\
+\cxxCodeLine{74}         ret=fcntl(_fd, F_SETFL, O_NONBLOCK);
+\\
+\cxxCodeLine{75}     }  
+\\
+\cxxCodeLine{76}     if (b==blocking) {
+\\
+\cxxCodeLine{77}         ret=fcntl(_fd, F_SETFL, _blocking_flags);
+\\
+\cxxCodeLine{78}     }
+\\
+\cxxCodeLine{79}     if (ret!=-1)
+\\
+\cxxCodeLine{80}         ret=0;
+\\
+\cxxCodeLine{81}     return(ret);
+\\
+\cxxCodeLine{82} }
+\\
+\cxxCodeLine{83} 
+\\
+\cxxCodeLine{84} 
+\\
+\cxxCodeLine{85} int File::get_blocking() const
+\\
+\cxxCodeLine{86} {
+\\
+\cxxCodeLine{87}         return(_blocking);
+\\
+\cxxCodeLine{88} }
+\\
+\cxxCodeLine{89} 
+\\
+\cxxCodeLine{90} 
+\\
+\cxxCodeLine{91} 
+\hbox{// File connection termination...}\strut\\
+\cxxCodeLine{92} int File::close()
+\\
+\cxxCodeLine{93} {
+\\
+\cxxCodeLine{94}         if (_fd==-1) {
+\\
+\cxxCodeLine{95}                 error_logger() << "File::close() attempte to close unopened descriptor.\n";
+\\
+\cxxCodeLine{96}         }
+\\
+\cxxCodeLine{97}         int ret=::close(_fd);
+\\
+\cxxCodeLine{98}         if (ret==0)
+\\
+\cxxCodeLine{99}                 _fd=-1;
+\\
+\cxxCodeLine{100}         return(ret);
+\\
+\cxxCodeLine{101} }
+\\
+\cxxCodeLine{102} 
+\\
+\cxxCodeLine{103} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em PSocket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename PSocket.cpp}\strut\\
+\hbox{/*}
+
+ *  PSocket.cpp
+ *  vrtp
+ *
+ *  Created by David Lapsley on Fri Mar 19 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em PSocket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{12} PSocket::PSocket(const int& num_ports, const int& mtu)
+\\
+\cxxCodeLine{13} {
+\\
+\cxxCodeLine{14}     debug_logger() << "PSocket::PSocket()\n";
+\\
+\cxxCodeLine{15}     _num_ports=num_ports;
+\\
+\cxxCodeLine{16}     _mtu=mtu;
+\\
+\cxxCodeLine{17}         _nfds=_num_ports;
+\\
+\cxxCodeLine{18}         FD_ZERO(&_read_fds);
+\\
+\cxxCodeLine{19}         FD_ZERO(&_write_fds);
+\\
+\cxxCodeLine{20} #if 0
+\\
+\cxxCodeLine{21}         if (_sock_list.size()<(num_ports+3))
+\\
+\cxxCodeLine{22}                 _sock_list.resize(num_ports+3); 
+\\
+\cxxCodeLine{23}         if (_sock_ctrlblk_list.size()<(num_ports+3))
+\\
+\cxxCodeLine{24}                 _sock_ctrlblk_list.resize(num_ports+3); 
+\\
+\cxxCodeLine{25} #endif
+\\
+\cxxCodeLine{26}     debug_logger() << "-PSocket::PSocket()\n";    
+\\
+\cxxCodeLine{27} }
+\\
+\cxxCodeLine{28} 
+\\
+\cxxCodeLine{29} PSocket::PSocket(const PSocket &s)
+\\
+\cxxCodeLine{30} {
+\\
+\cxxCodeLine{31}     debug_logger() << "PSocket::PSocket()\n";
+\\
+\cxxCodeLine{32}         _num_ports=s.get_num_ports();
+\\
+\cxxCodeLine{33}         _mtu=s.get_mtu();
+\\
+\cxxCodeLine{34}         _nfds=_num_ports;
+\\
+\cxxCodeLine{35}         FD_ZERO(&_read_fds);
+\\
+\cxxCodeLine{36}         FD_ZERO(&_write_fds);
+\\
+\cxxCodeLine{37} #if 0
+\\
+\cxxCodeLine{38}         if (_sock_list.size()<(_num_ports+3))
+\\
+\cxxCodeLine{39}                 _sock_list.resize(_num_ports+3);        
+\\
+\cxxCodeLine{40}         if (_sock_ctrlblk_list.size()<(_num_ports+3))
+\\
+\cxxCodeLine{41}                 _sock_ctrlblk_list.resize(_num_ports+3);        
+\\
+\cxxCodeLine{42} #endif
+\\
+\cxxCodeLine{43}     debug_logger() << "-PSocket::PSocket()\n";
+\\
+\cxxCodeLine{44} }
+\\
+\cxxCodeLine{45} 
+\\
+\cxxCodeLine{46} PSocket::~PSocket()
+\\
+\cxxCodeLine{47} {
+\\
+\cxxCodeLine{48}     debug_logger() << "PSocket::~PSocket()\n";
+\\
+\cxxCodeLine{49}     debug_logger() << "-PSocket::~PSocket()\n";
+\\
+\cxxCodeLine{50} }
+\\
+\cxxCodeLine{51} 
+\\
+\cxxCodeLine{52} PSocket& PSocket::operator=(const PSocket& s)
+\\
+\cxxCodeLine{53} {
+\\
+\cxxCodeLine{54}     debug_logger() << "PSocket::operator=()\n";
+\\
+\cxxCodeLine{55}     return(*this);
+\\
+\cxxCodeLine{56}     debug_logger() << "-PSocket::operator=()\n";    
+\\
+\cxxCodeLine{57} }
+\\
+\cxxCodeLine{58} 
+\\
+\cxxCodeLine{59} const int PSocket::get_mtu() const
+\\
+\cxxCodeLine{60} {
+\\
+\cxxCodeLine{61}     debug_logger() << "PSocket::get_mtu()\n";
+\\
+\cxxCodeLine{62}     return(_mtu);
+\\
+\cxxCodeLine{63}     debug_logger() << "-PSocket::get_mtu()\n";    
+\\
+\cxxCodeLine{64} }
+\\
+\cxxCodeLine{65} 
+\\
+\cxxCodeLine{66} const int PSocket::get_num_ports() const
+\\
+\cxxCodeLine{67} {
+\\
+\cxxCodeLine{68}     debug_logger() << "PSocket::get_num_ports()\n";
+\\
+\cxxCodeLine{69}     return(_num_ports);
+\\
+\cxxCodeLine{70}     debug_logger() << "-PSocket::get_num_ports()\n";    
+\\
+\cxxCodeLine{71} }
+\\
+\cxxCodeLine{72} 
+\\
+\cxxCodeLine{73} void PSocket::bind(const string& ip, const int& port)
+\\
+\cxxCodeLine{74} {
+\\
+\cxxCodeLine{75}     debug_logger() << "PSocket::bind()\n";
+\\
+\cxxCodeLine{76}     try {
+\\
+\cxxCodeLine{77}                 _accept_sock.bind(ip, port);
+\\
+\cxxCodeLine{78}     } catch (...) {
+\\
+\cxxCodeLine{79}         debug_logger() << "    Error in bind()\n";
+\\
+\cxxCodeLine{80}     }
+\\
+\cxxCodeLine{81}     debug_logger() << "-PSocket::bind()\n";
+\\
+\cxxCodeLine{82} }
+\\
+\cxxCodeLine{83} 
+\\
+\cxxCodeLine{84} void PSocket::listen()
+\\
+\cxxCodeLine{85} {
+\\
+\cxxCodeLine{86}     debug_logger() << "PSocket::listen()\n";
+\\
+\cxxCodeLine{87}     try {
+\\
+\cxxCodeLine{88}                 _accept_sock.listen();
+\\
+\cxxCodeLine{89}     } catch (...) {
+\\
+\cxxCodeLine{90}         debug_logger() << "    Error in listen()\n";        
+\\
+\cxxCodeLine{91}     }
+\\
+\cxxCodeLine{92}     debug_logger() << "-PSocket::listen()\n";    
+\\
+\cxxCodeLine{93} }
+\\
+\cxxCodeLine{94} 
+\\
+\cxxCodeLine{95} void PSocket::accept()
+\\
+\cxxCodeLine{96} {
+\\
+\cxxCodeLine{97}     debug_logger() << "PSocket::accept()\n";
+\\
+\cxxCodeLine{98}     try {
+\\
+\cxxCodeLine{99}                 for (int i=0; i<_num_ports; i++) {
+\\
+\cxxCodeLine{100}                         int ret=_accept_sock.accept();
+\\
+\cxxCodeLine{101}                         if (ret==-1) {
+\\
+\cxxCodeLine{102}                                 debug_logger() << "    accept returned error\n";
+\\
+\cxxCodeLine{103}                                 return;
+\\
+\cxxCodeLine{104}                         }
+\\
+\cxxCodeLine{105}                         TCPSocket s(ret, _mtu);
+\\
+\cxxCodeLine{106}                         _sock_list.push_back(s);
+\\
+\cxxCodeLine{107}                         SocketBufferCtrlBlk scb;
+\\
+\cxxCodeLine{108}                         _sock_ctrlblk_list.push_back(scb);
+\\
+\cxxCodeLine{109}                         FD_SET(s.get_sockd(), &_read_fds);
+\\
+\cxxCodeLine{110}                         FD_SET(s.get_sockd(), &_write_fds);
+\\
+\cxxCodeLine{111}             debug_logger() << "    accept sock list\n";
+\\
+\cxxCodeLine{112}             debug_logger() << "         _sockd=" << s.get_sockd()  << "\n";
+\\
+\cxxCodeLine{113}                 }
+\\
+\cxxCodeLine{114}         
+\hbox{// Important! Have to set back to the beginning!}\strut\\
+\cxxCodeLine{115}         _sock_list_iter=_sock_list.begin();
+\\
+\cxxCodeLine{116}     } catch (...) {
+\\
+\cxxCodeLine{117}         debug_logger() << "    Error in accept()\n";
+\\
+\cxxCodeLine{118}     }
+\\
+\cxxCodeLine{119}     debug_logger() << "-PSocket::accept()\n";        
+\\
+\cxxCodeLine{120} }
+\\
+\cxxCodeLine{121} 
+\\
+\cxxCodeLine{122} void PSocket::connect(const string& ip, const int& port)
+\\
+\cxxCodeLine{123} {
+\\
+\cxxCodeLine{124}     debug_logger() << "PSocket::connect()\n";
+\\
+\cxxCodeLine{125}     try {
+\\
+\cxxCodeLine{126}                 for (int i=0; i<_num_ports; i++) {
+\\
+\cxxCodeLine{127}                         TCPSocket s(_mtu);
+\\
+\cxxCodeLine{128}                         s.connect(ip, port);
+\\
+\cxxCodeLine{129}                         _sock_list.push_back(s);
+\\
+\cxxCodeLine{130}                         SocketBufferCtrlBlk scb;
+\\
+\cxxCodeLine{131}                         _sock_ctrlblk_list.push_back(scb);
+\\
+\cxxCodeLine{132}                         FD_SET(s.get_sockd(), &_read_fds);
+\\
+\cxxCodeLine{133}                         FD_SET(s.get_sockd(), &_write_fds);
+\\
+\cxxCodeLine{134}                 }
+\\
+\cxxCodeLine{135}         
+\hbox{// Important! Have to set back to the beginning!}\strut\\
+\cxxCodeLine{136}         _sock_list_iter=_sock_list.begin();
+\\
+\cxxCodeLine{137}     } catch (...) {
+\\
+\cxxCodeLine{138}         debug_logger() << "    Error in connect to: " << ip << ":" << port
+\\
+\cxxCodeLine{139}         << "\n";
+\\
+\cxxCodeLine{140}     }
+\\
+\cxxCodeLine{141}     debug_logger() << "-PSocket::connect()\n";
+\\
+\cxxCodeLine{142} }
+\\
+\cxxCodeLine{143} 
+\\
+\cxxCodeLine{144} int PSocket::recv(SocketBuffer& s, const int& n)
+\\
+\cxxCodeLine{145} {
+\\
+\cxxCodeLine{146}         ++_recv_calls;
+\\
+\cxxCodeLine{147}     int bytes_rcvd=_sock_list_iter->recv(s, n);
+\\
+\cxxCodeLine{148}         if (bytes_rcvd<=0)
+\\
+\cxxCodeLine{149}                 return(bytes_rcvd);
+\\
+\cxxCodeLine{150}         if (bytes_rcvd<n)
+\\
+\cxxCodeLine{151}                 
+\hbox{// short recv(). return without incrementing socket.}\strut\\
+\cxxCodeLine{152}                 return(bytes_rcvd);
+\\
+\cxxCodeLine{153}         _bytes_rcvd+=bytes_rcvd;
+\\
+\cxxCodeLine{154}     ++_sock_list_iter;
+\\
+\cxxCodeLine{155}     if (_sock_list_iter==_sock_list.end())
+\\
+\cxxCodeLine{156}         _sock_list_iter=_sock_list.begin();
+\\
+\cxxCodeLine{157}     return(bytes_rcvd);
+\\
+\cxxCodeLine{158} }
+\\
+\cxxCodeLine{159} #if 0
+\\
+\cxxCodeLine{160} int PSocket::mrecv(vector<SocketBuffer>& sl, const int& n)
+\\
+\cxxCodeLine{161} {
+\\
+\cxxCodeLine{162}         ++_recv_calls;
+\\
+\cxxCodeLine{163}         int total_bytes_left=n;
+\\
+\cxxCodeLine{164}         for (int i=3; i<3+_nfds; ++i) {
+\\
+\cxxCodeLine{165}                 _sock_ctrlblk_list[i]._bytes_rcvd=0;
+\\
+\cxxCodeLine{166}                 if (total_bytes_left>=_mtu) {
+\\
+\cxxCodeLine{167}                         _sock_ctrlblk_list[i]._bytes_to_rcv=_mtu;
+\\
+\cxxCodeLine{168}                         total_bytes_left-=_mtu;
+\\
+\cxxCodeLine{169}                 } else if (total_bytes_left>0) {
+\\
+\cxxCodeLine{170}                         _sock_ctrlblk_list[i]._bytes_to_rcv=total_bytes_left;
+\\
+\cxxCodeLine{171}                 } else {
+\\
+\cxxCodeLine{172}                         _sock_ctrlblk_list[i]._bytes_to_rcv=0;
+\\
+\cxxCodeLine{173}                 }
+\\
+\cxxCodeLine{174}         }
+\\
+\cxxCodeLine{175}         total_bytes_left=n;
+\\
+\cxxCodeLine{176}         
+\hbox{// Recv loop.}\strut\\
+\cxxCodeLine{177}         do {
+\\
+\cxxCodeLine{178}                 fd_set read_fds=_read_fds;
+\\
+\cxxCodeLine{179}                 if (select(_nfds, &read_fds, NULL, NULL, NULL)!=0) {
+\\
+\cxxCodeLine{180}                         
+\hbox{// Error in select.}\strut\\
+\cxxCodeLine{181}                         switch (errno) {
+\\
+\cxxCodeLine{182}                         case EBADF:
+\\
+\cxxCodeLine{183}                                 error_logger() << "    mrecv(): bad file descriptor\n";
+\\
+\cxxCodeLine{184}                                 break;
+\\
+\cxxCodeLine{185}                         case EINTR:
+\\
+\cxxCodeLine{186}                                 debug_logger() << "    mrecv(): interrupted select call\n";
+\\
+\cxxCodeLine{187}                                 break;
+\\
+\cxxCodeLine{188}                         case EINVAL:
+\\
+\cxxCodeLine{189}                                 error_logger() << "    mrecv(): invalid time limit\n";
+\\
+\cxxCodeLine{190}                                 break;
+\\
+\cxxCodeLine{191}                         }
+\\
+\cxxCodeLine{192}                 } else {
+\\
+\cxxCodeLine{193}                         
+\hbox{// Select returned ok. Start reading data from selectable sockets.}\strut\\
+\cxxCodeLine{194}                         for (int i=3; i<3+_nfds; ++i) {
+\\
+\cxxCodeLine{195}                                 if (FD_ISSET(i, &read_fds)) {
+\\
+\cxxCodeLine{196}                                         int& bytes_to_rcv=_sock_ctrlblk_list[i]._bytes_to_rcv;
+\\
+\cxxCodeLine{197}                                         int& bytes_rcvd=_sock_ctrlblk_list[i]._bytes_rcvd;
+\\
+\cxxCodeLine{198}                                         if (bytes_to_rcv-bytes_rcvd<=0)
+\\
+\cxxCodeLine{199}                                                 continue;
+\\
+\cxxCodeLine{200}                                         int rcvd=_sock_list[i].recv(sl[i], bytes_rcvd, 
+\\
+\cxxCodeLine{201}                                                                                                         bytes_to_rcv-bytes_rcvd);
+\\
+\cxxCodeLine{202}                                         if (rcvd<=0) {
+\\
+\cxxCodeLine{203}                                                 error_logger() << "    mrecv(): sock down\n";
+\\
+\cxxCodeLine{204}                                                 break;
+\\
+\cxxCodeLine{205}                                         }
+\\
+\cxxCodeLine{206}                                         bytes_rcvd+=rcvd;
+\\
+\cxxCodeLine{207}                                         total_bytes_left-=bytes_rcvd;
+\\
+\cxxCodeLine{208}                                 }
+\\
+\cxxCodeLine{209}                         }
+\\
+\cxxCodeLine{210}                 }
+\\
+\cxxCodeLine{211}         } while (total_bytes_left>0);
+\\
+\cxxCodeLine{212}     return(n);
+\\
+\cxxCodeLine{213} }
+\\
+\cxxCodeLine{214} #endif
+\\
+\cxxCodeLine{215} 
+\\
+\cxxCodeLine{216} int PSocket::send(const SocketBuffer& s, const int& n)
+\\
+\cxxCodeLine{217} {
+\\
+\cxxCodeLine{218}         ++_send_calls;
+\\
+\cxxCodeLine{219}     int bytes_sent=_sock_list_iter->send(s, n);
+\\
+\cxxCodeLine{220}         if (bytes_sent<=0)
+\\
+\cxxCodeLine{221}                 return(bytes_sent);
+\\
+\cxxCodeLine{222}         if (bytes_sent<n)
+\\
+\cxxCodeLine{223}                 
+\hbox{// short send(). return without incrementing socket.}\strut\\
+\cxxCodeLine{224}                 return(bytes_sent);
+\\
+\cxxCodeLine{225}         _bytes_sent+=bytes_sent;
+\\
+\cxxCodeLine{226}     ++_sock_list_iter;
+\\
+\cxxCodeLine{227}     if (_sock_list_iter==_sock_list.end())
+\\
+\cxxCodeLine{228}                 _sock_list_iter=_sock_list.begin();
+\\
+\cxxCodeLine{229}     return(bytes_sent);
+\\
+\cxxCodeLine{230} }
+\\
+\cxxCodeLine{231} 
+\\
+\cxxCodeLine{232} #if 0
+\\
+\cxxCodeLine{233} int PSocket::msend(const vector<SocketBuffer>& sl, const int& n)
+\\
+\cxxCodeLine{234} {
+\\
+\cxxCodeLine{235}         ++_send_calls;
+\\
+\cxxCodeLine{236}         int total_bytes_left=n;
+\\
+\cxxCodeLine{237}         for (int i=3; i<3+_nfds; ++i) {
+\\
+\cxxCodeLine{238}                 _sock_ctrlblk_list[i]._bytes_sent=0;
+\\
+\cxxCodeLine{239}                 if (total_bytes_left>=_mtu) {
+\\
+\cxxCodeLine{240}                         _sock_ctrlblk_list[i]._bytes_to_send=_mtu;
+\\
+\cxxCodeLine{241}                         total_bytes_left-=_mtu;
+\\
+\cxxCodeLine{242}                 } else if (total_bytes_left>0) {
+\\
+\cxxCodeLine{243}                         _sock_ctrlblk_list[i]._bytes_to_send=total_bytes_left;
+\\
+\cxxCodeLine{244}                 } else {
+\\
+\cxxCodeLine{245}                         _sock_ctrlblk_list[i]._bytes_to_send=0;
+\\
+\cxxCodeLine{246}                 }
+\\
+\cxxCodeLine{247}         }
+\\
+\cxxCodeLine{248}         total_bytes_left=n;
+\\
+\cxxCodeLine{249}         
+\hbox{// Recv loop.}\strut\\
+\cxxCodeLine{250}         do {
+\\
+\cxxCodeLine{251}                 fd_set write_fds=_write_fds;
+\\
+\cxxCodeLine{252}                 if (select(_nfds, NULL, &write_fds, NULL, NULL)!=0) {
+\\
+\cxxCodeLine{253}                         
+\hbox{// Error in select.}\strut\\
+\cxxCodeLine{254}                         switch (errno) {
+\\
+\cxxCodeLine{255}                         case EBADF:
+\\
+\cxxCodeLine{256}                                 error_logger() << "    msend(): bad file descriptor\n";
+\\
+\cxxCodeLine{257}                                 break;
+\\
+\cxxCodeLine{258}                         case EINTR:
+\\
+\cxxCodeLine{259}                                 debug_logger() << "    msend(): interrupted select call\n";
+\\
+\cxxCodeLine{260}                                 break;
+\\
+\cxxCodeLine{261}                         case EINVAL:
+\\
+\cxxCodeLine{262}                                 error_logger() << "    msend(): invalid time limit\n";
+\\
+\cxxCodeLine{263}                                 break;
+\\
+\cxxCodeLine{264}                         }
+\\
+\cxxCodeLine{265}                 } else {
+\\
+\cxxCodeLine{266}                         
+\hbox{// Select returned ok. Start reading data from selectable sockets.}\strut\\
+\cxxCodeLine{267}                         for (int i=3; i<3+_nfds; ++i) {
+\\
+\cxxCodeLine{268}                                 if (FD_ISSET(i, &write_fds)) {
+\\
+\cxxCodeLine{269}                                         int& bytes_to_send=_sock_ctrlblk_list[i]._bytes_to_send;
+\\
+\cxxCodeLine{270}                                         int& bytes_sent=_sock_ctrlblk_list[i]._bytes_sent;
+\\
+\cxxCodeLine{271}                                         if (bytes_to_send-bytes_sent<=0)
+\\
+\cxxCodeLine{272}                                                 continue;
+\\
+\cxxCodeLine{273}                                         int sent=_sock_list[i].send(sl[i], bytes_sent, 
+\\
+\cxxCodeLine{274}                                                                                                         bytes_to_send-bytes_sent);
+\\
+\cxxCodeLine{275}                                         if (sent<=0) {
+\\
+\cxxCodeLine{276}                                                 error_logger() << "    msend(): sock down\n";
+\\
+\cxxCodeLine{277}                                                 break;
+\\
+\cxxCodeLine{278}                                         }
+\\
+\cxxCodeLine{279}                                         bytes_sent+=sent;
+\\
+\cxxCodeLine{280}                                         total_bytes_left-=bytes_sent;
+\\
+\cxxCodeLine{281}                                 }
+\\
+\cxxCodeLine{282}                         }
+\\
+\cxxCodeLine{283}                 }
+\\
+\cxxCodeLine{284}         } while (total_bytes_left>0);
+\\
+\cxxCodeLine{285}     return(n);
+\\
+\cxxCodeLine{286} }
+\\
+\cxxCodeLine{287} #endif
+\\
+\cxxCodeLine{288} 
+\\
+\cxxCodeLine{289} int PSocket::close()
+\\
+\cxxCodeLine{290} {
+\\
+\cxxCodeLine{291}     debug_logger() << "PSocket::close()\n";
+\\
+\cxxCodeLine{292}         int ret=0;
+\\
+\cxxCodeLine{293}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{294}          ++_sock_list_iter)
+\\
+\cxxCodeLine{295}         ret+=_sock_list_iter->close();
+\\
+\cxxCodeLine{296}     ret+=_accept_sock.close();
+\\
+\cxxCodeLine{297}     debug_logger() << "-PSocket::close()\n";    
+\\
+\cxxCodeLine{298}         return(ret);
+\\
+\cxxCodeLine{299} }
+\\
+\cxxCodeLine{300} 
+\\
+\cxxCodeLine{301} int PSocket::shutdown(const int& howto)
+\\
+\cxxCodeLine{302} {
+\\
+\cxxCodeLine{303}     int ret=0;
+\\
+\cxxCodeLine{304}     debug_logger() << "PSocket::shutdown()\n";
+\\
+\cxxCodeLine{305} #if 0
+\\
+\cxxCodeLine{306}         vector<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{307} #else
+\\
+\cxxCodeLine{308}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{309} #endif
+\\
+\cxxCodeLine{310}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{311}          ++_sock_list_iter)
+\\
+\cxxCodeLine{312}         ret+=_sock_list_iter->shutdown(howto);
+\\
+\cxxCodeLine{313}     ret+=_accept_sock.shutdown(howto);
+\\
+\cxxCodeLine{314}     if (ret!=0)
+\\
+\cxxCodeLine{315}         error_logger() << "    Unable to shutdown all TCP connections\n";
+\\
+\cxxCodeLine{316}         
+\hbox{// Restore old _sock_list_iter in case application still wants to }\strut\\
+\cxxCodeLine{317}         
+\hbox{// read the socket after doing a shutdown(SHUT_WR).}\strut\\
+\cxxCodeLine{318}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{319}     debug_logger() << "-PSocket::shutdown()\n";    
+\\
+\cxxCodeLine{320}     return(ret);
+\\
+\cxxCodeLine{321} }
+\\
+\cxxCodeLine{322} 
+\\
+\cxxCodeLine{323} 
+\hbox{// Options.}\strut\\
+\cxxCodeLine{324} int PSocket::set_so_reuseaddr(const int& yes)
+\\
+\cxxCodeLine{325} {
+\\
+\cxxCodeLine{326}     _so_reuseaddr=yes;
+\\
+\cxxCodeLine{327}         int ret=0;
+\\
+\cxxCodeLine{328}         
+\hbox{// Save old value.}\strut\\
+\cxxCodeLine{329} #if 0
+\\
+\cxxCodeLine{330}         vector<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{331} #else
+\\
+\cxxCodeLine{332}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{333} #endif
+\\
+\cxxCodeLine{334}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{335}          ++_sock_list_iter)
+\\
+\cxxCodeLine{336}         ret+=_sock_list_iter->set_so_reuseaddr(yes);
+\\
+\cxxCodeLine{337}     if (ret!=0)
+\\
+\cxxCodeLine{338}         error_logger() << 
+\\
+\cxxCodeLine{339}                                 "    Unable to set_so_reuseaddr on all TCP connections\n";
+\\
+\cxxCodeLine{340}         
+\hbox{// Restore old value.}\strut\\
+\cxxCodeLine{341}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{342}     return(ret);
+\\
+\cxxCodeLine{343} }
+\\
+\cxxCodeLine{344} 
+\\
+\cxxCodeLine{345} int PSocket::get_so_reuseaddr() const
+\\
+\cxxCodeLine{346} {
+\\
+\cxxCodeLine{347}         return(_so_reuseaddr);
+\\
+\cxxCodeLine{348} }
+\\
+\cxxCodeLine{349} 
+\\
+\cxxCodeLine{350} int PSocket::set_so_linger(const int& onoff, const int& time)
+\\
+\cxxCodeLine{351} {
+\\
+\cxxCodeLine{352}     _so_linger.l_onoff=onoff;
+\\
+\cxxCodeLine{353}     _so_linger.l_linger=time;
+\\
+\cxxCodeLine{354}         int ret=0;
+\\
+\cxxCodeLine{355}         
+\hbox{// Save old value.}\strut\\
+\cxxCodeLine{356} #if 0
+\\
+\cxxCodeLine{357}         vector<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{358} #else
+\\
+\cxxCodeLine{359}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{360} #endif
+\\
+\cxxCodeLine{361}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{362}          ++_sock_list_iter)
+\\
+\cxxCodeLine{363}         ret+=_sock_list_iter->set_so_linger(onoff, time);
+\\
+\cxxCodeLine{364}     if (ret!=0)
+\\
+\cxxCodeLine{365}         error_logger() << 
+\\
+\cxxCodeLine{366}                                 "    Unable to set_so_linger on all TCP connections\n";
+\\
+\cxxCodeLine{367}         
+\hbox{// Restore old value.}\strut\\
+\cxxCodeLine{368}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{369}     return(ret);
+\\
+\cxxCodeLine{370} }
+\\
+\cxxCodeLine{371} 
+\\
+\cxxCodeLine{372} const struct linger& PSocket::get_so_linger() const
+\\
+\cxxCodeLine{373} {
+\\
+\cxxCodeLine{374}         return(_so_linger);
+\\
+\cxxCodeLine{375} }
+\\
+\cxxCodeLine{376} 
+\\
+\cxxCodeLine{377} int PSocket::set_so_rcvbuf(const int& sz)
+\\
+\cxxCodeLine{378} {
+\\
+\cxxCodeLine{379}     _so_rcvbuf=sz;
+\\
+\cxxCodeLine{380}         int ret=0;
+\\
+\cxxCodeLine{381}         
+\hbox{// Save old value.}\strut\\
+\cxxCodeLine{382} #if 0
+\\
+\cxxCodeLine{383}         vector<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{384} #else
+\\
+\cxxCodeLine{385}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{386} #endif
+\\
+\cxxCodeLine{387}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{388}          ++_sock_list_iter)
+\\
+\cxxCodeLine{389}         ret+=_sock_list_iter->set_so_rcvbuf(sz);
+\\
+\cxxCodeLine{390}     if (ret!=0)
+\\
+\cxxCodeLine{391}         error_logger() << 
+\\
+\cxxCodeLine{392}                                 "    Unable to set_so_recvbuf on all TCP connections\n";
+\\
+\cxxCodeLine{393}         
+\hbox{// Restore old value.}\strut\\
+\cxxCodeLine{394}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{395}         return(ret);
+\\
+\cxxCodeLine{396} }
+\\
+\cxxCodeLine{397} 
+\\
+\cxxCodeLine{398} int PSocket::get_so_rcvbuf() const
+\\
+\cxxCodeLine{399} {
+\\
+\cxxCodeLine{400}         return(_so_rcvbuf);
+\\
+\cxxCodeLine{401} }
+\\
+\cxxCodeLine{402} 
+\\
+\cxxCodeLine{403} int PSocket::set_so_sndbuf(const int& sz)
+\\
+\cxxCodeLine{404} {
+\\
+\cxxCodeLine{405}     _so_sndbuf=sz;
+\\
+\cxxCodeLine{406}         int ret=0;
+\\
+\cxxCodeLine{407}         
+\hbox{// Save old value.}\strut\\
+\cxxCodeLine{408} #if 0
+\\
+\cxxCodeLine{409}         vector<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{410} #else
+\\
+\cxxCodeLine{411}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{412} #endif
+\\
+\cxxCodeLine{413}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{414}          ++_sock_list_iter)
+\\
+\cxxCodeLine{415}         ret+=_sock_list_iter->set_so_sndbuf(sz);
+\\
+\cxxCodeLine{416}     if (ret!=0)
+\\
+\cxxCodeLine{417}         error_logger() << 
+\\
+\cxxCodeLine{418}                                 "    Unable to set_so_sndbuf on all TCP connections\n";
+\\
+\cxxCodeLine{419}         
+\hbox{// Restore old value.}\strut\\
+\cxxCodeLine{420}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{421}         return(ret);
+\\
+\cxxCodeLine{422} }
+\\
+\cxxCodeLine{423} 
+\\
+\cxxCodeLine{424} int PSocket::get_so_sndbuf() const
+\\
+\cxxCodeLine{425} {
+\\
+\cxxCodeLine{426}         return(_so_sndbuf);
+\\
+\cxxCodeLine{427} }
+\\
+\cxxCodeLine{428} 
+\\
+\cxxCodeLine{429} int PSocket::set_so_rcvlowat(const int& m)
+\\
+\cxxCodeLine{430} {
+\\
+\cxxCodeLine{431}     _so_rcvlowat=m;
+\\
+\cxxCodeLine{432}         int ret=0;
+\\
+\cxxCodeLine{433}         
+\hbox{// Save old value.}\strut\\
+\cxxCodeLine{434} #if 0
+\\
+\cxxCodeLine{435}         vector<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{436} #else
+\\
+\cxxCodeLine{437}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{438} #endif
+\\
+\cxxCodeLine{439}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{440}          ++_sock_list_iter)
+\\
+\cxxCodeLine{441}         ret+=_sock_list_iter->set_so_rcvlowat(m);
+\\
+\cxxCodeLine{442}     if (ret!=0)
+\\
+\cxxCodeLine{443}         error_logger() << 
+\\
+\cxxCodeLine{444}                                 "    Unable to set_so_linger on all TCP connections\n";
+\\
+\cxxCodeLine{445}         
+\hbox{// Restore old value.}\strut\\
+\cxxCodeLine{446}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{447}     return(ret);
+\\
+\cxxCodeLine{448} }
+\\
+\cxxCodeLine{449} 
+\\
+\cxxCodeLine{450} int PSocket::get_so_rcvlowat() const
+\\
+\cxxCodeLine{451} {
+\\
+\cxxCodeLine{452}         return(_so_rcvlowat);
+\\
+\cxxCodeLine{453} }
+\\
+\cxxCodeLine{454} 
+\\
+\cxxCodeLine{455} int PSocket::set_so_sndlowat(const int& m)
+\\
+\cxxCodeLine{456} {
+\\
+\cxxCodeLine{457}     _so_rcvlowat=m;
+\\
+\cxxCodeLine{458}         int ret=0;
+\\
+\cxxCodeLine{459}         
+\hbox{// Save old value.}\strut\\
+\cxxCodeLine{460} #if 0
+\\
+\cxxCodeLine{461}         vector<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{462} #else
+\\
+\cxxCodeLine{463}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{464} #endif
+\\
+\cxxCodeLine{465}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{466}          ++_sock_list_iter)
+\\
+\cxxCodeLine{467}         ret+=_sock_list_iter->set_so_sndlowat(m);
+\\
+\cxxCodeLine{468}     if (ret!=0)
+\\
+\cxxCodeLine{469}         error_logger() << 
+\\
+\cxxCodeLine{470}                                 "    Unable to set_so_linger on all TCP connections\n";
+\\
+\cxxCodeLine{471}         
+\hbox{// Restore old value.}\strut\\
+\cxxCodeLine{472}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{473}     return(ret);
+\\
+\cxxCodeLine{474} }
+\\
+\cxxCodeLine{475} 
+\\
+\cxxCodeLine{476} int PSocket::get_so_sndlowat() const
+\\
+\cxxCodeLine{477} {
+\\
+\cxxCodeLine{478}         return(_so_sndlowat);
+\\
+\cxxCodeLine{479} }
+\\
+\cxxCodeLine{480} 
+\\
+\cxxCodeLine{481} int PSocket::set_tcp_nodelay(const int& n)
+\\
+\cxxCodeLine{482} {
+\\
+\cxxCodeLine{483}     _tcp_nodelay=n;
+\\
+\cxxCodeLine{484}         int ret=0;
+\\
+\cxxCodeLine{485}         
+\hbox{// Save old value.}\strut\\
+\cxxCodeLine{486} #if 0
+\\
+\cxxCodeLine{487}         vector<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{488} #else
+\\
+\cxxCodeLine{489}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{490} #endif
+\\
+\cxxCodeLine{491}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{492}          ++_sock_list_iter)
+\\
+\cxxCodeLine{493}         ret+=_sock_list_iter->set_tcp_nodelay(n);
+\\
+\cxxCodeLine{494}     if (ret!=0)
+\\
+\cxxCodeLine{495}         error_logger() << 
+\\
+\cxxCodeLine{496}                                 "    Unable to set_tcp_nodelay on all TCP connections\n";
+\\
+\cxxCodeLine{497}         
+\hbox{// Restore old value.}\strut\\
+\cxxCodeLine{498}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{499}     return(ret);
+\\
+\cxxCodeLine{500} }
+\\
+\cxxCodeLine{501} 
+\\
+\cxxCodeLine{502} int PSocket::get_tcp_nodelay() const
+\\
+\cxxCodeLine{503} {
+\\
+\cxxCodeLine{504}         return(_tcp_nodelay);
+\\
+\cxxCodeLine{505} }
+\\
+\cxxCodeLine{506} 
+\\
+\cxxCodeLine{507} int PSocket::set_blocking(const int& b)
+\\
+\cxxCodeLine{508} {
+\\
+\cxxCodeLine{509}     _blocking=b;
+\\
+\cxxCodeLine{510}         int ret=0;
+\\
+\cxxCodeLine{511}         list<TCPSocket>::iterator old_sock_list_iter=_sock_list_iter;
+\\
+\cxxCodeLine{512}     for (_sock_list_iter=_sock_list.begin(); _sock_list_iter!=_sock_list.end();
+\\
+\cxxCodeLine{513}          ++_sock_list_iter)
+\\
+\cxxCodeLine{514}         ret+=_sock_list_iter->set_blocking(b);
+\\
+\cxxCodeLine{515}     if (ret!=0)
+\\
+\cxxCodeLine{516}         error_logger() << 
+\\
+\cxxCodeLine{517}                                 "    Unable to set_blocking on all TCP connections\n";
+\\
+\cxxCodeLine{518}         
+\hbox{// Restore old value.}\strut\\
+\cxxCodeLine{519}         _sock_list_iter=old_sock_list_iter;
+\\
+\cxxCodeLine{520}     return(ret);
+\\
+\cxxCodeLine{521} }
+\\
+\cxxCodeLine{522} 
+\\
+\cxxCodeLine{523} int PSocket::get_blocking() const
+\\
+\cxxCodeLine{524} {
+\\
+\cxxCodeLine{525}         return(_blocking);
+\\
+\cxxCodeLine{526} }
+\\
+\cxxCodeLine{527} 
+\\
+\cxxCodeLine{528} static bool parent()
+\\
+\cxxCodeLine{529} {
+\\
+\cxxCodeLine{530}     PSocket s(8, 1024);
+\\
+\cxxCodeLine{531}     string ip("0.0.0.0");
+\\
+\cxxCodeLine{532}     int port(49002);
+\\
+\cxxCodeLine{533}     s.bind(ip, port);
+\\
+\cxxCodeLine{534}     s.listen();
+\\
+\cxxCodeLine{535}     s.accept();
+\\
+\cxxCodeLine{536}     SocketBuffer sbuf;
+\\
+\cxxCodeLine{537}     sbuf.reserve(1024);
+\\
+\cxxCodeLine{538}         for (int j=0; j<1000; j++) {
+\\
+\cxxCodeLine{539}                 (*Logsystem::debug_logger()) << "    psocket: recv-ing j==" << j << "\n";
+\\
+\cxxCodeLine{540}         int rcvd_bytes=s.recv(sbuf, 1024);
+\\
+\cxxCodeLine{541}                 (*Logsystem::debug_logger()) << "    psocket: rcvd_bytes==" << rcvd_bytes 
+\\
+\cxxCodeLine{542}                                                                 << "\n";
+\\
+\cxxCodeLine{543}         if (rcvd_bytes!=1024) {
+\\
+\cxxCodeLine{544}                         cerr << "    psocket: parent() short READ!!!\n";
+\\
+\cxxCodeLine{545}                 return(false);
+\\
+\cxxCodeLine{546}                 }
+\\
+\cxxCodeLine{547}         for (int i=0; i<1024; i++) {
+\\
+\cxxCodeLine{548}                 if (sbuf[i]!=i%10) {
+\\
+\cxxCodeLine{549}                                 cerr << "    psocket: parent() invalid data!!!\n";
+\\
+\cxxCodeLine{550}                 return(false);
+\\
+\cxxCodeLine{551}                         }
+\\
+\cxxCodeLine{552}         }
+\\
+\cxxCodeLine{553}         }
+\\
+\cxxCodeLine{554}     s.close();
+\\
+\cxxCodeLine{555}     return(true);
+\\
+\cxxCodeLine{556} }
+\\
+\cxxCodeLine{557} 
+\\
+\cxxCodeLine{558} static bool child()
+\\
+\cxxCodeLine{559} {
+\\
+\cxxCodeLine{560}     string ip("127.0.0.1");
+\\
+\cxxCodeLine{561}     int port(49002);
+\\
+\cxxCodeLine{562}     PSocket c(8, 1024);
+\\
+\cxxCodeLine{563}     usleep(2000000);
+\\
+\cxxCodeLine{564}     c.connect(ip, port);
+\\
+\cxxCodeLine{565}     SocketBuffer sbuf(1024);
+\\
+\cxxCodeLine{566}     for (int i=0; i<1024; i++) {
+\\
+\cxxCodeLine{567}         sbuf[i]=i%10;
+\\
+\cxxCodeLine{568}     }
+\\
+\cxxCodeLine{569}         int sent_bytes=0;
+\\
+\cxxCodeLine{570} 
+\\
+\cxxCodeLine{571}         for (int j=0; j<1000; j++) {
+\\
+\cxxCodeLine{572}                 cerr << "    psocket: send-ing j==" << j << endl;
+\\
+\cxxCodeLine{573}         sent_bytes=c.send(sbuf, 1024);
+\\
+\cxxCodeLine{574}         if (sent_bytes!=1024)
+\\
+\cxxCodeLine{575}                 return(false);
+\\
+\cxxCodeLine{576}                 usleep(100000);
+\\
+\cxxCodeLine{577}         }
+\\
+\cxxCodeLine{578}     c.close();
+\\
+\cxxCodeLine{579}     exit(0);
+\\
+\cxxCodeLine{580} }
+\\
+\cxxCodeLine{581} 
+\\
+\cxxCodeLine{582} bool PSocket::test()
+\\
+\cxxCodeLine{583} {
+\\
+\cxxCodeLine{584}     pid_t child_id=fork();
+\\
+\cxxCodeLine{585}     bool ret=false;
+\\
+\cxxCodeLine{586}     if (child_id==0)
+\\
+\cxxCodeLine{587}         ret=parent();
+\\
+\cxxCodeLine{588}     else
+\\
+\cxxCodeLine{589}         ret=child();
+\\
+\cxxCodeLine{590}     return(ret);
+\\
+\cxxCodeLine{591} }
+\\
+\cxxCodeLine{592} 
+\\
+\cxxCodeLine{593} 
+\\
+\cxxCodeLine{594} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em PSocketThread.cpp}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename PSocketThread.cpp}\strut\\
+\hbox{/*}
+
+ *  PSocketThread.cpp
+ *  vrtp
+ *
+ *  Created by David Lapsley on Sun Feb 29 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em PSocketThread.cpp}\strut\nopagebreak\\
+\cxxCodeLine{13} PSocketThread::PSocketThread(const string& s, SocketBuffer& sb, int& mtu, 
+\\
+\cxxCodeLine{14}                                                         Mutex& m, TCPSocket& t, int& mode):
+\\
+\cxxCodeLine{15} Thread(s), _sbuf(sb), _mtu(mtu), _mutex(m), _sock(t), _mode(mode)
+\\
+\cxxCodeLine{16} {
+\\
+\cxxCodeLine{17}     debug_logger() << "PSocketThread::PSocketThread()\n";
+\\
+\cxxCodeLine{18}     debug_logger() << "-PSocketThread::PSocketThread()\n";
+\\
+\cxxCodeLine{19} }  
+\hbox{// End PSocketThread().}\strut\\
+\cxxCodeLine{20} 
+\\
+\cxxCodeLine{21} PSocketThread::~PSocketThread()
+\\
+\cxxCodeLine{22} {
+\\
+\cxxCodeLine{23}     debug_logger() << "PSocketThread::~PSocketThread()\n";
+\\
+\cxxCodeLine{24}     debug_logger() << "-PSocketThread::~PSocketThread()\n";
+\\
+\cxxCodeLine{25} }  
+\hbox{// End ~PSocketThread().}\strut\\
+\cxxCodeLine{26} 
+\\
+\cxxCodeLine{27} void PSocketThread::thread_create()
+\\
+\cxxCodeLine{28} {
+\\
+\cxxCodeLine{29}     debug_logger() << "PSocketThread::thread_func()\n";
+\\
+\cxxCodeLine{30}         Thread::thread_create();
+\\
+\cxxCodeLine{31}     debug_logger() << "-PSocketThread::thread_func()\n";
+\\
+\cxxCodeLine{32} }  
+\hbox{// End thread_create().}\strut\\
+\cxxCodeLine{33} 
+\\
+\cxxCodeLine{34} void* PSocketThread::thread_func()
+\\
+\cxxCodeLine{35} {
+\\
+\cxxCodeLine{36}     debug_logger() << "PSocketThread::thread_func()\n";
+\\
+\cxxCodeLine{37}         switch (_mode) {
+\\
+\cxxCodeLine{38}         case 1:
+\\
+\cxxCodeLine{39}                 while (true) {
+\\
+\cxxCodeLine{40}                         m.lock();
+\\
+\cxxCodeLine{41}                         int rcv_bytes=_sock.recv(_sbuf, _mtu);
+\\
+\cxxCodeLine{42}                         m.unlock();
+\\
+\cxxCodeLine{43}                 }
+\\
+\cxxCodeLine{44}                 break;
+\\
+\cxxCodeLine{45}         case 2:
+\\
+\cxxCodeLine{46}                 break;
+\\
+\cxxCodeLine{47}         }
+\\
+\cxxCodeLine{48}     debug_logger() << "-PSocketThread::thread_func()\n";
+\\
+\cxxCodeLine{49}         return(Thread::thread_func());
+\\
+\cxxCodeLine{50} }  
+\hbox{// End thread_func().}\strut\\
+\cxxCodeLine{51} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em Socket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename Socket.cpp}\strut\\
+\hbox{/*}
+
+ *  Socket.cpp
+ *  vrtp
+ *
+ *  Created by David Lapsley on Fri Feb 20 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em Socket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{13} const int Socket::blocking=0;
+\\
+\cxxCodeLine{14} const int Socket::nonblocking=1;
+\\
+\cxxCodeLine{15} 
+\\
+\cxxCodeLine{16} Socket::Socket(const int& type)
+\\
+\cxxCodeLine{17} {
+\\
+\cxxCodeLine{18}         _type=type;
+\\
+\cxxCodeLine{19}         _bytes_sent=_bytes_rcvd=_send_calls=_recv_calls=0;
+\\
+\cxxCodeLine{20}         _sockd=socket(AF_INET, type, 0);
+\\
+\cxxCodeLine{21}         _blocking=blocking;
+\\
+\cxxCodeLine{22} }
+\\
+\cxxCodeLine{23} 
+\\
+\cxxCodeLine{24} Socket::Socket(const int& type, const int& s, const int&m)
+\\
+\cxxCodeLine{25} {
+\\
+\cxxCodeLine{26}         _type=type;
+\\
+\cxxCodeLine{27}         _sockd=s;
+\\
+\cxxCodeLine{28}         _mtu=m;
+\\
+\cxxCodeLine{29}         _bytes_sent=_bytes_rcvd=_send_calls=_recv_calls=0;
+\\
+\cxxCodeLine{30}         _blocking=blocking;
+\\
+\cxxCodeLine{31} }
+\\
+\cxxCodeLine{32} 
+\\
+\cxxCodeLine{33} Socket::Socket() 
+\\
+\cxxCodeLine{34} {
+\\
+\cxxCodeLine{35}         _bytes_sent=_bytes_rcvd=_send_calls=_recv_calls=0;
+\\
+\cxxCodeLine{36}         _sockd=-1;
+\\
+\cxxCodeLine{37}         _mtu=1024;
+\\
+\cxxCodeLine{38}         _type=SOCK_STREAM;
+\\
+\cxxCodeLine{39}         _blocking=blocking;
+\\
+\cxxCodeLine{40} }
+\\
+\cxxCodeLine{41} 
+\\
+\cxxCodeLine{42} Socket::~Socket() 
+\\
+\cxxCodeLine{43} {
+\\
+\cxxCodeLine{44} }
+\\
+\cxxCodeLine{45} 
+\\
+\cxxCodeLine{46} 
+\hbox{// Member access.}\strut\\
+\cxxCodeLine{47} int Socket::get_sockd() const {
+\\
+\cxxCodeLine{48}         return(_sockd);
+\\
+\cxxCodeLine{49} }
+\\
+\cxxCodeLine{50} 
+\\
+\cxxCodeLine{51} int Socket::get_type() const {
+\\
+\cxxCodeLine{52}         return(_type);
+\\
+\cxxCodeLine{53} }
+\\
+\cxxCodeLine{54} 
+\\
+\cxxCodeLine{55} int Socket::get_mtu() const {
+\\
+\cxxCodeLine{56}         return(_mtu);
+\\
+\cxxCodeLine{57} }
+\\
+\cxxCodeLine{58} 
+\\
+\cxxCodeLine{59} int Socket::get_bytes_sent() const {
+\\
+\cxxCodeLine{60}         return(_bytes_sent);
+\\
+\cxxCodeLine{61} }   
+\\
+\cxxCodeLine{62} 
+\\
+\cxxCodeLine{63} int Socket::get_bytes_rcvd() const {
+\\
+\cxxCodeLine{64}         return(_bytes_rcvd);
+\\
+\cxxCodeLine{65} }
+\\
+\cxxCodeLine{66} 
+\\
+\cxxCodeLine{67} int Socket::get_send_calls() const {
+\\
+\cxxCodeLine{68}         return(_send_calls);
+\\
+\cxxCodeLine{69} }
+\\
+\cxxCodeLine{70} 
+\\
+\cxxCodeLine{71} int Socket::get_recv_calls() const {
+\\
+\cxxCodeLine{72}         return(_recv_calls);
+\\
+\cxxCodeLine{73} }
+\\
+\cxxCodeLine{74} 
+\\
+\cxxCodeLine{75} 
+\hbox{// Options.}\strut\\
+\cxxCodeLine{76} int Socket::set_so_reuseaddr(const int& yes)
+\\
+\cxxCodeLine{77} {
+\\
+\cxxCodeLine{78}         _so_reuseaddr=yes;
+\\
+\cxxCodeLine{79}     return(::setsockopt(_sockd, SOL_SOCKET, SO_REUSEADDR, &_so_reuseaddr, 
+\\
+\cxxCodeLine{80}                         sizeof(int)));
+\\
+\cxxCodeLine{81} }
+\\
+\cxxCodeLine{82} 
+\\
+\cxxCodeLine{83} int Socket::get_so_reuseaddr() const
+\\
+\cxxCodeLine{84} {
+\\
+\cxxCodeLine{85}         return(_so_reuseaddr);
+\\
+\cxxCodeLine{86} }
+\\
+\cxxCodeLine{87} 
+\\
+\cxxCodeLine{88} int Socket::set_so_linger(const int& onoff, const int& time)
+\\
+\cxxCodeLine{89} {
+\\
+\cxxCodeLine{90}         _so_linger.l_onoff=onoff;
+\\
+\cxxCodeLine{91}         _so_linger.l_linger=time;
+\\
+\cxxCodeLine{92}     return(::setsockopt(_sockd, SOL_SOCKET, SO_LINGER, &_so_linger, 
+\\
+\cxxCodeLine{93}                         sizeof(struct linger)));
+\\
+\cxxCodeLine{94} }
+\\
+\cxxCodeLine{95} 
+\\
+\cxxCodeLine{96} const struct linger& Socket::get_so_linger() const
+\\
+\cxxCodeLine{97} {
+\\
+\cxxCodeLine{98}         return(_so_linger);
+\\
+\cxxCodeLine{99} }
+\\
+\cxxCodeLine{100} 
+\\
+\cxxCodeLine{101} int Socket::set_so_rcvbuf(const int& sz)
+\\
+\cxxCodeLine{102} {
+\\
+\cxxCodeLine{103}         _so_rcvbuf=sz;
+\\
+\cxxCodeLine{104}     return(::setsockopt(_sockd, SOL_SOCKET, SO_RCVBUF, &_so_rcvbuf,
+\\
+\cxxCodeLine{105}             sizeof(int)));      
+\\
+\cxxCodeLine{106} }
+\\
+\cxxCodeLine{107} 
+\\
+\cxxCodeLine{108} int Socket::get_so_rcvbuf() const
+\\
+\cxxCodeLine{109} {
+\\
+\cxxCodeLine{110}         return(_so_rcvbuf);
+\\
+\cxxCodeLine{111} }
+\\
+\cxxCodeLine{112} 
+\\
+\cxxCodeLine{113} int Socket::set_so_sndbuf(const int& sz)
+\\
+\cxxCodeLine{114} {
+\\
+\cxxCodeLine{115}         _so_sndbuf=sz;
+\\
+\cxxCodeLine{116}     return(::setsockopt(_sockd, SOL_SOCKET, SO_SNDBUF, &_so_sndbuf,
+\\
+\cxxCodeLine{117}             sizeof(int)));      
+\\
+\cxxCodeLine{118} }
+\\
+\cxxCodeLine{119} 
+\\
+\cxxCodeLine{120} int Socket::get_so_sndbuf() const
+\\
+\cxxCodeLine{121} {
+\\
+\cxxCodeLine{122}         return(_so_sndbuf);
+\\
+\cxxCodeLine{123} }
+\\
+\cxxCodeLine{124} 
+\\
+\cxxCodeLine{125} int Socket::set_so_rcvlowat(const int& m)
+\\
+\cxxCodeLine{126} {
+\\
+\cxxCodeLine{127}         _so_rcvlowat=m;
+\\
+\cxxCodeLine{128}     return(::setsockopt(_sockd, SOL_SOCKET, SO_RCVLOWAT, &_so_rcvlowat,
+\\
+\cxxCodeLine{129}             sizeof(int)));      
+\\
+\cxxCodeLine{130} }
+\\
+\cxxCodeLine{131} 
+\\
+\cxxCodeLine{132} int Socket::get_so_rcvlowat() const
+\\
+\cxxCodeLine{133} {
+\\
+\cxxCodeLine{134}         return(_so_rcvlowat);
+\\
+\cxxCodeLine{135} }
+\\
+\cxxCodeLine{136} 
+\\
+\cxxCodeLine{137} int Socket::set_so_sndlowat(const int& m)
+\\
+\cxxCodeLine{138} {
+\\
+\cxxCodeLine{139}     _so_sndlowat=m;
+\\
+\cxxCodeLine{140}     return(::setsockopt(_sockd, SOL_SOCKET, SO_SNDLOWAT, &_so_sndlowat,
+\\
+\cxxCodeLine{141}             sizeof(int)));
+\\
+\cxxCodeLine{142} }
+\\
+\cxxCodeLine{143} 
+\\
+\cxxCodeLine{144} int Socket::get_so_sndlowat() const
+\\
+\cxxCodeLine{145} {
+\\
+\cxxCodeLine{146}         return(_so_sndlowat);
+\\
+\cxxCodeLine{147} }
+\\
+\cxxCodeLine{148} 
+\\
+\cxxCodeLine{149} int Socket::set_tcp_nodelay(const int& n)
+\\
+\cxxCodeLine{150} {
+\\
+\cxxCodeLine{151}     if (_type!=SOCK_STREAM)
+\\
+\cxxCodeLine{152}         return(-1);
+\\
+\cxxCodeLine{153}     _tcp_nodelay=n;
+\\
+\cxxCodeLine{154}     return(::setsockopt(_sockd, IPPROTO_TCP, TCP_NODELAY, &_tcp_nodelay,
+\\
+\cxxCodeLine{155}             sizeof(int)));
+\\
+\cxxCodeLine{156} }
+\\
+\cxxCodeLine{157} 
+\\
+\cxxCodeLine{158} int Socket::get_tcp_nodelay() const
+\\
+\cxxCodeLine{159} {
+\\
+\cxxCodeLine{160}     if (_type!=SOCK_STREAM)
+\\
+\cxxCodeLine{161}         return(-1);
+\\
+\cxxCodeLine{162}     return(_tcp_nodelay);
+\\
+\cxxCodeLine{163} }
+\\
+\cxxCodeLine{164} 
+\\
+\cxxCodeLine{165} 
+\hbox{// Blocking.}\strut\\
+\cxxCodeLine{166} int Socket::set_blocking(const int& b)
+\\
+\cxxCodeLine{167} {
+\\
+\cxxCodeLine{168}         int ret=0;
+\\
+\cxxCodeLine{169}         if (_blocking==b)
+\\
+\cxxCodeLine{170}                 return(0);
+\\
+\cxxCodeLine{171}         _blocking=b;
+\\
+\cxxCodeLine{172}         if (b==nonblocking) {
+\\
+\cxxCodeLine{173}                 _blocking_flags=fcntl(_sockd, F_GETFL, 0);
+\\
+\cxxCodeLine{174}                 ret=fcntl(_sockd, F_SETFL, _blocking_flags | O_NONBLOCK);
+\\
+\cxxCodeLine{175}         } 
+\\
+\cxxCodeLine{176}         if (b==blocking) {
+\\
+\cxxCodeLine{177}                 ret=fcntl(_sockd, F_SETFL, _blocking_flags);
+\\
+\cxxCodeLine{178}         }
+\\
+\cxxCodeLine{179}         if (ret!=-1)
+\\
+\cxxCodeLine{180}                 ret=0;
+\\
+\cxxCodeLine{181}         return(ret);    
+\\
+\cxxCodeLine{182} }
+\\
+\cxxCodeLine{183} 
+\\
+\cxxCodeLine{184} int Socket::get_blocking() const
+\\
+\cxxCodeLine{185} {
+\\
+\cxxCodeLine{186}     return(_blocking);
+\\
+\cxxCodeLine{187} }
+\\
+\cxxCodeLine{188} 
+\\
+\cxxCodeLine{189} 
+\hbox{// Socket connection termination...}\strut\\
+\cxxCodeLine{190} const int Socket::shutdown(const int& how)
+\\
+\cxxCodeLine{191} {
+\\
+\cxxCodeLine{192}         return(::shutdown(_sockd, how));
+\\
+\cxxCodeLine{193} }
+\\
+\cxxCodeLine{194} 
+\\
+\cxxCodeLine{195} const int Socket::close()
+\\
+\cxxCodeLine{196} {
+\\
+\cxxCodeLine{197}         return(::close(_sockd));
+\\
+\cxxCodeLine{198} }
+\\
+\cxxCodeLine{199} 
+\\
+\cxxCodeLine{200} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em TCPSocket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename TCPSocket.cpp}\strut\\
+\hbox{/*}
+
+ *  TCPSocket.cpp
+ *  vrtp
+ *
+ *  Created by David Lapsley on Mon Feb 23 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em TCPSocket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{13} TCPSocket::TCPSocket():
+\\
+\cxxCodeLine{14} Socket(SOCK_STREAM)
+\\
+\cxxCodeLine{15} {
+\\
+\cxxCodeLine{16}     debug_logger() << "TCPSocket::TCPSocket()\n";
+\\
+\cxxCodeLine{17}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{18}     debug_logger() << "-TCPSocket::TCPSocket()\n";
+\\
+\cxxCodeLine{19} }
+\\
+\cxxCodeLine{20} 
+\\
+\cxxCodeLine{21} TCPSocket::TCPSocket(const int& m):
+\\
+\cxxCodeLine{22} Socket(SOCK_STREAM)
+\\
+\cxxCodeLine{23} {
+\\
+\cxxCodeLine{24}     debug_logger() << "TCPSocket::TCPSocket()\n";
+\\
+\cxxCodeLine{25}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{26}         _mtu=m;
+\\
+\cxxCodeLine{27}     debug_logger() << "-TCPSocket::TCPSocket()\n";
+\\
+\cxxCodeLine{28} }
+\\
+\cxxCodeLine{29} 
+\\
+\cxxCodeLine{30} TCPSocket::TCPSocket(const int& s, const int& m):
+\\
+\cxxCodeLine{31} Socket(SOCK_STREAM, s, m)
+\\
+\cxxCodeLine{32} {
+\\
+\cxxCodeLine{33}     debug_logger() << "TCPSocket::TCPSocket(int)\n";
+\\
+\cxxCodeLine{34}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{35}     debug_logger() << "-TCPSocket::TCPSocket(int)\n";
+\\
+\cxxCodeLine{36} }
+\\
+\cxxCodeLine{37} 
+\\
+\cxxCodeLine{38} TCPSocket::TCPSocket(const TCPSocket &s):
+\\
+\cxxCodeLine{39} Socket()
+\\
+\cxxCodeLine{40} {
+\\
+\cxxCodeLine{41}     debug_logger() << "TCPSocket::TCPSocket(&)\n";
+\\
+\cxxCodeLine{42}     _sockd=s.get_sockd();
+\\
+\cxxCodeLine{43}         _mtu=s.get_mtu();
+\\
+\cxxCodeLine{44}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{45}     debug_logger() << "-TCPSocket::TCPSocket(&)\n";
+\\
+\cxxCodeLine{46} }
+\\
+\cxxCodeLine{47} 
+\\
+\cxxCodeLine{48} TCPSocket::~TCPSocket()
+\\
+\cxxCodeLine{49} {
+\\
+\cxxCodeLine{50}     debug_logger() << "TCPSocket::~TCPSocket()\n";
+\\
+\cxxCodeLine{51}     
+\hbox{// This is an important feature of the TCPSocket class. Especially}\strut\\
+\cxxCodeLine{52}     
+\hbox{// for copying of TCPSockets. TCPSockets do *not* close their}\strut\\
+\cxxCodeLine{53}         
+\hbox{// sockets when they are destroyed.}\strut\\
+\cxxCodeLine{54}     debug_logger() << "-TCPSocket::~TCPSocket()\n";
+\\
+\cxxCodeLine{55} }
+\\
+\cxxCodeLine{56} 
+\\
+\cxxCodeLine{57} TCPSocket& TCPSocket::operator=(const TCPSocket& s)
+\\
+\cxxCodeLine{58} {
+\\
+\cxxCodeLine{59}     debug_logger() << "TCPSocket::operator=()\n";
+\\
+\cxxCodeLine{60}     _sockd=s.get_sockd();
+\\
+\cxxCodeLine{61}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{62}         _mtu=s.get_mtu();
+\\
+\cxxCodeLine{63}     debug_logger() << "-TCPSocket::operator=()\n";
+\\
+\cxxCodeLine{64}     return(*this);
+\\
+\cxxCodeLine{65} }
+\\
+\cxxCodeLine{66} 
+\\
+\cxxCodeLine{67} void TCPSocket::set_sockd(const int& s)
+\\
+\cxxCodeLine{68} {
+\\
+\cxxCodeLine{69}     debug_logger() << "TCPSocket::set_sockd()\n";
+\\
+\cxxCodeLine{70}     if (_sockd!=-1)
+\\
+\cxxCodeLine{71}         ::close(_sockd);
+\\
+\cxxCodeLine{72}     _sockd=s;
+\\
+\cxxCodeLine{73}     debug_logger() << "-TCPSocket::set_sockd()\n";
+\\
+\cxxCodeLine{74} }
+\\
+\cxxCodeLine{75} 
+\\
+\cxxCodeLine{76} int TCPSocket::bind(const string& ip, const int& port)
+\\
+\cxxCodeLine{77} {
+\\
+\cxxCodeLine{78}     debug_logger() << "TCPSocket::bind()\n";
+\\
+\cxxCodeLine{79}     char* p=(char*)ip.data();
+\\
+\cxxCodeLine{80}     struct sockaddr_in addr;
+\\
+\cxxCodeLine{81}     int ret=0;
+\\
+\cxxCodeLine{82}     if (ip.size()<0) {
+\\
+\cxxCodeLine{83}         throw SocketException("Zero length IP string.");
+\\
+\cxxCodeLine{84}     }      
+\\
+\cxxCodeLine{85}     ret=::inet_aton(p, &addr.sin_addr);
+\\
+\cxxCodeLine{86} #ifndef LINUX
+\\
+\cxxCodeLine{87}     addr.sin_len=sizeof(addr);
+\\
+\cxxCodeLine{88} #endif 
+\hbox{// LINUX}\strut\\
+\cxxCodeLine{89}     addr.sin_family=AF_INET;
+\\
+\cxxCodeLine{90}     addr.sin_port=htons(port);
+\\
+\cxxCodeLine{91}     if (ret==0) {
+\\
+\cxxCodeLine{92}         throw SocketException("Invalid IP address string.");
+\\
+\cxxCodeLine{93}     }
+\\
+\cxxCodeLine{94}     if (_sockd==-1) {
+\\
+\cxxCodeLine{95}         throw SocketException("Invalid sock descriptor.");
+\\
+\cxxCodeLine{96}     }
+\\
+\cxxCodeLine{97}     ret=::bind(_sockd, (struct sockaddr*)&addr, sizeof(addr));
+\\
+\cxxCodeLine{98}     debug_logger() << "    addr.sin_port: " << (int)addr.sin_port << "\n";
+\\
+\cxxCodeLine{99}     debug_logger() << "    addr.sin_addr: " << (int)addr.sin_addr.s_addr 
+\\
+\cxxCodeLine{100}                                         << "\n";
+\\
+\cxxCodeLine{101}     if (ret==-1)
+\\
+\cxxCodeLine{102}         error_logger() << "Bind error.\n";
+\\
+\cxxCodeLine{103}     debug_logger() << "-TCPSocket::bind()\n";
+\\
+\cxxCodeLine{104}         return(ret);
+\\
+\cxxCodeLine{105} }
+\\
+\cxxCodeLine{106} 
+\\
+\cxxCodeLine{107} int TCPSocket::listen()
+\\
+\cxxCodeLine{108} {
+\\
+\cxxCodeLine{109}     debug_logger() << "TCPSocket::listen()\n";
+\\
+\cxxCodeLine{110}     if (_sockd==-1)
+\\
+\cxxCodeLine{111}         debug_logger() << "Invalid sock descriptor.\n";
+\\
+\cxxCodeLine{112}     int ret=::listen(_sockd, 10);
+\\
+\cxxCodeLine{113}         if (ret==-1)
+\\
+\cxxCodeLine{114}                 error_logger() << "Listen error.\n";
+\\
+\cxxCodeLine{115}     debug_logger() << "-TCPSocket::listen()\n";
+\\
+\cxxCodeLine{116}         return(ret);
+\\
+\cxxCodeLine{117} }
+\\
+\cxxCodeLine{118} 
+\\
+\cxxCodeLine{119} int TCPSocket::accept()
+\\
+\cxxCodeLine{120} {
+\\
+\cxxCodeLine{121}     debug_logger() << "TCPSocket::accept()\n";
+\\
+\cxxCodeLine{122}     if (_sockd==-1) {
+\\
+\cxxCodeLine{123}         throw SocketException("Invalid sock descriptor.");
+\\
+\cxxCodeLine{124}     }
+\\
+\cxxCodeLine{125}     struct sockaddr addr;
+\\
+\cxxCodeLine{126}     socklen_t addrlen=sizeof(addr);
+\\
+\cxxCodeLine{127}     int ret=::accept(_sockd, &addr, &addrlen);
+\\
+\cxxCodeLine{128}         if (ret==-1)
+\\
+\cxxCodeLine{129}                 error_logger() << "Accept error\n";
+\\
+\cxxCodeLine{130}     debug_logger() << "Accept sock " << ret << "\n";
+\\
+\cxxCodeLine{131}     debug_logger() << "-TCPSocket::accept()\n";
+\\
+\cxxCodeLine{132}     return(ret);
+\\
+\cxxCodeLine{133} }
+\\
+\cxxCodeLine{134} 
+\\
+\cxxCodeLine{135} int TCPSocket::connect(const string& ip, const int& port)
+\\
+\cxxCodeLine{136} {
+\\
+\cxxCodeLine{137}     debug_logger() << "TCPSocket::connect()\n";
+\\
+\cxxCodeLine{138}     struct sockaddr_in addr;
+\\
+\cxxCodeLine{139}     int ret=0;
+\\
+\cxxCodeLine{140}     if (ip.size()<=0) {
+\\
+\cxxCodeLine{141}         throw SocketException("Zero length IP string.");
+\\
+\cxxCodeLine{142}     }
+\\
+\cxxCodeLine{143}     ret=::inet_aton((char*)ip.data(), &addr.sin_addr);
+\\
+\cxxCodeLine{144}     if (ret==0) {
+\\
+\cxxCodeLine{145}         throw SocketException("Invalid IP address string.");
+\\
+\cxxCodeLine{146}     }
+\\
+\cxxCodeLine{147}     addr.sin_port=htons(port);
+\\
+\cxxCodeLine{148} #ifndef LINUX
+\\
+\cxxCodeLine{149}     addr.sin_len=sizeof(addr);
+\\
+\cxxCodeLine{150} #endif 
+\hbox{// LINUX}\strut\\
+\cxxCodeLine{151}     addr.sin_family=AF_INET;
+\\
+\cxxCodeLine{152}     debug_logger() << "    addr.sin_port: " << (int)addr.sin_port << "\n";
+\\
+\cxxCodeLine{153}     debug_logger() << "    addr.sin_addr: " << (int)addr.sin_addr.s_addr 
+\\
+\cxxCodeLine{154}                                 << "\n";
+\\
+\cxxCodeLine{155} 
+\\
+\cxxCodeLine{156}     ret=::connect(_sockd, (struct sockaddr*)&addr, sizeof(addr));
+\\
+\cxxCodeLine{157}         if (ret==-1)
+\\
+\cxxCodeLine{158}                 error_logger() << "connect() error\n";
+\\
+\cxxCodeLine{159}     debug_logger() << "-TCPSocket::connect()\n";
+\\
+\cxxCodeLine{160}         return(ret);
+\\
+\cxxCodeLine{161} }
+\\
+\cxxCodeLine{162} 
+\\
+\cxxCodeLine{163} int TCPSocket::recv(SocketBuffer& s, const int& n)
+\\
+\cxxCodeLine{164} {
+\\
+\cxxCodeLine{165}         ++_recv_calls;
+\\
+\cxxCodeLine{166}     if (n<0) {
+\\
+\cxxCodeLine{167}         throw SocketException("Zero size buffer");
+\\
+\cxxCodeLine{168}     }
+\\
+\cxxCodeLine{169}     if (_sockd==-1) {
+\\
+\cxxCodeLine{170}         throw SocketException("Sockd error");
+\\
+\cxxCodeLine{171}     }
+\\
+\cxxCodeLine{172}         fd_set rset;
+\\
+\cxxCodeLine{173}         FD_ZERO(&rset);
+\\
+\cxxCodeLine{174}         FD_SET(_sockd, &rset);
+\\
+\cxxCodeLine{175}         int sl=0;
+\\
+\cxxCodeLine{176}         while (false) {
+\\
+\cxxCodeLine{177}                 
+\hbox{// XXXX This is a bit risky :-)}\strut\\
+\cxxCodeLine{178}                 if ((sl=select(_sockd+1, &rset, NULL, NULL, NULL))==-1) {
+\\
+\cxxCodeLine{179}                         error_logger() << "    select error.\n";
+\\
+\cxxCodeLine{180}                         return(-1);
+\\
+\cxxCodeLine{181}                 }
+\\
+\cxxCodeLine{182}                 if (FD_ISSET(_sockd, &rset))
+\\
+\cxxCodeLine{183}                         break;
+\\
+\cxxCodeLine{184}         }
+\\
+\cxxCodeLine{185}     int ret=::recv(_sockd, (char*)&s[0], n, 0);
+\\
+\cxxCodeLine{186}     if (ret>0)
+\\
+\cxxCodeLine{187}                 _bytes_rcvd+=ret;
+\\
+\cxxCodeLine{188}     return(ret);
+\\
+\cxxCodeLine{189} }
+\\
+\cxxCodeLine{190} 
+\\
+\cxxCodeLine{191} int TCPSocket::recv(SocketBuffer& s, const int& pos, const int& n)
+\\
+\cxxCodeLine{192} {
+\\
+\cxxCodeLine{193}         ++_recv_calls;
+\\
+\cxxCodeLine{194}     if (n<0) {
+\\
+\cxxCodeLine{195}         throw SocketException("Zero size buffer");
+\\
+\cxxCodeLine{196}     }
+\\
+\cxxCodeLine{197}     if (_sockd==-1) {
+\\
+\cxxCodeLine{198}         throw SocketException("Sockd error");
+\\
+\cxxCodeLine{199}     }
+\\
+\cxxCodeLine{200}         fd_set rset;
+\\
+\cxxCodeLine{201}         FD_ZERO(&rset);
+\\
+\cxxCodeLine{202}         FD_SET(_sockd, &rset);
+\\
+\cxxCodeLine{203}         int sl=0;
+\\
+\cxxCodeLine{204}         while (false) {
+\\
+\cxxCodeLine{205}                 
+\hbox{// XXXX This is a bit risky :-)}\strut\\
+\cxxCodeLine{206}                 if ((sl=select(_sockd+1, &rset, NULL, NULL, NULL))==-1) {
+\\
+\cxxCodeLine{207}                         error_logger() << "    select error.\n";
+\\
+\cxxCodeLine{208}                         return(-1);
+\\
+\cxxCodeLine{209}                 }
+\\
+\cxxCodeLine{210}                 if (FD_ISSET(_sockd, &rset))
+\\
+\cxxCodeLine{211}                         break;
+\\
+\cxxCodeLine{212}         }
+\\
+\cxxCodeLine{213}     int ret=::recv(_sockd, (char*)&s[pos], n, 0);
+\\
+\cxxCodeLine{214}     if (ret>0)
+\\
+\cxxCodeLine{215}                 _bytes_rcvd+=ret;
+\\
+\cxxCodeLine{216}     return(ret);
+\\
+\cxxCodeLine{217} }
+\\
+\cxxCodeLine{218} 
+\\
+\cxxCodeLine{219} 
+\\
+\cxxCodeLine{220} int TCPSocket::send(const SocketBuffer& s, const int& n)
+\\
+\cxxCodeLine{221} {
+\\
+\cxxCodeLine{222}         debug_logger() << "TCPSocket::send()\n";
+\\
+\cxxCodeLine{223}         ++_send_calls;
+\\
+\cxxCodeLine{224}     if (_sockd==-1) {
+\\
+\cxxCodeLine{225}         throw SocketException("Sockd error");
+\\
+\cxxCodeLine{226}     }
+\\
+\cxxCodeLine{227}         fd_set wset;
+\\
+\cxxCodeLine{228}         FD_ZERO(&wset);
+\\
+\cxxCodeLine{229}         FD_SET(_sockd, &wset);
+\\
+\cxxCodeLine{230}         while (false) {
+\\
+\cxxCodeLine{231}                 
+\hbox{// XXXX This is a bit risky :-)}\strut\\
+\cxxCodeLine{232}                 if (select(_sockd+1, NULL, &wset, NULL, NULL)==-1) {
+\\
+\cxxCodeLine{233}                         error_logger() << "    select error.\n";
+\\
+\cxxCodeLine{234}                         return(-1);
+\\
+\cxxCodeLine{235}                 }
+\\
+\cxxCodeLine{236}                 if (FD_ISSET(_sockd, &wset))
+\\
+\cxxCodeLine{237}                         break;
+\\
+\cxxCodeLine{238}                 debug_logger() << "    TCPSocket::send() - select loop\n";
+\\
+\cxxCodeLine{239}         }
+\\
+\cxxCodeLine{240}     int ret=::send(_sockd, (char*)&s[0], n, 0);
+\\
+\cxxCodeLine{241}         if (ret>0)
+\\
+\cxxCodeLine{242}                 _bytes_sent+=ret;
+\\
+\cxxCodeLine{243}         debug_logger() << "-TCPSocket::send()\n";
+\\
+\cxxCodeLine{244}     return(ret);
+\\
+\cxxCodeLine{245} }
+\\
+\cxxCodeLine{246} 
+\\
+\cxxCodeLine{247} int TCPSocket::send(const SocketBuffer& s, const int& pos, const int& n)
+\\
+\cxxCodeLine{248} {
+\\
+\cxxCodeLine{249}         ++_send_calls;
+\\
+\cxxCodeLine{250}     if (_sockd==-1) {
+\\
+\cxxCodeLine{251}         throw SocketException("Sockd error");
+\\
+\cxxCodeLine{252}     }
+\\
+\cxxCodeLine{253}         fd_set wset;
+\\
+\cxxCodeLine{254}         FD_ZERO(&wset);
+\\
+\cxxCodeLine{255}         FD_SET(_sockd, &wset);
+\\
+\cxxCodeLine{256}         int sl=0;
+\\
+\cxxCodeLine{257}         while (false) {
+\\
+\cxxCodeLine{258}                 
+\hbox{// XXXX This is a bit risky :-)}\strut\\
+\cxxCodeLine{259}                 if ((sl=select(_sockd+1, NULL, &wset, NULL, NULL))==-1) {
+\\
+\cxxCodeLine{260}                         error_logger() << "    select error.\n";
+\\
+\cxxCodeLine{261}                         return(-1);
+\\
+\cxxCodeLine{262}                 }
+\\
+\cxxCodeLine{263}                 if (FD_ISSET(_sockd, &wset))
+\\
+\cxxCodeLine{264}                         break;
+\\
+\cxxCodeLine{265}         }
+\\
+\cxxCodeLine{266}     int ret=::send(_sockd, (char*)&s[pos], n, 0);
+\\
+\cxxCodeLine{267}         if (ret>0)
+\\
+\cxxCodeLine{268}                 _bytes_sent+=ret;
+\\
+\cxxCodeLine{269}     return(ret);
+\\
+\cxxCodeLine{270} }
+\\
+\cxxCodeLine{271} 
+\\
+\cxxCodeLine{272} int TCPSocket::close()
+\\
+\cxxCodeLine{273} {
+\\
+\cxxCodeLine{274}     debug_logger() << "TCPSocket::close()\n";
+\\
+\cxxCodeLine{275}     if (_sockd==-1) {
+\\
+\cxxCodeLine{276}         throw SocketException("Attempt to close unallocated socket");
+\\
+\cxxCodeLine{277}     }
+\\
+\cxxCodeLine{278}     return(::close(_sockd));
+\\
+\cxxCodeLine{279}     debug_logger() << "-TCPSocket::close()\n";
+\\
+\cxxCodeLine{280} }
+\\
+\cxxCodeLine{281} 
+\\
+\cxxCodeLine{282} int TCPSocket::shutdown(int howto)
+\\
+\cxxCodeLine{283} {
+\\
+\cxxCodeLine{284}     debug_logger() << "TCPSocket::shutdown()\n";
+\\
+\cxxCodeLine{285}     if (_sockd==-1) {
+\\
+\cxxCodeLine{286}         throw SocketException("Attempt to close unallocated socket");
+\\
+\cxxCodeLine{287}     }
+\\
+\cxxCodeLine{288}     debug_logger() << "-TCPSocket::shutdown()\n";
+\\
+\cxxCodeLine{289}     return(::shutdown(_sockd, howto));
+\\
+\cxxCodeLine{290} }
+\\
+\cxxCodeLine{291} 
+\\
+\cxxCodeLine{292} ostream& operator<<(ostream& os, const TCPSocket& s)
+\\
+\cxxCodeLine{293} {
+\\
+\cxxCodeLine{294}         os << "TCPSocket dump\n";
+\\
+\cxxCodeLine{295}     os << "    _sockd:         " << s.get_sockd() << endl;
+\\
+\cxxCodeLine{296}     os << "    _bytes_sent:    " << s.get_bytes_sent() << endl;
+\\
+\cxxCodeLine{297}     os << "    _bytes_rcvd:    " << s.get_bytes_rcvd() << endl;
+\\
+\cxxCodeLine{298}     os << "    _send_calls:    " << s.get_send_calls() << endl;
+\\
+\cxxCodeLine{299}     os << "    _recv_calls:    " << s.get_recv_calls() << endl;
+\\
+\cxxCodeLine{300}         os << "-TCPSocket dump\n";
+\\
+\cxxCodeLine{301}     return(os);
+\\
+\cxxCodeLine{302} }
+\\
+\cxxCodeLine{303} 
+\\
+\cxxCodeLine{304} static bool parent()
+\\
+\cxxCodeLine{305} {
+\\
+\cxxCodeLine{306}     TCPSocket s;
+\\
+\cxxCodeLine{307}     string ip("0.0.0.0");
+\\
+\cxxCodeLine{308}     int port(49000);
+\\
+\cxxCodeLine{309}     s.bind(ip, port);
+\\
+\cxxCodeLine{310}     s.listen();
+\\
+\cxxCodeLine{311}     int sd=s.accept();
+\\
+\cxxCodeLine{312}     if (sd<=0)
+\\
+\cxxCodeLine{313}         return(false);
+\\
+\cxxCodeLine{314}     TCPSocket c(sd, 1024);
+\\
+\cxxCodeLine{315}     SocketBuffer sbuf;
+\\
+\cxxCodeLine{316}     sbuf.reserve(1024);
+\\
+\cxxCodeLine{317}     int rcvd_bytes=c.recv(sbuf, 1024);
+\\
+\cxxCodeLine{318}     if (rcvd_bytes!=1024) {
+\\
+\cxxCodeLine{319}         c.close();
+\\
+\cxxCodeLine{320}         s.close();
+\\
+\cxxCodeLine{321}         return(false);
+\\
+\cxxCodeLine{322}         }
+\\
+\cxxCodeLine{323}     for (int i=0; i<1024; i++) {
+\\
+\cxxCodeLine{324}         if (sbuf[i]!=i%10) {
+\\
+\cxxCodeLine{325}                         c.close();
+\\
+\cxxCodeLine{326}                         s.close();
+\\
+\cxxCodeLine{327}             return(false);
+\\
+\cxxCodeLine{328}                 }
+\\
+\cxxCodeLine{329}     }
+\\
+\cxxCodeLine{330}     c.close();
+\\
+\cxxCodeLine{331}     s.close();
+\\
+\cxxCodeLine{332}     return(true);
+\\
+\cxxCodeLine{333} }
+\\
+\cxxCodeLine{334} 
+\\
+\cxxCodeLine{335} static bool child()
+\\
+\cxxCodeLine{336} {
+\\
+\cxxCodeLine{337}     string ip("127.0.0.1");
+\\
+\cxxCodeLine{338}     int port(49000);
+\\
+\cxxCodeLine{339}     TCPSocket c;
+\\
+\cxxCodeLine{340}     usleep(2000000);
+\\
+\cxxCodeLine{341}     c.connect(ip, port);
+\\
+\cxxCodeLine{342}     SocketBuffer sbuf(1024);
+\\
+\cxxCodeLine{343}     for (int i=0; i<1024; i++) {
+\\
+\cxxCodeLine{344}         sbuf[i]=i%10;
+\\
+\cxxCodeLine{345}     }
+\\
+\cxxCodeLine{346}     int sent_bytes=c.send(sbuf, 1024);
+\\
+\cxxCodeLine{347}     if (sent_bytes!=1024) {
+\\
+\cxxCodeLine{348}                 c.close();
+\\
+\cxxCodeLine{349}         return(false);
+\\
+\cxxCodeLine{350}         }
+\\
+\cxxCodeLine{351}     c.close();
+\\
+\cxxCodeLine{352}     exit(0);
+\\
+\cxxCodeLine{353} }
+\\
+\cxxCodeLine{354} 
+\\
+\cxxCodeLine{355} bool TCPSocket::test()
+\\
+\cxxCodeLine{356} {
+\\
+\cxxCodeLine{357}     pid_t child_id=fork();
+\\
+\cxxCodeLine{358}     bool ret=false;
+\\
+\cxxCodeLine{359}     if (child_id==0)
+\\
+\cxxCodeLine{360}         ret=parent();
+\\
+\cxxCodeLine{361}     else
+\\
+\cxxCodeLine{362}         ret=child();
+\\
+\cxxCodeLine{363}     return(ret);
+\\
+\cxxCodeLine{364} }
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em UDPSocket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename UDPSocket.cpp}\strut\\
+\hbox{/*}
+
+ *  UDPSocket.cpp
+ *  vrtp
+ *
+ *  Created by David Lapsley on Tue Feb 24 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em UDPSocket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{14} UDPSocket::UDPSocket():
+\\
+\cxxCodeLine{15} Socket(SOCK_DGRAM)
+\\
+\cxxCodeLine{16} {
+\\
+\cxxCodeLine{17}     debug_logger() << "UDPSocket::UDPSocket()\n";
+\\
+\cxxCodeLine{18}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{19}     debug_logger() << "-UDPSocket::UDPSocket()\n";
+\\
+\cxxCodeLine{20} }
+\\
+\cxxCodeLine{21} 
+\\
+\cxxCodeLine{22} UDPSocket::UDPSocket(const int& s, const int& m):
+\\
+\cxxCodeLine{23} Socket(SOCK_DGRAM, s, m)
+\\
+\cxxCodeLine{24} {
+\\
+\cxxCodeLine{25}     debug_logger() << "UDPSocket::UDPSocket()\n";
+\\
+\cxxCodeLine{26}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{27}     debug_logger() << "-UDPSocket::UDPSocket()\n";
+\\
+\cxxCodeLine{28} }
+\\
+\cxxCodeLine{29} 
+\\
+\cxxCodeLine{30} UDPSocket::UDPSocket(const UDPSocket& s)
+\\
+\cxxCodeLine{31} {
+\\
+\cxxCodeLine{32}     debug_logger() << "UDPSocket::UDPSocket()\n";
+\\
+\cxxCodeLine{33}         _sockd=s.get_sockd();
+\\
+\cxxCodeLine{34}         _mtu=s.get_mtu();
+\\
+\cxxCodeLine{35}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{36}     debug_logger() << "-UDPSocket::UDPSocket()\n";
+\\
+\cxxCodeLine{37} }
+\\
+\cxxCodeLine{38} 
+\\
+\cxxCodeLine{39} UDPSocket::~UDPSocket()
+\\
+\cxxCodeLine{40} {
+\\
+\cxxCodeLine{41}     debug_logger() << "UDPSocket::~UDPSocket()\n";
+\\
+\cxxCodeLine{42}     if (_sockd!=-1)
+\\
+\cxxCodeLine{43}         ::close(_sockd);
+\\
+\cxxCodeLine{44}     debug_logger() << "-UDPSocket::~UDPSocket()\n";
+\\
+\cxxCodeLine{45} }
+\\
+\cxxCodeLine{46} 
+\\
+\cxxCodeLine{47} UDPSocket& UDPSocket::operator=(const UDPSocket& s)
+\\
+\cxxCodeLine{48} {
+\\
+\cxxCodeLine{49}     debug_logger() << "UDPSocket::operator=()\n";
+\\
+\cxxCodeLine{50}     _sockd=s.get_sockd();
+\\
+\cxxCodeLine{51}     int yes=1;
+\\
+\cxxCodeLine{52}     setsockopt(_sockd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+\\
+\cxxCodeLine{53}         _mtu=s.get_mtu();
+\\
+\cxxCodeLine{54}     debug_logger() << "-UDPSocket::operator=()\n";
+\\
+\cxxCodeLine{55}     return(*this);
+\\
+\cxxCodeLine{56} }
+\\
+\cxxCodeLine{57} 
+\\
+\cxxCodeLine{58} void UDPSocket::set_sockd(const int& s)
+\\
+\cxxCodeLine{59} {
+\\
+\cxxCodeLine{60}     debug_logger() << "UDPSocket::set_sockd()\n";
+\\
+\cxxCodeLine{61}     if (_sockd!=-1)
+\\
+\cxxCodeLine{62}         ::close(_sockd);
+\\
+\cxxCodeLine{63}     _sockd=s;
+\\
+\cxxCodeLine{64}     debug_logger() << "-UDPSocket::set_sockd()\n";
+\\
+\cxxCodeLine{65} }
+\\
+\cxxCodeLine{66} 
+\\
+\cxxCodeLine{67} void UDPSocket::bind(const string& ip, const int& port)
+\\
+\cxxCodeLine{68} {
+\\
+\cxxCodeLine{69}     debug_logger() << "UDPSocket::bind()\n";
+\\
+\cxxCodeLine{70}     const char* const p=(char*)ip.c_str();
+\\
+\cxxCodeLine{71}     struct sockaddr_in addr;
+\\
+\cxxCodeLine{72}     int ret=0;
+\\
+\cxxCodeLine{73}     if (ip.size()<0) {
+\\
+\cxxCodeLine{74}         throw SocketException("Zero length IP string.");
+\\
+\cxxCodeLine{75}     }      
+\\
+\cxxCodeLine{76}     ret=::inet_aton(p, &addr.sin_addr);
+\\
+\cxxCodeLine{77} #ifndef LINUX
+\\
+\cxxCodeLine{78}     addr.sin_len=sizeof(addr);
+\\
+\cxxCodeLine{79} #endif 
+\hbox{// LINUX}\strut\\
+\cxxCodeLine{80}     addr.sin_family=AF_INET;
+\\
+\cxxCodeLine{81}     addr.sin_port=htons(port);
+\\
+\cxxCodeLine{82}     if (ret==0) {
+\\
+\cxxCodeLine{83}         throw SocketException("Invalid IP address string.");
+\\
+\cxxCodeLine{84}     }
+\\
+\cxxCodeLine{85}     if (_sockd==-1) {
+\\
+\cxxCodeLine{86}         throw SocketException("Invalid sock descriptor.");
+\\
+\cxxCodeLine{87}     }
+\\
+\cxxCodeLine{88}     ret=::bind(_sockd, (struct sockaddr*)&addr, sizeof(addr));
+\\
+\cxxCodeLine{89}     cout << "    addr.sin_port: " << (int)addr.sin_port << endl;
+\\
+\cxxCodeLine{90}     cout << "    addr.sin_addr: " << (int)addr.sin_addr.s_addr << endl;
+\\
+\cxxCodeLine{91}     if (ret==-1) {
+\\
+\cxxCodeLine{92}         perror("UDPSocket ");
+\\
+\cxxCodeLine{93}         throw SocketException("Bind error.");
+\\
+\cxxCodeLine{94}     }
+\\
+\cxxCodeLine{95}     debug_logger() << "-UDPSocket::bind()\n";
+\\
+\cxxCodeLine{96} }
+\\
+\cxxCodeLine{97} 
+\\
+\cxxCodeLine{98} void UDPSocket::connect(const string& ip, const int& port)
+\\
+\cxxCodeLine{99} {
+\\
+\cxxCodeLine{100}     debug_logger() << "UDPSocket::connect()\n";
+\\
+\cxxCodeLine{101}     struct sockaddr_in addr;
+\\
+\cxxCodeLine{102}     int ret=0;
+\\
+\cxxCodeLine{103}     if (ip.size()<=0) {
+\\
+\cxxCodeLine{104}         throw SocketException("Zero length IP string.");
+\\
+\cxxCodeLine{105}     }
+\\
+\cxxCodeLine{106}     ret=::inet_aton((char*)ip.data(), &addr.sin_addr);
+\\
+\cxxCodeLine{107}     if (ret==0) {
+\\
+\cxxCodeLine{108}         throw SocketException("Invalid IP address string.");
+\\
+\cxxCodeLine{109}     }
+\\
+\cxxCodeLine{110}     addr.sin_port=htons(port);
+\\
+\cxxCodeLine{111} #ifndef LINUX
+\\
+\cxxCodeLine{112}     addr.sin_len=sizeof(addr);
+\\
+\cxxCodeLine{113} #endif 
+\hbox{// LINUX}\strut\\
+\cxxCodeLine{114}     addr.sin_family=AF_INET;
+\\
+\cxxCodeLine{115}     cout << "    addr.sin_port: " << (int)addr.sin_port << endl;
+\\
+\cxxCodeLine{116}     cout << "    addr.sin_addr: " << (int)addr.sin_addr.s_addr << endl;
+\\
+\cxxCodeLine{117} 
+\\
+\cxxCodeLine{118}     ret=::connect(_sockd, (struct sockaddr*)&addr, sizeof(addr));
+\\
+\cxxCodeLine{119}     if (ret==-1) {
+\\
+\cxxCodeLine{120}         throw SocketException("Connect error.");
+\\
+\cxxCodeLine{121}     }
+\\
+\cxxCodeLine{122}     debug_logger() << "-UDPSocket::connect()\n";
+\\
+\cxxCodeLine{123} }
+\\
+\cxxCodeLine{124} 
+\\
+\cxxCodeLine{125} int UDPSocket::recv(SocketBuffer& s, const int& n)
+\\
+\cxxCodeLine{126} {
+\\
+\cxxCodeLine{127}     debug_logger() << "UDPSocket::recv()\n";
+\\
+\cxxCodeLine{128}     int ret=0;
+\\
+\cxxCodeLine{129}     if (n<=0) {
+\\
+\cxxCodeLine{130}         throw SocketException("Zero size buffer");
+\\
+\cxxCodeLine{131}     }
+\\
+\cxxCodeLine{132}     if (_sockd==-1) {
+\\
+\cxxCodeLine{133}         throw SocketException("Sockd error");
+\\
+\cxxCodeLine{134}     }
+\\
+\cxxCodeLine{135}     ret=::recv(_sockd, (char*)&s[0], n, 0);
+\\
+\cxxCodeLine{136}     if (ret<0)
+\\
+\cxxCodeLine{137}         return(ret);
+\\
+\cxxCodeLine{138}     debug_logger() << "-UDPSocket::recv()\n";
+\\
+\cxxCodeLine{139}     return(ret);
+\\
+\cxxCodeLine{140} }
+\\
+\cxxCodeLine{141} 
+\\
+\cxxCodeLine{142} int UDPSocket::send(const SocketBuffer& s, const int& n)
+\\
+\cxxCodeLine{143} {
+\\
+\cxxCodeLine{144}     debug_logger() << "UDPSocket::send()\n";
+\\
+\cxxCodeLine{145}     if (n<=0) {
+\\
+\cxxCodeLine{146}         throw SocketException("Zero size buffer");
+\\
+\cxxCodeLine{147}     }
+\\
+\cxxCodeLine{148}     if (_sockd==-1) {
+\\
+\cxxCodeLine{149}         throw SocketException("Sockd error");
+\\
+\cxxCodeLine{150}     }
+\\
+\cxxCodeLine{151}     int ret=::send(_sockd, (char*)&s[0], n, 0);
+\\
+\cxxCodeLine{152}     debug_logger() << "-UDPSocket::send()\n";
+\\
+\cxxCodeLine{153}     return(ret);
+\\
+\cxxCodeLine{154} }
+\\
+\cxxCodeLine{155} 
+\\
+\cxxCodeLine{156} int UDPSocket::sendto(const string& ip, const int& port, const SocketBuffer& s,
+\\
+\cxxCodeLine{157}                                                 const int& n)
+\\
+\cxxCodeLine{158} {
+\\
+\cxxCodeLine{159}     debug_logger() << "UDPSocket::sendto()\n";
+\\
+\cxxCodeLine{160}     const char* const p=(char*)ip.c_str();
+\\
+\cxxCodeLine{161}     struct sockaddr_in to;
+\\
+\cxxCodeLine{162}     int tolen=sizeof(to);
+\\
+\cxxCodeLine{163}     int ret=0;
+\\
+\cxxCodeLine{164}     if (ip.size()<=0) {
+\\
+\cxxCodeLine{165}         throw SocketException("Zero length IP string.");
+\\
+\cxxCodeLine{166}     }
+\\
+\cxxCodeLine{167}     ret=::inet_aton(p, &to.sin_addr);
+\\
+\cxxCodeLine{168}     if (ret==0) {
+\\
+\cxxCodeLine{169}             throw SocketException("Invalid IP address string.");
+\\
+\cxxCodeLine{170}     }
+\\
+\cxxCodeLine{171}     if (s.size()<=0) {
+\\
+\cxxCodeLine{172}         throw SocketException("Zero size buffer");
+\\
+\cxxCodeLine{173}     }
+\\
+\cxxCodeLine{174} #ifndef LINUX
+\\
+\cxxCodeLine{175}     to.sin_len=sizeof(to);
+\\
+\cxxCodeLine{176} #endif 
+\hbox{// LINUX}\strut\\
+\cxxCodeLine{177}     to.sin_family=AF_INET;
+\\
+\cxxCodeLine{178}     to.sin_port=htons(port);
+\\
+\cxxCodeLine{179}     ret=::sendto(_sockd, (const char*)&s[0], n, 0, (struct sockaddr*)&to, tolen);
+\\
+\cxxCodeLine{180}     debug_logger() << "-UDPSocket::sendto()\n";
+\\
+\cxxCodeLine{181}     return(ret);
+\\
+\cxxCodeLine{182} }
+\\
+\cxxCodeLine{183} 
+\\
+\cxxCodeLine{184} void UDPSocket::close()
+\\
+\cxxCodeLine{185} {
+\\
+\cxxCodeLine{186}     debug_logger() << "UDPSocket::close()\n";
+\\
+\cxxCodeLine{187}     if (_sockd==-1) {
+\\
+\cxxCodeLine{188}         throw SocketException("Attempt to close unallocated socket");
+\\
+\cxxCodeLine{189}     }
+\\
+\cxxCodeLine{190}     ::close(_sockd);
+\\
+\cxxCodeLine{191}     debug_logger() << "-UDPSocket::close()\n";
+\\
+\cxxCodeLine{192} }
+\\
+\cxxCodeLine{193} 
+\\
+\cxxCodeLine{194} ostream& operator<<(ostream& os, const UDPSocket& s)
+\\
+\cxxCodeLine{195} {
+\\
+\cxxCodeLine{196}     os << "UDPSocket dump\n";
+\\
+\cxxCodeLine{197}     os << "    _sockd:         " << s.get_sockd() << endl;
+\\
+\cxxCodeLine{198}     os << "    _bytes_sent:    " << s.get_bytes_sent() << endl;
+\\
+\cxxCodeLine{199}     os << "    _bytes_rcvd:    " << s.get_bytes_rcvd() << endl;
+\\
+\cxxCodeLine{200}     os << "    _send_calls:    " << s.get_send_calls() << endl;
+\\
+\cxxCodeLine{201}     os << "    _recv_calls:    " << s.get_recv_calls() << endl;
+\\
+\cxxCodeLine{202}     os << "-UDPSocket dump\n";
+\\
+\cxxCodeLine{203}     return(os);
+\\
+\cxxCodeLine{204} }
+\\
+\cxxCodeLine{205} 
+\\
+\cxxCodeLine{206} static bool parent()
+\\
+\cxxCodeLine{207} {   
+\\
+\cxxCodeLine{208}     UDPSocket s;
+\\
+\cxxCodeLine{209}     string ip("0.0.0.0");
+\\
+\cxxCodeLine{210}     int port(49001);
+\\
+\cxxCodeLine{211}     s.bind(ip, port);
+\\
+\cxxCodeLine{212}         if (s.get_sockd()<=0)
+\\
+\cxxCodeLine{213}                 return(false);
+\\
+\cxxCodeLine{214} 
+\\
+\cxxCodeLine{215}     SocketBuffer sbuf;
+\\
+\cxxCodeLine{216}     sbuf.reserve(1024);
+\\
+\cxxCodeLine{217}     int rcvd_bytes=s.recv(sbuf, 1024);
+\\
+\cxxCodeLine{218}     if (rcvd_bytes!=1024) {
+\\
+\cxxCodeLine{219}                 s.close();
+\\
+\cxxCodeLine{220}         return(false);
+\\
+\cxxCodeLine{221}         }
+\\
+\cxxCodeLine{222}     for (int i=0; i<1024; i++) {
+\\
+\cxxCodeLine{223}         if (sbuf[i]!=i%10) {
+\\
+\cxxCodeLine{224}                 s.close();
+\\
+\cxxCodeLine{225}             return(false);
+\\
+\cxxCodeLine{226}                 }
+\\
+\cxxCodeLine{227}     }
+\\
+\cxxCodeLine{228}     s.close();
+\\
+\cxxCodeLine{229}     return(true);
+\\
+\cxxCodeLine{230} }       
+\\
+\cxxCodeLine{231} 
+\\
+\cxxCodeLine{232} static bool child()
+\\
+\cxxCodeLine{233} {
+\\
+\cxxCodeLine{234}     string ip("127.0.0.1");
+\\
+\cxxCodeLine{235}     int port(49001);
+\\
+\cxxCodeLine{236}     UDPSocket c;
+\\
+\cxxCodeLine{237}     usleep(2000000);
+\\
+\cxxCodeLine{238}     c.connect(ip, port);
+\\
+\cxxCodeLine{239}     SocketBuffer sbuf(1024);
+\\
+\cxxCodeLine{240}     for (int i=0; i<1024; i++) {
+\\
+\cxxCodeLine{241}         sbuf[i]=i%10;
+\\
+\cxxCodeLine{242}     }
+\\
+\cxxCodeLine{243}     int sent_bytes=c.send(sbuf, 1024);
+\\
+\cxxCodeLine{244}     if (sent_bytes!=1024) {
+\\
+\cxxCodeLine{245}                 c.close();
+\\
+\cxxCodeLine{246}         return(false);
+\\
+\cxxCodeLine{247}         }
+\\
+\cxxCodeLine{248}     c.close();
+\\
+\cxxCodeLine{249}     exit(0);
+\\
+\cxxCodeLine{250} }
+\\
+\cxxCodeLine{251} 
+\\
+\cxxCodeLine{252} bool UDPSocket::test()
+\\
+\cxxCodeLine{253} {   
+\\
+\cxxCodeLine{254}     pid_t child_id=fork();
+\\
+\cxxCodeLine{255}     bool ret=false;
+\\
+\cxxCodeLine{256}     if (child_id==0)
+\\
+\cxxCodeLine{257}         ret=parent();
+\\
+\cxxCodeLine{258}     else
+\\
+\cxxCodeLine{259}         ret=child();
+\\
+\cxxCodeLine{260}     return(ret);
+\\
+\cxxCodeLine{261} }
+\\
+\cxxCodeLine{262} 
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em VRSocket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename VRSocket.cpp}\strut\\
+\hbox{/*}
+
+ *  VRSocket.cpp
+ *  vrtp
+ *
+ *  Created by David Lapsley on Mon Feb 23 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ \strut\goodbreak
+\noindent{\tiny\em VRSocket.cpp}\strut\nopagebreak\\
+\cxxCodeLine{14} const int VRSocket::receiver=0;
+\\
+\cxxCodeLine{15} const int VRSocket::sender=1;
+\\
+\cxxCodeLine{16} 
+\\
+\cxxCodeLine{17} void* VRSocket::thread_func()
+\\
+\cxxCodeLine{18} {
+\\
+\cxxCodeLine{19}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{20}         switch (_mode) {
+\\
+\cxxCodeLine{21}         case VRSocket::receiver:
+\\
+\cxxCodeLine{22}                 recv_proc();
+\\
+\cxxCodeLine{23}                 break;
+\\
+\cxxCodeLine{24}         case VRSocket::sender:
+\\
+\cxxCodeLine{25}                 send_proc();
+\\
+\cxxCodeLine{26}                 break;
+\\
+\cxxCodeLine{27}         default:
+\\
+\cxxCodeLine{28}                 XDEBUG_FUNC(Thread) << "Unknown _mode: " << _mode << "\n"; 
+\\
+\cxxCodeLine{29}         }
+\\
+\cxxCodeLine{30}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{31} }
+\\
+\cxxCodeLine{32} 
+\\
+\cxxCodeLine{33} void VRSocket::recv_proc()
+\\
+\cxxCodeLine{34} {
+\\
+\cxxCodeLine{35}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{36}         int sl;
+\\
+\cxxCodeLine{37}         fd_set rset;
+\\
+\cxxCodeLine{38}         struct timeval to;
+\\
+\cxxCodeLine{39}         to.tv_sec=2;
+\\
+\cxxCodeLine{40}         to.tv_usec=0;
+\\
+\cxxCodeLine{41}         while (true) {
+\\
+\cxxCodeLine{42}                 FD_ZERO(&rset);
+\\
+\cxxCodeLine{43}                 FD_SET(_sockd, &rset);
+\\
+\cxxCodeLine{44}                 if ((sl=select(_sockd+1, &rset, NULL, NULL, &to))==-1) {
+\\
+\cxxCodeLine{45}                         XDEBUG_FUNC(Thread) << "select(): not ready yet.\n";
+\\
+\cxxCodeLine{46}                         continue;
+\\
+\cxxCodeLine{47}                 }
+\\
+\cxxCodeLine{48}                 XDEBUG_FUNC(Thread) << "select(): ready yet.\n";
+\\
+\cxxCodeLine{49}                 if (FD_ISSET(_sockd, &rset)) {
+\\
+\cxxCodeLine{50}                         XDEBUG_FUNC(Thread) << "ready for reading.\n";
+\\
+\cxxCodeLine{51}                         
+\hbox{// Ready for reading.}\strut\\
+\cxxCodeLine{52}                         SocketBufferCtrlBlk sbcb;
+\\
+\cxxCodeLine{53}                         sbcb._sb.resize(_mtu);
+\\
+\cxxCodeLine{54}                         SocketBuffer& sb=sbcb._sb;
+\\
+\cxxCodeLine{55}                 int ret=UDPSocket::recv(sb, _mtu);
+\\
+\cxxCodeLine{56}                         XDEBUG_FUNC(Thread) << " UDPSocket::recv() returned " << ret 
+\\
+\cxxCodeLine{57}                                                                 << "\n";
+\\
+\cxxCodeLine{58}                         if (ret<=0)
+\\
+\cxxCodeLine{59}                                 continue;
+\\
+\cxxCodeLine{60}                         sbcb._bytes_read=ret;
+\\
+\cxxCodeLine{61}                         _recv_mutex.lock();
+\\
+\cxxCodeLine{62}                         _recv_sockbufctrlblk_list.push_back(sbcb);
+\\
+\cxxCodeLine{63}                         _recv_mutex.unlock();
+\\
+\cxxCodeLine{64}                 } else {
+\\
+\cxxCodeLine{65}                         XDEBUG_FUNC(Thread) << "not ready for reading.\n";
+\\
+\cxxCodeLine{66}                 }
+\\
+\cxxCodeLine{67}         }
+\\
+\cxxCodeLine{68} #if 0
+\\
+\cxxCodeLine{69}         while (true) {
+\\
+\cxxCodeLine{70}                 if ((sl=select(_sockd+1, &rset, &wset, NULL, NULL))==-1) {
+\\
+\cxxCodeLine{71}                         XDEBUG_FUNC(Thread) << "select(): not ready yet.\n";
+\\
+\cxxCodeLine{72}                         continue;
+\\
+\cxxCodeLine{73}                 }
+\\
+\cxxCodeLine{74}                 if (FD_ISSET(_sockd, &rset)) {
+\\
+\cxxCodeLine{75}                         
+\hbox{// Ready for reading.}\strut\\
+\cxxCodeLine{76}                         SocketBufferCtrlBlk& sbcb=*_rcv_sockbufctrlblk_list.begin();
+\\
+\cxxCodeLine{77}                         SocketBuffer& sb=sbcb._sb;
+\\
+\cxxCodeLine{78}                 ret=::recv(_sockd, (char*)&sb[0], _mtu, MSG_WAITALL);
+\\
+\cxxCodeLine{79}                 }
+\\
+\cxxCodeLine{80}                 char hdr1=(char)sb[0];
+\\
+\cxxCodeLine{81}                 char hdr2=(char)sb[1];
+\\
+\cxxCodeLine{82}                 if (hdr1!='a')
+\\
+\cxxCodeLine{83}                         XDEBUG_FUNC(Thread) << "VRSocket::recv(): invalid hdr1\n";
+\\
+\cxxCodeLine{84}                 if (hdr2!='b')
+\\
+\cxxCodeLine{85}                         XDEBUG_FUNC(Thread) << "VRSocket::recv(): invalid hdr2\n";
+\\
+\cxxCodeLine{86}                 char length1=sb[2];
+\\
+\cxxCodeLine{87}                 char length2=sb[3];
+\\
+\cxxCodeLine{88}                 int length=((length1<<8)&0xff00)+(length2);
+\\
+\cxxCodeLine{89}                 if ((ret-4)!=length)
+\\
+\cxxCodeLine{90}                         XDEBUG_FUNC(Thread) << "short packet\n";
+\\
+\cxxCodeLine{91}                 char seq1=sb[4];
+\\
+\cxxCodeLine{92}                 char seq2=sb[4];
+\\
+\cxxCodeLine{93}                 int seq=((seq1<<8)&0xff00)+(seq2);
+\\
+\cxxCodeLine{94}                 XDEBUG_FUNC(Thread) << "seq==" << seq << "\n";
+\\
+\cxxCodeLine{95}                 if (FD_ISSET(_sockd, &wset)) {
+\\
+\cxxCodeLine{96}                         
+\hbox{// Ready for writing.}\strut\\
+\cxxCodeLine{97}                 }
+\\
+\cxxCodeLine{98}         }
+\\
+\cxxCodeLine{99} #endif
+\\
+\cxxCodeLine{100}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{101} }
+\\
+\cxxCodeLine{102} 
+\\
+\cxxCodeLine{103} void VRSocket::send_proc()
+\\
+\cxxCodeLine{104} {
+\\
+\cxxCodeLine{105}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{106}         fd_set wset;
+\\
+\cxxCodeLine{107}         int sl=0;
+\\
+\cxxCodeLine{108}         while (true) {
+\\
+\cxxCodeLine{109}                 FD_ZERO(&wset);
+\\
+\cxxCodeLine{110}                 FD_SET(_sockd, &wset);
+\\
+\cxxCodeLine{111}                 if ((sl=select(_sockd+1, NULL, &wset, NULL, NULL))==-1) {
+\\
+\cxxCodeLine{112}                         XDEBUG_FUNC(Thread) << "select(): not ready yet.\n";
+\\
+\cxxCodeLine{113}                         continue;
+\\
+\cxxCodeLine{114}                 }
+\\
+\cxxCodeLine{115}                 if (FD_ISSET(_sockd, &wset)) {
+\\
+\cxxCodeLine{116}                         _send_mutex.lock();
+\\
+\cxxCodeLine{117}                         if (_send_sockbufctrlblk_list.empty()) {
+\\
+\cxxCodeLine{118}                                 _send_mutex.unlock();
+\\
+\cxxCodeLine{119}                                 continue;
+\\
+\cxxCodeLine{120}                         }
+\\
+\cxxCodeLine{121}                         
+\hbox{// Ready for writing.}\strut\\
+\cxxCodeLine{122}                         SocketBufferCtrlBlk& sbcb=*_send_sockbufctrlblk_list.begin();
+\\
+\cxxCodeLine{123}                         SocketBuffer& sb=sbcb._sb;
+\\
+\cxxCodeLine{124}                 int ret=UDPSocket::send(sb, sbcb._bytes_read-sbcb._bytes_sent);
+\\
+\cxxCodeLine{125}                         if (ret>0) 
+\\
+\cxxCodeLine{126}                                 sbcb._bytes_sent+=ret;  
+\\
+\cxxCodeLine{127}                         if ((sbcb._bytes_read-sbcb._bytes_sent)==0) {
+\\
+\cxxCodeLine{128}                                 _send_sockbufctrlblk_list.pop_front();
+\\
+\cxxCodeLine{129}                         }
+\\
+\cxxCodeLine{130}                         _send_mutex.unlock();
+\\
+\cxxCodeLine{131}                 }
+\\
+\cxxCodeLine{132}         }
+\\
+\cxxCodeLine{133}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{134} }
+\\
+\cxxCodeLine{135} 
+\\
+\cxxCodeLine{136} VRSocket::VRSocket(const int& mode):
+\\
+\cxxCodeLine{137} _mode(mode), _mtu(DEFAULT_MTU)
+\\
+\cxxCodeLine{138} {
+\\
+\cxxCodeLine{139}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{140}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{141}         thread_create();
+\\
+\cxxCodeLine{142}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{143} }
+\\
+\cxxCodeLine{144} 
+\\
+\cxxCodeLine{145} VRSocket::VRSocket(const int& mode, const int& m):
+\\
+\cxxCodeLine{146} _mode(mode), _mtu(m)
+\\
+\cxxCodeLine{147} {
+\\
+\cxxCodeLine{148}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{149}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{150}         thread_create();
+\\
+\cxxCodeLine{151}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{152} }
+\\
+\cxxCodeLine{153} 
+\\
+\cxxCodeLine{154} VRSocket::VRSocket(const int& mode, const int& s, const int& m):
+\\
+\cxxCodeLine{155} _mode(mode), _mtu(m)
+\\
+\cxxCodeLine{156} {
+\\
+\cxxCodeLine{157}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{158}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{159}         thread_create();
+\\
+\cxxCodeLine{160}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{161} }
+\\
+\cxxCodeLine{162} 
+\\
+\cxxCodeLine{163} VRSocket::VRSocket(const VRSocket &s)
+\\
+\cxxCodeLine{164} {
+\\
+\cxxCodeLine{165}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{166}     _sockd=s.get_sockd();
+\\
+\cxxCodeLine{167}         _mtu=s.get_mtu();
+\\
+\cxxCodeLine{168}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{169}         thread_create();
+\\
+\cxxCodeLine{170}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{171} }
+\\
+\cxxCodeLine{172} 
+\\
+\cxxCodeLine{173} VRSocket::~VRSocket()
+\\
+\cxxCodeLine{174} {
+\\
+\cxxCodeLine{175}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{176}     
+\hbox{// This is an important feature of the VRSocket class. Especially}\strut\\
+\cxxCodeLine{177}     
+\hbox{// for copying of VRSockets. VRSockets do *not* close their}\strut\\
+\cxxCodeLine{178}         
+\hbox{// sockets when they are destroyed.}\strut\\
+\cxxCodeLine{179}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{180} }
+\\
+\cxxCodeLine{181} 
+\\
+\cxxCodeLine{182} VRSocket& VRSocket::operator=(const VRSocket& s)
+\\
+\cxxCodeLine{183} {
+\\
+\cxxCodeLine{184}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{185}     _sockd=s.get_sockd();
+\\
+\cxxCodeLine{186}         set_so_reuseaddr(1);
+\\
+\cxxCodeLine{187}         _mtu=s.get_mtu();
+\\
+\cxxCodeLine{188}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{189}     return(*this);
+\\
+\cxxCodeLine{190} }
+\\
+\cxxCodeLine{191} 
+\\
+\cxxCodeLine{192} int VRSocket::recv(SocketBuffer& s, const int& n)
+\\
+\cxxCodeLine{193} {
+\\
+\cxxCodeLine{194}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{195}         ++_recv_calls;
+\\
+\cxxCodeLine{196}     if (n<0) {
+\\
+\cxxCodeLine{197}         throw SocketException("Zero size buffer");
+\\
+\cxxCodeLine{198}     }
+\\
+\cxxCodeLine{199}     if (_sockd==-1) {
+\\
+\cxxCodeLine{200}         throw SocketException("Sockd error");
+\\
+\cxxCodeLine{201}     }
+\\
+\cxxCodeLine{202}     SocketBufferCtrlBlk scb(_mtu);
+\\
+\cxxCodeLine{203}         int ret=0;;
+\\
+\cxxCodeLine{204}     _recv_mutex.lock();
+\\
+\cxxCodeLine{205}         if (_recv_sockbufctrlblk_list.empty()) {
+\\
+\cxxCodeLine{206}         _recv_mutex.unlock();
+\\
+\cxxCodeLine{207}                 XDEBUG_FUNC(Thread) << "empty recv_sockbufctrlblk_list\n";
+\\
+\cxxCodeLine{208}                 return(0);
+\\
+\cxxCodeLine{209}         } else {
+\\
+\cxxCodeLine{210}                 XDEBUG_FUNC(Thread) << "non-empty recv_sockbufctrlblk_list\n";
+\\
+\cxxCodeLine{211}                 s=_recv_sockbufctrlblk_list.begin()->_sb;
+\\
+\cxxCodeLine{212}                 ret=_recv_sockbufctrlblk_list.begin()->_bytes_read;
+\\
+\cxxCodeLine{213}         _recv_sockbufctrlblk_list.pop_front();
+\\
+\cxxCodeLine{214}         }       
+\\
+\cxxCodeLine{215}     _recv_mutex.unlock();
+\\
+\cxxCodeLine{216}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{217}     return(ret);
+\\
+\cxxCodeLine{218} }
+\\
+\cxxCodeLine{219} 
+\\
+\cxxCodeLine{220} int VRSocket::send(const SocketBuffer& s, const int& n)
+\\
+\cxxCodeLine{221} {
+\\
+\cxxCodeLine{222}         XSTART_FUNC(Thread)
+\\
+\cxxCodeLine{223}         ++_send_calls;
+\\
+\cxxCodeLine{224}     if (_sockd==-1) {
+\\
+\cxxCodeLine{225}         throw SocketException("Sockd error");
+\\
+\cxxCodeLine{226}     }
+\\
+\cxxCodeLine{227}         SocketBufferCtrlBlk scb(_mtu);
+\\
+\cxxCodeLine{228}         scb._sb=s;
+\\
+\cxxCodeLine{229}         scb._bytes_read=s.size();
+\\
+\cxxCodeLine{230}         scb._bytes_sent=0;
+\\
+\cxxCodeLine{231}         _send_mutex.lock();
+\\
+\cxxCodeLine{232}         _send_sockbufctrlblk_list.push_back(scb);       
+\\
+\cxxCodeLine{233}         _send_mutex.unlock();
+\\
+\cxxCodeLine{234}         XEND_FUNC(Thread)
+\\
+\cxxCodeLine{235}     return(n);
+\\
+\cxxCodeLine{236} }
+\\
+\cxxCodeLine{237} 
+\\
+\cxxCodeLine{238} int VRSocket::get_send_buf_size() const
+\\
+\cxxCodeLine{239} {
+\\
+\cxxCodeLine{240}         return(_send_sockbufctrlblk_list.size());
+\\
+\cxxCodeLine{241} }
+\\
+\cxxCodeLine{242} 
+\\
+\cxxCodeLine{243} ostream& operator<<(ostream& os, const VRSocket& s)
+\\
+\cxxCodeLine{244} {
+\\
+\cxxCodeLine{245}         os << "VRSocket dump\n";
+\\
+\cxxCodeLine{246}     os << "    _sockd:         " << s.get_sockd() << endl;
+\\
+\cxxCodeLine{247}     os << "    _bytes_sent:    " << s.get_bytes_sent() << endl;
+\\
+\cxxCodeLine{248}     os << "    _bytes_rcvd:    " << s.get_bytes_rcvd() << endl;
+\\
+\cxxCodeLine{249}     os << "    _send_calls:    " << s.get_send_calls() << endl;
+\\
+\cxxCodeLine{250}     os << "    _recv_calls:    " << s.get_recv_calls() << endl;
+\\
+\cxxCodeLine{251}         os << "-VRSocket dump\n";
+\\
+\cxxCodeLine{252}     return(os);
+\\
+\cxxCodeLine{253} }
+\\
+\cxxCodeLine{254} 
+\\
+\cxxCodeLine{255} #if 0
+\\
+\cxxCodeLine{256} static bool parent()
+\\
+\cxxCodeLine{257} {
+\\
+\cxxCodeLine{258}     VRSocket s;
+\\
+\cxxCodeLine{259}     string ip("0.0.0.0");
+\\
+\cxxCodeLine{260}     int port(49000);
+\\
+\cxxCodeLine{261}     s.bind(ip, port);
+\\
+\cxxCodeLine{262}     int sd=s.accept();
+\\
+\cxxCodeLine{263}     if (sd<=0)
+\\
+\cxxCodeLine{264}         return(false);
+\\
+\cxxCodeLine{265}     VRSocket c(sd, 1024);
+\\
+\cxxCodeLine{266}     SocketBuffer sbuf;
+\\
+\cxxCodeLine{267}     sbuf.reserve(1024);
+\\
+\cxxCodeLine{268}     int rcvd_bytes=c.recv(sbuf, 1024);
+\\
+\cxxCodeLine{269}     if (rcvd_bytes!=1024) {
+\\
+\cxxCodeLine{270}         c.close();
+\\
+\cxxCodeLine{271}         s.close();
+\\
+\cxxCodeLine{272}         return(false);
+\\
+\cxxCodeLine{273}         }
+\\
+\cxxCodeLine{274}     for (int i=0; i<1024; i++) {
+\\
+\cxxCodeLine{275}         if (sbuf[i]!=i%10) {
+\\
+\cxxCodeLine{276}                         c.close();
+\\
+\cxxCodeLine{277}                         s.close();
+\\
+\cxxCodeLine{278}             return(false);
+\\
+\cxxCodeLine{279}                 }
+\\
+\cxxCodeLine{280}     }
+\\
+\cxxCodeLine{281}     c.close();
+\\
+\cxxCodeLine{282}     s.close();
+\\
+\cxxCodeLine{283}     return(true);
+\\
+\cxxCodeLine{284} }
+\\
+\cxxCodeLine{285} 
+\\
+\cxxCodeLine{286} static bool child()
+\\
+\cxxCodeLine{287} {
+\\
+\cxxCodeLine{288}     string ip("127.0.0.1");
+\\
+\cxxCodeLine{289}     int port(49000);
+\\
+\cxxCodeLine{290}     VRSocket c;
+\\
+\cxxCodeLine{291}     usleep(2000000);
+\\
+\cxxCodeLine{292}     c.connect(ip, port);
+\\
+\cxxCodeLine{293}     SocketBuffer sbuf(1024);
+\\
+\cxxCodeLine{294}     for (int i=0; i<1024; i++) {
+\\
+\cxxCodeLine{295}         sbuf[i]=i%10;
+\\
+\cxxCodeLine{296}     }
+\\
+\cxxCodeLine{297}     int sent_bytes=c.send(sbuf, 1024);
+\\
+\cxxCodeLine{298}     if (sent_bytes!=1024) {
+\\
+\cxxCodeLine{299}                 c.close();
+\\
+\cxxCodeLine{300}         return(false);
+\\
+\cxxCodeLine{301}         }
+\\
+\cxxCodeLine{302}     c.close();
+\\
+\cxxCodeLine{303}     exit(0);
+\\
+\cxxCodeLine{304} }
+\\
+\cxxCodeLine{305} 
+\\
+\cxxCodeLine{306} int VRSocket::get_send_buf_size() const
+\\
+\cxxCodeLine{307} {
+\\
+\cxxCodeLine{308}         return(_snd_sockbufctrlblk_list.size());
+\\
+\cxxCodeLine{309} }
+\\
+\cxxCodeLine{310} #endif
+\\
+\cxxCodeLine{311} 
+\\
+\cxxCodeLine{312} bool VRSocket::test()
+\\
+\cxxCodeLine{313} {
+\\
+\cxxCodeLine{314}     pid_t child_id=fork();
+\\
+\cxxCodeLine{315}     bool ret=false;
+\\
+\cxxCodeLine{316}     if (child_id==0)
+\\
+\cxxCodeLine{317}         ; 
+\hbox{// ret=parent();}\strut\\
+\cxxCodeLine{318}     else
+\\
+\cxxCodeLine{319}         ; 
+\hbox{// ret=child();}\strut\\
+\cxxCodeLine{320}     return(ret);
+\\
+\cxxCodeLine{321} }
+\\
+\strut\\
+\strut\goodbreak
+\noindent{\tiny\em main.cpp}\strut\nopagebreak\\
+\cxxCodeLine{2} 
+\hbox{//$$filename main.cpp}\strut\\
+\cxxCodeLine{3} 
+\\
+\cxxCodeLine{4} int parent();
+\\
+\cxxCodeLine{5} int child();
+\\
+\cxxCodeLine{6} 
+\\
+\cxxCodeLine{7} int main(int argc, char** argv) 
+\\
+\cxxCodeLine{8} {
+\\
+\cxxCodeLine{9}         Logsystem::debug_logger()->enable_logging();
+\\
+\cxxCodeLine{10} 
+\\
+\cxxCodeLine{11}         
+\hbox{// TCPSocket test.}\strut\\
+\cxxCodeLine{12}         bool ret=TCPSocket::test();
+\\
+\cxxCodeLine{13}         cout << "TCPSocket: test ";
+\\
+\cxxCodeLine{14}         if (ret==false)
+\\
+\cxxCodeLine{15}                 cout << "failed";
+\\
+\cxxCodeLine{16}         else 
+\\
+\cxxCodeLine{17}                 cout << "passed";
+\\
+\cxxCodeLine{18}         cout << endl;
+\\
+\cxxCodeLine{19} 
+\\
+\cxxCodeLine{20}         usleep(1000000);
+\\
+\cxxCodeLine{21} 
+\\
+\cxxCodeLine{22}         
+\hbox{// UDPSocket test.}\strut\\
+\cxxCodeLine{23}         ret=UDPSocket::test();
+\\
+\cxxCodeLine{24}         cout << "UDPSocket: test ";
+\\
+\cxxCodeLine{25}         if (ret==false)
+\\
+\cxxCodeLine{26}                 cout << "failed";
+\\
+\cxxCodeLine{27}         else 
+\\
+\cxxCodeLine{28}                 cout << "passed";
+\\
+\cxxCodeLine{29}         cout << endl;
+\\
+\cxxCodeLine{30} 
+\\
+\cxxCodeLine{31}         
+\hbox{// PSocket test.}\strut\\
+\cxxCodeLine{32}         ret=PSocket::test();
+\\
+\cxxCodeLine{33}         cout << "PSocket: test ";
+\\
+\cxxCodeLine{34}         if (ret==false)
+\\
+\cxxCodeLine{35}                 cout << "failed";
+\\
+\cxxCodeLine{36}         else 
+\\
+\cxxCodeLine{37}                 cout << "passed";
+\\
+\cxxCodeLine{38}         cout << endl;
+\\
+\cxxCodeLine{39}         return(1);
+\\
+\cxxCodeLine{40} }
+\\
+\end{document}

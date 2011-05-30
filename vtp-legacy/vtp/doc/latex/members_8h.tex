@@ -1,0 +1,174 @@
+\section{members.h File Reference}
+\label{members_8h}\index{members.h@{members.h}}
+{\tt \#include $<$glib.h$>$}\par
+{\tt \#include $<$time.h$>$}\par
+{\tt \#include $<$rtp.h$>$}\par
+\subsection*{Compounds}
+\begin{CompactItemize}
+\item 
+struct {\bf members\_\-t}
+\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int {\bf members\_\-init} ({\bf members\_\-t} $\ast$m)
+\item 
+void {\bf members\_\-destroy} ({\bf members\_\-t} $\ast$m)
+\item 
+void {\bf members\_\-add\_\-member} ({\bf members\_\-t} $\ast$m, u\_\-int32\_\-t $\ast$s, {\bf rtcp\_\-member\_\-t} $\ast$nm)
+\item 
+void {\bf members\_\-remove\_\-member} ({\bf members\_\-t} $\ast$m, u\_\-int32\_\-t $\ast$s)
+\item 
+int {\bf members\_\-add\_\-sender} ({\bf members\_\-t} $\ast$m, u\_\-int32\_\-t $\ast$s)
+\item 
+int {\bf members\_\-remove\_\-sender} ({\bf members\_\-t} $\ast$m, u\_\-int32\_\-t $\ast$s)
+\item 
+int {\bf members\_\-new\_\-member} ({\bf members\_\-t} $\ast$m, u\_\-int32\_\-t $\ast$s)
+\item 
+int {\bf members\_\-new\_\-sender} ({\bf members\_\-t} $\ast$m, u\_\-int32\_\-t $\ast$s)
+\item 
+GSList $\ast$ {\bf members\_\-get\_\-senders} ({\bf members\_\-t} $\ast$m)
+\item 
+gpointer {\bf members\_\-get\_\-sender} ({\bf members\_\-t} $\ast$m, const u\_\-int32\_\-t $\ast$ssrc)
+\item 
+int {\bf members\_\-num\_\-members} ({\bf members\_\-t} $\ast$m)
+\item 
+int {\bf members\_\-num\_\-senders} ({\bf members\_\-t} $\ast$m)
+\item 
+void {\bf members\_\-print} ({\bf members\_\-t} $\ast$m)
+\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\index{members.h@{members.h}!members_add_member@{members\_\-add\_\-member}}
+\index{members_add_member@{members\_\-add\_\-member}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void members\_\-add\_\-member ({\bf members\_\-t} $\ast$ {\em m}, u\_\-int32\_\-t $\ast$ {\em s}, {\bf rtcp\_\-member\_\-t} $\ast$ {\em nm})}\label{members_8h_a2}
+
+
+Add a new member to the member tree. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree to add to. \item[{\em s}]The ssrc of the new member. \item[{\em p}]A pointer to the member to be added. \end{description}
+\end{Desc}
+\index{members.h@{members.h}!members_add_sender@{members\_\-add\_\-sender}}
+\index{members_add_sender@{members\_\-add\_\-sender}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int members\_\-add\_\-sender ({\bf members\_\-t} $\ast$ {\em m}, u\_\-int32\_\-t $\ast$ {\em s})}\label{members_8h_a4}
+
+
+Add a new sender to the sender \char`\"{}sublist\char`\"{} of the member tree. This function simply sets the sender flag for a member that is already in the list. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree to add to. \item[{\em s}]A pointer to the ssrc of the member to be added to the sender sublist. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]0: on success, -1 on failure. \end{Desc}
+\index{members.h@{members.h}!members_destroy@{members\_\-destroy}}
+\index{members_destroy@{members\_\-destroy}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void members\_\-destroy ({\bf members\_\-t} $\ast$ {\em m})}\label{members_8h_a1}
+
+
+Destroy member tree. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the {\bf members\_\-t}{\rm (p.\,\pageref{structmembers__t})} to be destroyed. \end{description}
+\end{Desc}
+\index{members.h@{members.h}!members_get_sender@{members\_\-get\_\-sender}}
+\index{members_get_sender@{members\_\-get\_\-sender}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}gpointer members\_\-get\_\-sender ({\bf members\_\-t} $\ast$ {\em m}, const u\_\-int32\_\-t $\ast$ {\em ssrc})}\label{members_8h_a9}
+
+
+Retrieves a pointer to the Sender with the specified ssrc. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \item[{\em s}]The ssrc of the sender. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]A pointer to the sender on sucess, NULL: on failure. \end{Desc}
+\index{members.h@{members.h}!members_get_senders@{members\_\-get\_\-senders}}
+\index{members_get_senders@{members\_\-get\_\-senders}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}GSList$\ast$ members\_\-get\_\-senders ({\bf members\_\-t} $\ast$ {\em m})}\label{members_8h_a8}
+
+
+Retrieves a list of pointers to the Senders in the tree. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]A pointer to the list of senders. \end{Desc}
+\index{members.h@{members.h}!members_init@{members\_\-init}}
+\index{members_init@{members\_\-init}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int members\_\-init ({\bf members\_\-t} $\ast$ {\em m})}\label{members_8h_a0}
+
+
+Initialize member tree. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the {\bf members\_\-t}{\rm (p.\,\pageref{structmembers__t})} to be initialized (already created). \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]0: on success, -1: on failure. \end{Desc}
+\index{members.h@{members.h}!members_new_member@{members\_\-new\_\-member}}
+\index{members_new_member@{members\_\-new\_\-member}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int members\_\-new\_\-member ({\bf members\_\-t} $\ast$ {\em m}, u\_\-int32\_\-t $\ast$ {\em s})}\label{members_8h_a6}
+
+
+Determines if a member is in the member list or not. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \item[{\em s}]A pointer to the ssrc that identifies the member to look for. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]1: if the participant is not currently in the members list, 0: otherwise. \end{Desc}
+\index{members.h@{members.h}!members_new_sender@{members\_\-new\_\-sender}}
+\index{members_new_sender@{members\_\-new\_\-sender}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int members\_\-new\_\-sender ({\bf members\_\-t} $\ast$ {\em m}, u\_\-int32\_\-t $\ast$ {\em s})}\label{members_8h_a7}
+
+
+Determines if a sender is in the member list or not. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \item[{\em s}]A pointer to the ssrc that identifies the member to look for. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]1: if the participant who sent packet p is not currently in the sender \char`\"{}subtree\char`\"{} of the member tree, 0: otherwise. \end{Desc}
+\index{members.h@{members.h}!members_num_members@{members\_\-num\_\-members}}
+\index{members_num_members@{members\_\-num\_\-members}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int members\_\-num\_\-members ({\bf members\_\-t} $\ast$ {\em m})}\label{members_8h_a10}
+
+
+\index{members.h@{members.h}!members_num_senders@{members\_\-num\_\-senders}}
+\index{members_num_senders@{members\_\-num\_\-senders}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int members\_\-num\_\-senders ({\bf members\_\-t} $\ast$ {\em m})}\label{members_8h_a11}
+
+
+\index{members.h@{members.h}!members_print@{members\_\-print}}
+\index{members_print@{members\_\-print}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void members\_\-print ({\bf members\_\-t} $\ast$ {\em m})}\label{members_8h_a12}
+
+
+Prints the keys for all members in the tree. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \end{description}
+\end{Desc}
+\index{members.h@{members.h}!members_remove_member@{members\_\-remove\_\-member}}
+\index{members_remove_member@{members\_\-remove\_\-member}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void members\_\-remove\_\-member ({\bf members\_\-t} $\ast$ {\em m}, u\_\-int32\_\-t $\ast$ {\em s})}\label{members_8h_a3}
+
+
+Removes the member with ssrc = $\ast$s from the member tree. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \item[{\em s}]A pointer to the ssrc that identifies the member to be removed from the tree. \end{description}
+\end{Desc}
+\index{members.h@{members.h}!members_remove_sender@{members\_\-remove\_\-sender}}
+\index{members_remove_sender@{members\_\-remove\_\-sender}!members.h@{members.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int members\_\-remove\_\-sender ({\bf members\_\-t} $\ast$ {\em m}, u\_\-int32\_\-t $\ast$ {\em s})}\label{members_8h_a5}
+
+
+Removes the member with ssrc = $\ast$s from the sender sublist. This function simply resets the sender flag for a member to 0. The member is $\ast$not$\ast$ removed from the list. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \item[{\em s}]A pointer to the ssrc that identifies the member to be removed from the sender sublist. \end{description}
+\end{Desc}

@@ -1,0 +1,131 @@
+-rw-r--r--  1 davidlap  staff      3248  9 Apr 20:42 Client.cpp
+-rw-r--r--  1 davidlap  staff      1732  9 Apr 20:43 Client.h
+-rw-r--r--  1 davidlap  staff     23994 23 Apr 09:20 Makefile
+-rw-r--r--  1 davidlap  staff      1356 20 Apr 21:45 Makefile.am
+-rw-r--r--  1 davidlap  staff     26720 22 Apr 09:15 Makefile.in
+-rw-r--r--  1 davidlap  staff      5793 22 Apr 16:12 Options.cpp
+-rw-r--r--  1 davidlap  staff      1477 22 Apr 16:09 Options.h
+-rw-r--r--  1 davidlap  staff      4224  9 Apr 20:45 Server.cpp
+-rw-r--r--  1 davidlap  staff      1732  9 Apr 20:43 Server.h
+-rw-r--r--  1 davidlap  staff         0 25 Apr 01:37 dat
+-rwxr-xr-x  1 davidlap  staff   1618972 22 Apr 16:18 egae
+-rw-r--r--  1 davidlap  staff     83248 22 Apr 16:18 egae-Options.o
+-rw-r--r--  1 davidlap  staff    189100 22 Apr 16:18 egae-egae_main.o
+-rw-r--r--  1 davidlap  staff      8269 14 Apr 01:48 egae_main.cpp
+-rwxr-xr-x  1 davidlap  staff    839140 22 Apr 16:18 egaed
+-rw-r--r--  1 davidlap  staff     83248 22 Apr 16:18 egaed-Options.o
+-rw-r--r--  1 davidlap  staff    107344 22 Apr 16:18 egaed-egaed_main.o
+-rw-r--r--  1 davidlap  staff      1671 14 Apr 02:57 egaed_main.cpp
+-rw-r--r--  1 davidlap  staff       272 14 Apr 01:13 egaedrive
+-rwxr-xr-x  1 davidlap  staff        95 13 Apr 22:32 exec.sh
+-rw-r--r--  1 davidlap  staff    812203 25 Apr 01:37 gmon.out
+-rw-r--r--  1 davidlap  staff   1048576 12 Apr 22:49 input.dat
+-rw-r--r--  1 davidlap  staff  32310456  6 Apr 14:58 input.dat.1
+-rw-r--r--  1 davidlap  staff  63767040 10 Apr 13:13 input63.dat
+-rw-r--r--  1 davidlap  staff         0 13 Apr 15:17 log.dat
+-rw-r--r--  1 davidlap  staff         0 13 Apr 15:41 log.txt
+-rw-r--r--  1 davidlap  staff       956 13 Apr 17:22 m5c_main.cpp
+-rw-r--r--  1 davidlap  staff      9926 17 Apr 11:43 main.cpp
+-rw-r--r--  1 davidlap  staff      1980 22 Apr 10:03 md5.out
+-rw-------  1 davidlap  staff         0 22 Apr 10:02 output.dat
+-rw-r--r--  1 davidlap  staff     10084  6 Apr 14:14 psocket_main.cpp
+-rw-r--r--  1 davidlap  staff    572717 14 Apr 01:14 services
+-rw-r--r--  1 davidlap  staff      5893 13 Apr 20:56 tcpsocket_main.cpp
+-rwxr-xr-x  1 davidlap  staff   1719232 22 Apr 16:18 tcpsocket_test
+-rw-r--r--  1 davidlap  staff     83248 22 Apr 16:18 tcpsocket_test-Options.o
+-rw-r--r--  1 davidlap  staff    187244 22 Apr 16:18 tcpsocket_test-tcpsocket_main.o
+-rw-------  1 davidlap  staff         0 25 Apr 01:13 test.dat
+-rwxr-xr-x  1 davidlap  staff        93 20 Apr 16:42 vrsocket_client.sh
+-rw-r--r--  1 davidlap  staff      8501 17 Apr 11:44 vrsocket_main.cpp
+-rwxr-xr-x  1 davidlap  staff       135 20 Apr 16:42 vrsocket_server.sh
+-rwxr-xr-x  1 davidlap  staff   2509020 22 Apr 16:12 vrsocket_test
+-rw-r--r--  1 davidlap  staff     83248 22 Apr 16:12 vrsocket_test-Options.o
+-rw-r--r--  1 davidlap  staff    265772 22 Apr 16:12 vrsocket_test-vrsocket_main.o
+-rwxr-xr-x  1 davidlap  staff        94 21 Apr 13:24 vrsocketa_client.sh
+-rw-r--r--  1 davidlap  staff      8284 22 Apr 16:18 vrsocketa_main.cpp
+-rwxr-xr-x  1 davidlap  staff       136 21 Apr 13:24 vrsocketa_server.sh
+-rwxr-xr-x  1 davidlap  staff   2462476 22 Apr 16:18 vrsocketa_test
+-rw-r--r--  1 davidlap  staff     83248 22 Apr 16:12 vrsocketa_test-Options.o
+-rw-r--r--  1 davidlap  staff    267036 22 Apr 16:18 vrsocketa_test-vrsocketa_main.o
+-rwxr-xr-x  1 davidlap  staff   1776376 22 Apr 16:12 vsocket.app
+-rw-r--r--  1 davidlap  staff     83248 22 Apr 16:12 vsocket_app-Options.o
+-rw-r--r--  1 davidlap  staff    238516 22 Apr 16:12 vsocket_app-main.o
+
+CVS:
+total 24
+-rw-r--r--  1 davidlap  staff  789 21 Apr 14:05 Entries
+-rw-r--r--  1 davidlap  staff   35  3 Apr 21:55 Repository
+-rw-r--r--  1 davidlap  staff   19  3 Apr 21:55 Root
+
+client:
+total 79880
+drwxr-xr-x  5 davidlap  staff       170  5 Apr 00:23 CVS
+-rw-r--r--  1 davidlap  staff         0  5 Apr 02:08 a
+-rwxr-xr-x  1 davidlap  staff        96  6 Apr 14:44 client.sh
+-rwxr-xr-x  1 davidlap  staff        95 22 Apr 09:21 exec.sh
+-rw-r--r--  1 davidlap  staff    811069 22 Apr 10:17 gmon.out
+-rwxr-xr-x  1 davidlap  staff       100  4 Apr 19:15 i.client.sh
+-rw-r--r--  1 davidlap  staff   1048576 22 Apr 09:26 input.dat
+-rwxr-xr-x  1 davidlap  staff        94  5 Apr 02:08 l.client.sh
+-rw-r--r--  1 davidlap  staff        44  4 Apr 19:55 md5.out
+-rwxr-xr-x  1 davidlap  staff   1718772 22 Apr 09:22 tcpsocket_test
+-rw-------  1 davidlap  staff  32310456  5 Apr 02:00 test.dat
+-rwxr-xr-x  1 davidlap  staff        93 22 Apr 09:21 vrsocket_client.sh
+-rwxr-xr-x  1 davidlap  staff       135 22 Apr 09:21 vrsocket_server.sh
+-rwxr-xr-x  1 davidlap  staff   2504440 22 Apr 09:22 vrsocket_test
+-rwxr-xr-x  1 davidlap  staff        94 22 Apr 09:21 vrsocketa_client.sh
+-rwxr-xr-x  1 davidlap  staff       136 22 Apr 09:21 vrsocketa_server.sh
+-rwxr-xr-x  1 davidlap  staff   2456256 22 Apr 09:22 vrsocketa_test
+
+html:
+total 32
+-rw-r--r--  1 davidlap  staff  376  5 Apr 13:10 General.html
+-rw-r--r--  1 davidlap  staff  326  5 Apr 13:10 icon1.gif
+-rw-r--r--  1 davidlap  staff  326  5 Apr 13:10 icon2.gif
+-rw-r--r--  1 davidlap  staff  342  5 Apr 13:10 index.html
+
+server:
+total 16736
+drwxr-xr-x  5 davidlap  staff      170  6 Apr 16:52 CVS
+-rwxr-xr-x  1 davidlap  staff       95 22 Apr 09:21 exec.sh
+-rw-r--r--  1 davidlap  staff   812971 22 Apr 10:17 gmon.out
+-rw-r--r--  1 davidlap  staff      539 22 Apr 10:17 md5.out
+-rw-------  1 davidlap  staff  1034240 22 Apr 10:17 output.dat
+-rwxr-xr-x  1 davidlap  staff      134  6 Apr 14:44 server.sh
+-rwxr-xr-x  1 davidlap  staff  1718772 22 Apr 09:22 tcpsocket_test
+-rwxr-xr-x  1 davidlap  staff       93 22 Apr 09:21 vrsocket_client.sh
+-rwxr-xr-x  1 davidlap  staff      135 22 Apr 09:21 vrsocket_server.sh
+-rwxr-xr-x  1 davidlap  staff  2504440 22 Apr 09:22 vrsocket_test
+-rwxr-xr-x  1 davidlap  staff       94 22 Apr 09:21 vrsocketa_client.sh
+-rwxr-xr-x  1 davidlap  staff      136 22 Apr 09:21 vrsocketa_server.sh
+-rwxr-xr-x  1 davidlap  staff  2460392 22 Apr 10:15 vrsocketa_test
+
+udt:
+total 6560
+-rw-------   1 davidlap  staff     1007 25 Mar 10:03 Makefile
+-rw-r--r--   1 davidlap  staff     3663 13 Apr 14:01 UDPSocket.cpp
+-rw-------   1 davidlap  staff    11715 13 Apr 14:05 appclient.cpp
+-rw-r--r--   1 davidlap  staff    14392 13 Apr 14:04 appserver.cpp
+-rw-r--r--   1 davidlap  staff   198408 13 Apr 14:12 appserver.o
+-rw-------   1 davidlap  staff     5671 24 Mar 03:44 appserver.old
+-rwxr--r--   1 davidlap  staff      391 25 Mar 17:39 client.sh
+-rw-r--r--   1 davidlap  staff    25880 13 Apr 14:11 demo_main.cpp
+-rw-r--r--   1 davidlap  staff   109694 25 Mar 12:48 libudt.a
+-rwxr--r--   1 davidlap  staff      126 24 Mar 04:23 m5rx.sh
+-rwxr--r--   1 davidlap  staff       75 24 Mar 14:36 m5tx.sh
+-rw-r--r--   1 davidlap  staff     3909 25 Mar 10:31 options.cpp
+-rw-r--r--   1 davidlap  staff     1020 25 Mar 10:31 options.h
+-rw-------   1 davidlap  staff     1291 24 Mar 03:19 recvfile.cpp
+-rw-------   1 davidlap  staff     1257 24 Mar 03:19 sendfile.cpp
+-rw-r--r--   1 davidlap  staff      192 25 Mar 10:36 server.out
+-rwxr--r--   1 davidlap  staff      429 25 Mar 12:04 server.sh
+-rw-r--r--   1 davidlap  staff     5677 24 Mar 03:24 tcpsocket.1
+-rw-r--r--   1 davidlap  staff     5657 25 Mar 10:43 tcpsocket.cpp
+-rw-r--r--   1 davidlap  staff      914 25 Mar 09:57 tcpsocket.h
+-rw-r--r--   1 davidlap  staff    90568 13 Apr 14:01 tcpsocket.o
+-rw-r--r--   1 davidlap  staff      904 25 Mar 10:08 udpsocket.h
+drwxr-xr-x  14 davidlap  staff      476 13 Apr 13:58 udt
+-rw-r--r--   1 davidlap  staff    44493 25 Mar 12:48 udt.h
+-rw-r--r--   1 davidlap  staff  2242560 24 Mar 09:16 udt.tar
+-rw-r--r--   1 davidlap  staff   522240 24 Mar 03:13 udt1.2.sdk.tar
+-rw-r--r--   1 davidlap  staff      551 24 Mar 11:41 utils.h

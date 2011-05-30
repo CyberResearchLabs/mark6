@@ -1,0 +1,13 @@
+service egaedrive
+{
+	disable		= no
+	id			= egaedrive
+	socket_type	= stream
+	wait		= no
+    server      = /Users/davidlapsley/Sites/mit/vsocket/src/app/egaed
+	server_args	= -c -t -L /tmp/log.txt
+	user		= root
+	groups		= yes
+	only_from	= localhost
+	flags		= REUSE NODELAY
+}

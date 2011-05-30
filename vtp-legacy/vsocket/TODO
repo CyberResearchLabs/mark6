@@ -1,0 +1,69 @@
+Mark5 command control
+VRTP Socket
+RTP Framing
+Signalling Daemon
+Performance comparison
+Documentation
+
+* VRSocket.h
+- Added PS_APP_FIN to ProcStateType.
+- added method get_outstanding_buf_size for use in termination(among other 
+things).
+* VRSocket.cpp
+- recv()
+Added check to see if mode was PT_APP_FIN. In this case, return -1.
+- send()
+Added check to see if mode was PT_APP_FIN. In this case, return -1.
+Added get_outstanding_buf_size body.
+Note! Using send_mutex() for synchronizing access to 
+outstanding_sockbufctrlblk_map instead of outstanding_mutex. A bit nervous
+about having two sets of mutexes floating around. Could create deadlock 
+condition. Need to think more about this.
+- send_proc()
+Allowed use of _outstanding_mutex to protect _outstanding_* data members.
+This is done on the condition that whenever _send_mutex and _outstanding_mutex
+are both required to be held, _send_mutex is acquired first, and then
+_outstanding_mutex. This will ensure no deadlock.
+- get_outstanding_buf_size()
+Uses _outstanding mutex for synchronization of acces..
+* TCPSocket.h
+- modified return type of close to be void.
+* TCPSocket.cpp
+- close()
+Modified close function to print error message instead of throwing an
+exception. Also modified return type to void.
+get_outstanding_buf_size
+* UDPSocket.cpp
+- close()
+Modified close function to print error message instead of throwing an
+exception.
+* PSocket.h
+- modified return type of close to be 0.
+* PSocket.cpp
+- close()
+modified return type of close to be 0.
+* vrsocket_main.cpp
+- client()
+Removed application level ACK and shutdown sequence (already included in 
+VRSocket.
+-server()
+Removed application level ACK and shutdown sequence (already included in 
+VRSocket.
+
+
+Add automated test suites.
+
+* VRSocket.cpp
+- recv_proc()
+cleanup of code.
+
+* Socket.h
+- SocketBufferCtrlBlk
+Added timer.
+* VRSocket.cpp
+- send_proc()
+Added retx logic for handling timers.
+
+
+
+Clean up copy constructors

@@ -1,0 +1,340 @@
+\section{rtcp.c File Reference}
+\label{rtcp_8c}\index{rtcp.c@{rtcp.c}}
+{\tt \#include $<$assert.h$>$}\par
+{\tt \#include $<$stdlib.h$>$}\par
+{\tt \#include $<$string.h$>$}\par
+{\tt \#include $<$sys/time.h$>$}\par
+{\tt \#include $<$arpa/inet.h$>$}\par
+{\tt \#include $<$mysock.h$>$}\par
+{\tt \#include $<$syslog.h$>$}\par
+{\tt \#include $<$stdarg.h$>$}\par
+{\tt \#include $<$random.h$>$}\par
+{\tt \#include \char`\"{}rtcp.h\char`\"{}}\par
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int {\bf rtcp\_\-init} ({\bf rtcp\_\-session\_\-t} $\ast$s, double rtcp\_\-bw, double avg\_\-rtcp\_\-size, u\_\-int32\_\-t ssrc, u\_\-int32\_\-t sampling\_\-frequency, u\_\-int32\_\-t samples\_\-per\_\-packet, u\_\-int32\_\-t bits\_\-per\_\-sample, u\_\-int32\_\-t sz\_\-ctrl\_\-rcv\_\-buf, u\_\-int32\_\-t sz\_\-ctrl\_\-snd\_\-buf)
+\item 
+int {\bf rtcp\_\-destroy} ({\bf rtcp\_\-session\_\-t} $\ast$s)
+\item 
+int {\bf rtcp\_\-send\_\-rtcp\_\-report} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-event\_\-t} e)
+\item 
+int {\bf rtcp\_\-send\_\-bye\_\-packet} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-event\_\-t} e)
+\item 
+int {\bf rtcp\_\-new\_\-member} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+int {\bf rtcp\_\-new\_\-sender} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+int {\bf rtcp\_\-add\_\-member} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+int {\bf rtcp\_\-remove\_\-member} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+int {\bf rtcp\_\-add\_\-sender} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+int {\bf rtcp\_\-remove\_\-sender} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+{\bf rtcp\_\-member\_\-t} $\ast$ {\bf rtcp\_\-get\_\-sender} ({\bf rtcp\_\-session\_\-t} $\ast$s, const u\_\-int32\_\-t $\ast$ssrc)
+\item 
+void {\bf rtcp\_\-on\_\-receive} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+void {\bf rtcp\_\-on\_\-expire} ({\bf rtcp\_\-session\_\-t} $\ast$s)
+\item 
+void {\bf init\_\-seq} ({\bf source} $\ast$s, u\_\-int16\_\-t seq)
+\item 
+int {\bf update\_\-seq} ({\bf source} $\ast$s, u\_\-int16\_\-t seq)
+\item 
+void {\bf on\_\-receive} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-packet\_\-t} $\ast$p, {\bf rtcp\_\-event\_\-t} e, int $\ast$members, int $\ast$pmembers, int $\ast$senders, double $\ast$avg\_\-rtcp\_\-size, double $\ast$tp, double tc, double tn)
+\item 
+void {\bf on\_\-expire} ({\bf rtcp\_\-session\_\-t} $\ast$s, {\bf rtcp\_\-event\_\-t} e, int members, int senders, double rtcp\_\-bw, int we\_\-sent, double $\ast$avg\_\-rtcp\_\-size, int $\ast$initial, double tc, double $\ast$tp, int $\ast$pmembers)
+\item 
+double {\bf rtcp\_\-interval} ({\bf rtcp\_\-session\_\-t} $\ast$s, int members, int senders, double rtcp\_\-bw, int we\_\-sent, double avg\_\-rtcp\_\-size, int initial)
+\item 
+int {\bf rtcp\_\-received\_\-packet\_\-size} ({\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+int {\bf rtcp\_\-sent\_\-packet\_\-size} ({\bf rtcp\_\-event\_\-t} e)
+\item 
+{\bf rtcp\_\-event\_\-type\_\-t} {\bf rtcp\_\-type\_\-of\_\-event} ({\bf rtcp\_\-event\_\-t} e)
+\item 
+gpointer {\bf rtcp\_\-earliest\_\-event} ({\bf rtcp\_\-session\_\-t} $\ast$s, gpointer t)
+\item 
+void {\bf rtcp\_\-schedule} ({\bf rtcp\_\-session\_\-t} $\ast$s, double t, {\bf rtcp\_\-event\_\-t} e)
+\item 
+void {\bf rtcp\_\-reschedule} ({\bf rtcp\_\-session\_\-t} $\ast$s, double t, {\bf rtcp\_\-event\_\-t} e)
+\item 
+{\bf rtcp\_\-packet\_\-type\_\-t} {\bf rtcp\_\-packet\_\-type} ({\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+u\_\-int32\_\-t {\bf rtcp\_\-packet\_\-ssrc} ({\bf rtcp\_\-packet\_\-t} $\ast$p)
+\item 
+u\_\-int32\_\-t {\bf rtcp\_\-packet\_\-seq} ({\bf rtcp\_\-packet\_\-t} $\ast$p)
+\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\index{rtcp.c@{rtcp.c}!init_seq@{init\_\-seq}}
+\index{init_seq@{init\_\-seq}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void init\_\-seq ({\bf source} $\ast$ {\em s}, u\_\-int16\_\-t {\em seq})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a13}
+
+
+\index{rtcp.c@{rtcp.c}!on_expire@{on\_\-expire}}
+\index{on_expire@{on\_\-expire}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void on\_\-expire ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-event\_\-t} {\em e}, int {\em members}, int {\em senders}, double {\em rtcp\_\-bw}, int {\em we\_\-sent}, double $\ast$ {\em avg\_\-rtcp\_\-size}, int $\ast$ {\em initial}, double {\em tc}, double $\ast$ {\em tp}, int $\ast$ {\em pmembers})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a16}
+
+
+Called whenever the RTCP transmission timer has expired. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em members}]estimated number of members in the current session \item[{\em senders}]estimated number of senders in the current session \item[{\em rtcp\_\-bw}]The target RTCP bandwidth, i.e., the total bandwidth. that will be used for RTCP packets by all members of this session, in octets per second. This will be a specified fraction of the \char`\"{}session bandwidth\char`\"{} parameter supplied to the application at startup. \item[{\em we\_\-sent}]true if application has sent data since the second previous RTCP report was transmitted. \item[{\em avg\_\-rtcp\_\-size}]The average compound RTCP packet size, in octets, over all RTCP packets sent and received by this participant. The size includes lower-layer transport and network protocol headers (e.g., UDP and IP). \item[{\em initial}]flag that is true if the application has not yet sent an RTCP packet. \item[{\em tc}]the current time. \item[{\em tp}]the last time an RTCP packet was transmitted. \item[{\em pmembers}]the estimated number of session members at the time tn was last recomputed. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[See also:]static void {\bf rtcp\_\-on\_\-expire(rtcp\_\-session\_\-t$\ast$ s)}{\rm (p.\,\pageref{rtcp_8h_a14})} \end{Desc}
+\index{rtcp.c@{rtcp.c}!on_receive@{on\_\-receive}}
+\index{on_receive@{on\_\-receive}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void on\_\-receive ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-packet\_\-t} $\ast$ {\em p}, {\bf rtcp\_\-event\_\-t} {\em e}, int $\ast$ {\em members}, int $\ast$ {\em pmembers}, int $\ast$ {\em senders}, double $\ast$ {\em avg\_\-rtcp\_\-size}, double $\ast$ {\em tp}, double {\em tc}, double {\em tn})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a15}
+
+
+Called whenever an RTCP packet is received. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]a pointer to the rtcp session block. \item[{\em p}]a pointer to the received packet. \item[{\em members}]estimated number of members in the current session. \item[{\em pmembers}]the estimated number of session members at the time tn was last recomputed. \item[{\em senders}]estimated number of senders in the current session \item[{\em avg\_\-rtcp\_\-size}]The average compound RTCP packet size, in octets, over all RTCP packets sent and received by this participant. The size includes lower-layer transport and network protocol headers (e.g., UDP and IP). \item[{\em tp}]the last time an RTCP packet was transmitted. \item[{\em senders}]estimated number of senders in the current session. \item[{\em tn}]the next scheduled transmission time of an RTCP packet. \end{description}
+\end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_add_member@{rtcp\_\-add\_\-member}}
+\index{rtcp_add_member@{rtcp\_\-add\_\-member}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-add\_\-member ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})}\label{rtcp_8c_a6}
+
+
+Adds the member that sent packet p to the member tree. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \item[{\em s}]A pointer to packet sent by the new member. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]1: on success, 0: otherwise. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_add_sender@{rtcp\_\-add\_\-sender}}
+\index{rtcp_add_sender@{rtcp\_\-add\_\-sender}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-add\_\-sender ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})}\label{rtcp_8c_a8}
+
+
+Add a new sender to the sender \char`\"{}sublist\char`\"{} of the member tree. This function simply sets the sender flag for a member that is already in the list. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree to add to. \item[{\em p}]A pointer to a packet received from this sender. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]0: on success, -1 on failure. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_destroy@{rtcp\_\-destroy}}
+\index{rtcp_destroy@{rtcp\_\-destroy}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-destroy ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s})}\label{rtcp_8c_a1}
+
+
+Destroy the {\bf rtcp\_\-session\_\-t}{\rm (p.\,\pageref{structrtcp__session__t})} and deallocate memory associated with its data structures. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]A pointer to the {\bf rtcp\_\-session\_\-t}{\rm (p.\,\pageref{structrtcp__session__t})} to be destroyed. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]0: on success. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_earliest_event@{rtcp\_\-earliest\_\-event}}
+\index{rtcp_earliest_event@{rtcp\_\-earliest\_\-event}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}gpointer rtcp\_\-earliest\_\-event ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, gpointer {\em t})}\label{rtcp_8c_a21}
+
+
+Retrieves a pointer to the earliest event in the event queue and removes the event from the queue. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]a pointer to the rtcp session block \item[{\em t}]a pointer that will contain the time of the event after the function returns. This must point to pre-allocated memory. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]a pointer to the type of the event. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_get_sender@{rtcp\_\-get\_\-sender}}
+\index{rtcp_get_sender@{rtcp\_\-get\_\-sender}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf rtcp\_\-member\_\-t}$\ast$ rtcp\_\-get\_\-sender ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, const u\_\-int32\_\-t $\ast$ {\em ssrc})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a10}
+
+
+\index{rtcp.c@{rtcp.c}!rtcp_init@{rtcp\_\-init}}
+\index{rtcp_init@{rtcp\_\-init}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-init ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, double {\em rtcp\_\-bw}, double {\em avg\_\-rtcp\_\-size}, u\_\-int32\_\-t {\em ssrc}, u\_\-int32\_\-t {\em sampling\_\-frequency}, u\_\-int32\_\-t {\em samples\_\-per\_\-packet}, u\_\-int32\_\-t {\em bits\_\-per\_\-sample}, u\_\-int32\_\-t {\em sz\_\-ctrl\_\-rcv\_\-buf}, u\_\-int32\_\-t {\em sz\_\-ctrl\_\-snd\_\-buf})}\label{rtcp_8c_a0}
+
+
+Initializes a new {\bf rtcp\_\-session\_\-t}{\rm (p.\,\pageref{structrtcp__session__t})} object. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]A pointer to a {\bf rtcp\_\-session\_\-t}{\rm (p.\,\pageref{structrtcp__session__t})} object (already created). \item[{\em rtcp\_\-bw}]Target RTCP bandwidth (Bps). \item[{\em avg\_\-rtcp\_\-size}]Average RTCP packet size (B). \item[{\em ssrc}]32 bit identifier used to identify this host when it is transmitting data. \item[{\em sampling\_\-frequency}]Source sampling frequency in KSamples/s. \item[{\em samples\_\-per\_\-packet}]Total number of samples per packet. \item[{\em bits\_\-per\_\-sample}]Number of bits per sample. \item[{\em sz\_\-ctrl\_\-rcv\_\-buf}]Size of control receive buffer. \item[{\em sz\_\-ctrl\_\-snd\_\-buf}]Size of control send buffer. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]0: if successful, -1: if not successful. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_interval@{rtcp\_\-interval}}
+\index{rtcp_interval@{rtcp\_\-interval}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}double rtcp\_\-interval ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, int {\em members}, int {\em senders}, double {\em rtcp\_\-bw}, int {\em we\_\-sent}, double {\em avg\_\-rtcp\_\-size}, int {\em initial})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a17}
+
+
+Computes the deterministic calculated interval, measured in seconds. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]a pointer to the rtcp session block. \item[{\em members}]estimated number of members in the current session. \item[{\em senders}]estimated number of senders in the current session. \item[{\em rtcp\_\-bw}]The target RTCP bandwidth, i.e., the total bandwidth. that will be used for RTCP packets by all members of this session, in octets per second. This will be a specified fraction of the \char`\"{}session bandwidth\char`\"{} parameter supplied to the application at startup. \item[{\em we\_\-sent}]true if application has sent data since the second previous RTCP report was transmitted. \item[{\em avg\_\-rtcp\_\-size}]The average compound RTCP packet size, in octets, over all RTCP packets sent and received by this participant. The size includes lower-layer transport and network protocol headers (e.g., UDP and IP). \item[{\em initial}]flag that is true if the application has not yet sent an RTCP packet. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]current rctp interval (in seconds). \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_new_member@{rtcp\_\-new\_\-member}}
+\index{rtcp_new_member@{rtcp\_\-new\_\-member}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-new\_\-member ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})}\label{rtcp_8c_a4}
+
+
+Determines if a member is in the member list or not. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the RTCP session. \item[{\em p}]A pointer to a packet received from the member. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]1: if the participant is not currently in the members list, 0: otherwise. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_new_sender@{rtcp\_\-new\_\-sender}}
+\index{rtcp_new_sender@{rtcp\_\-new\_\-sender}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-new\_\-sender ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})}\label{rtcp_8c_a5}
+
+
+Determines if a sender is in the member list or not. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \item[{\em s}]A pointer to the ssrc that identifies the member to look for. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]1: if the participant who sent packet p is not currently in the sender \char`\"{}subtree\char`\"{} of the member tree, 0: otherwise. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_on_expire@{rtcp\_\-on\_\-expire}}
+\index{rtcp_on_expire@{rtcp\_\-on\_\-expire}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void rtcp\_\-on\_\-expire ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s})}\label{rtcp_8c_a12}
+
+
+Called whenever the RTCP transmission timer has expired. This function wraps the static function {\bf on\_\-expire()}{\rm (p.\,\pageref{rtcp_8c_a16})}. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]a pointer to the rtcp session block \end{description}
+\end{Desc}
+\begin{Desc}
+\item[See also:]{\bf on\_\-expire()}{\rm (p.\,\pageref{rtcp_8c_a16})} \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_on_receive@{rtcp\_\-on\_\-receive}}
+\index{rtcp_on_receive@{rtcp\_\-on\_\-receive}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void rtcp\_\-on\_\-receive ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})}\label{rtcp_8c_a11}
+
+
+Called whenever an RTCP packet is received. This function wraps the static function {\bf on\_\-receive()}{\rm (p.\,\pageref{rtcp_8c_a15})}. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]a pointer to the rtcp session block. \item[{\em p}]a pointer to the received packet. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[See also:]{\bf on\_\-receive()}{\rm (p.\,\pageref{rtcp_8c_a15})} \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_packet_seq@{rtcp\_\-packet\_\-seq}}
+\index{rtcp_packet_seq@{rtcp\_\-packet\_\-seq}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}u\_\-int32\_\-t rtcp\_\-packet\_\-seq ({\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a26}
+
+
+Returns the SSRC of the packet supplied. Performs the appropriate checks to ensure the packet has an SSRC (i.e. the packet is one of: PACKET\_\-RTCP\_\-REPORT, or PACKET\_\-RTP). \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]A pointer to the packet to be parsed. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]the seq of the packet. 0 is used to indicate an error. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_packet_ssrc@{rtcp\_\-packet\_\-ssrc}}
+\index{rtcp_packet_ssrc@{rtcp\_\-packet\_\-ssrc}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}u\_\-int32\_\-t rtcp\_\-packet\_\-ssrc ({\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a25}
+
+
+Returns the SSRC of the packet supplied. Performs the appropriate checks to ensure the packet has an SSRC (i.e. the packet is one of: PACKET\_\-RTCP\_\-REPORT, or PACKET\_\-RTP). \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]A pointer to the packet to be parsed. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]the SSRC of the packet. 0 is used to indicate an error. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_packet_type@{rtcp\_\-packet\_\-type}}
+\index{rtcp_packet_type@{rtcp\_\-packet\_\-type}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf rtcp\_\-packet\_\-type\_\-t} rtcp\_\-packet\_\-type ({\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})}\label{rtcp_8c_a24}
+
+
+Determines the type of a packet. Note: Only weak validity checks are possible on an RTP/RTCP packet from a source that has not been heard before: o RTP version field must equal 2. o The payload type must be known. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]A pointer to the packet to be parsed. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]the packet type of the packet. Packet type is one of: PACKET\_\-RTCP\_\-REPORT, PACKET\_\-RTP, PACKET\_\-BYE, PACKET\_\-INVALID. \end{Desc}
+\begin{Desc}
+\item[See also:]{\bf rtcp\_\-packet\_\-type\_\-t}{\rm (p.\,\pageref{rtp_8h_a35})}. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_received_packet_size@{rtcp\_\-received\_\-packet\_\-size}}
+\index{rtcp_received_packet_size@{rtcp\_\-received\_\-packet\_\-size}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-received\_\-packet\_\-size ({\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a18}
+
+
+Determines the size of a received packet. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]A pointer to the packet to be parsed. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The size of the received packet. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_remove_member@{rtcp\_\-remove\_\-member}}
+\index{rtcp_remove_member@{rtcp\_\-remove\_\-member}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-remove\_\-member ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})}\label{rtcp_8c_a7}
+
+
+Removes the member that sent packet p from the member tree. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em m}]A pointer to the member tree. \item[{\em s}]A pointer to packet sent by the member. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]1: on success, 0: otherwise. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_remove_sender@{rtcp\_\-remove\_\-sender}}
+\index{rtcp_remove_sender@{rtcp\_\-remove\_\-sender}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-remove\_\-sender ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-packet\_\-t} $\ast$ {\em p})}\label{rtcp_8c_a9}
+
+
+\index{rtcp.c@{rtcp.c}!rtcp_reschedule@{rtcp\_\-reschedule}}
+\index{rtcp_reschedule@{rtcp\_\-reschedule}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void rtcp\_\-reschedule ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, double {\em t}, {\bf rtcp\_\-event\_\-t} {\em e})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a23}
+
+
+\index{rtcp.c@{rtcp.c}!rtcp_schedule@{rtcp\_\-schedule}}
+\index{rtcp_schedule@{rtcp\_\-schedule}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void rtcp\_\-schedule ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, double {\em t}, {\bf rtcp\_\-event\_\-t} {\em e})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a22}
+
+
+\index{rtcp.c@{rtcp.c}!rtcp_send_bye_packet@{rtcp\_\-send\_\-bye\_\-packet}}
+\index{rtcp_send_bye_packet@{rtcp\_\-send\_\-bye\_\-packet}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-send\_\-bye\_\-packet ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-event\_\-t} {\em e})}\label{rtcp_8c_a3}
+
+
+\index{rtcp.c@{rtcp.c}!rtcp_send_rtcp_report@{rtcp\_\-send\_\-rtcp\_\-report}}
+\index{rtcp_send_rtcp_report@{rtcp\_\-send\_\-rtcp\_\-report}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-send\_\-rtcp\_\-report ({\bf rtcp\_\-session\_\-t} $\ast$ {\em s}, {\bf rtcp\_\-event\_\-t} {\em e})}\label{rtcp_8c_a2}
+
+
+\index{rtcp.c@{rtcp.c}!rtcp_sent_packet_size@{rtcp\_\-sent\_\-packet\_\-size}}
+\index{rtcp_sent_packet_size@{rtcp\_\-sent\_\-packet\_\-size}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int rtcp\_\-sent\_\-packet\_\-size ({\bf rtcp\_\-event\_\-t} {\em e})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a19}
+
+
+Determines the size of packet generated and sent by event e. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em s}]The event that generated the packet. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The size of the sent packet. \end{Desc}
+\index{rtcp.c@{rtcp.c}!rtcp_type_of_event@{rtcp\_\-type\_\-of\_\-event}}
+\index{rtcp_type_of_event@{rtcp\_\-type\_\-of\_\-event}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf rtcp\_\-event\_\-type\_\-t} rtcp\_\-type\_\-of\_\-event ({\bf rtcp\_\-event\_\-t} {\em e})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a20}
+
+
+Determines the type of an event. \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em e}]The event we are interested in. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The type of the event. Valid types include: EVENT\_\-BYE, EVENT\_\-REPORT. \end{Desc}
+\index{rtcp.c@{rtcp.c}!update_seq@{update\_\-seq}}
+\index{update_seq@{update\_\-seq}!rtcp.c@{rtcp.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int update\_\-seq ({\bf source} $\ast$ {\em s}, u\_\-int16\_\-t {\em seq})\hspace{0.3cm}{\tt  [static]}}\label{rtcp_8c_a14}
+
+

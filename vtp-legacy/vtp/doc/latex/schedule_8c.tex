@@ -1,0 +1,92 @@
+\section{schedule.c File Reference}
+\label{schedule_8c}\index{schedule.c@{schedule.c}}
+{\tt \#include $<$assert.h$>$}\par
+{\tt \#include $<$limits.h$>$}\par
+{\tt \#include $<$stdlib.h$>$}\par
+{\tt \#include $<$stdio.h$>$}\par
+{\tt \#include $<$string.h$>$}\par
+{\tt \#include $<$rtp.h$>$}\par
+{\tt \#include \char`\"{}schedule.h\char`\"{}}\par
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int {\bf compare\_\-data\_\-func} (gconstpointer a, gconstpointer b, gpointer user\_\-data)
+\item 
+void {\bf key\_\-destroy\_\-func} (gpointer d)
+\item 
+void {\bf value\_\-destroy\_\-func} (gpointer d)
+\item 
+int {\bf schedule\_\-init} ({\bf schedule\_\-t} $\ast$s)
+\item 
+void {\bf schedule\_\-destroy} ({\bf schedule\_\-t} $\ast$s)
+\item 
+void {\bf schedule\_\-schedule} ({\bf schedule\_\-t} $\ast$s, double $\ast$t, {\bf rtcp\_\-event\_\-t} $\ast$e)
+\item 
+void {\bf schedule\_\-reschedule} ({\bf schedule\_\-t} $\ast$s, double t, {\bf rtcp\_\-event\_\-t} $\ast$e)
+\item 
+gboolean {\bf schedule\_\-print\_\-traverse\_\-func} (gpointer key, gpointer value, gpointer data)
+\item 
+void {\bf schedule\_\-print} ({\bf schedule\_\-t} $\ast$s)
+\item 
+gboolean {\bf schedule\_\-earliest\_\-event\_\-traverse\_\-func} (gpointer key, gpointer value, gpointer data)
+\item 
+{\bf rtcp\_\-event\_\-t} $\ast$ {\bf schedule\_\-earliest\_\-event} ({\bf schedule\_\-t} $\ast$s, double $\ast$k)
+\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\index{schedule.c@{schedule.c}!compare_data_func@{compare\_\-data\_\-func}}
+\index{compare_data_func@{compare\_\-data\_\-func}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int compare\_\-data\_\-func (gconstpointer {\em a}, gconstpointer {\em b}, gpointer {\em user\_\-data})\hspace{0.3cm}{\tt  [static]}}\label{schedule_8c_a0}
+
+
+\index{schedule.c@{schedule.c}!key_destroy_func@{key\_\-destroy\_\-func}}
+\index{key_destroy_func@{key\_\-destroy\_\-func}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void key\_\-destroy\_\-func (gpointer {\em d})\hspace{0.3cm}{\tt  [static]}}\label{schedule_8c_a1}
+
+
+\index{schedule.c@{schedule.c}!schedule_destroy@{schedule\_\-destroy}}
+\index{schedule_destroy@{schedule\_\-destroy}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void schedule\_\-destroy ({\bf schedule\_\-t} $\ast$ {\em s})}\label{schedule_8c_a4}
+
+
+\index{schedule.c@{schedule.c}!schedule_earliest_event@{schedule\_\-earliest\_\-event}}
+\index{schedule_earliest_event@{schedule\_\-earliest\_\-event}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf rtcp\_\-event\_\-t}$\ast$ schedule\_\-earliest\_\-event ({\bf schedule\_\-t} $\ast$ {\em s}, double $\ast$ {\em k})}\label{schedule_8c_a10}
+
+
+\index{schedule.c@{schedule.c}!schedule_earliest_event_traverse_func@{schedule\_\-earliest\_\-event\_\-traverse\_\-func}}
+\index{schedule_earliest_event_traverse_func@{schedule\_\-earliest\_\-event\_\-traverse\_\-func}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}gboolean schedule\_\-earliest\_\-event\_\-traverse\_\-func (gpointer {\em key}, gpointer {\em value}, gpointer {\em data})\hspace{0.3cm}{\tt  [static]}}\label{schedule_8c_a9}
+
+
+\index{schedule.c@{schedule.c}!schedule_init@{schedule\_\-init}}
+\index{schedule_init@{schedule\_\-init}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int schedule\_\-init ({\bf schedule\_\-t} $\ast$ {\em s})}\label{schedule_8c_a3}
+
+
+\index{schedule.c@{schedule.c}!schedule_print@{schedule\_\-print}}
+\index{schedule_print@{schedule\_\-print}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void schedule\_\-print ({\bf schedule\_\-t} $\ast$ {\em s})}\label{schedule_8c_a8}
+
+
+\index{schedule.c@{schedule.c}!schedule_print_traverse_func@{schedule\_\-print\_\-traverse\_\-func}}
+\index{schedule_print_traverse_func@{schedule\_\-print\_\-traverse\_\-func}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}gboolean schedule\_\-print\_\-traverse\_\-func (gpointer {\em key}, gpointer {\em value}, gpointer {\em data})\hspace{0.3cm}{\tt  [static]}}\label{schedule_8c_a7}
+
+
+\index{schedule.c@{schedule.c}!schedule_reschedule@{schedule\_\-reschedule}}
+\index{schedule_reschedule@{schedule\_\-reschedule}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void schedule\_\-reschedule ({\bf schedule\_\-t} $\ast$ {\em s}, double {\em t}, {\bf rtcp\_\-event\_\-t} $\ast$ {\em e})}\label{schedule_8c_a6}
+
+
+\index{schedule.c@{schedule.c}!schedule_schedule@{schedule\_\-schedule}}
+\index{schedule_schedule@{schedule\_\-schedule}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void schedule\_\-schedule ({\bf schedule\_\-t} $\ast$ {\em s}, double $\ast$ {\em t}, {\bf rtcp\_\-event\_\-t} $\ast$ {\em e})}\label{schedule_8c_a5}
+
+
+\index{schedule.c@{schedule.c}!value_destroy_func@{value\_\-destroy\_\-func}}
+\index{value_destroy_func@{value\_\-destroy\_\-func}!schedule.c@{schedule.c}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void value\_\-destroy\_\-func (gpointer {\em d})\hspace{0.3cm}{\tt  [static]}}\label{schedule_8c_a2}
+
+

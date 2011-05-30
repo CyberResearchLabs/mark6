@@ -1,0 +1,58 @@
+\section{schedule.h File Reference}
+\label{schedule_8h}\index{schedule.h@{schedule.h}}
+{\tt \#include $<$glib.h$>$}\par
+{\tt \#include $<$time.h$>$}\par
+{\tt \#include $<$rtp.h$>$}\par
+\subsection*{Compounds}
+\begin{CompactItemize}
+\item 
+struct {\bf schedule\_\-t}
+\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int {\bf schedule\_\-init} ({\bf schedule\_\-t} $\ast$s)
+\item 
+void {\bf schedule\_\-destroy} ({\bf schedule\_\-t} $\ast$s)
+\item 
+void {\bf schedule\_\-schedule} ({\bf schedule\_\-t} $\ast$s, double $\ast$t, {\bf rtcp\_\-event\_\-t} $\ast$e)
+\item 
+void {\bf schedule\_\-reschedule} ({\bf schedule\_\-t} $\ast$s, double t, {\bf rtcp\_\-event\_\-t} $\ast$e)
+\item 
+void {\bf schedule\_\-print} ({\bf schedule\_\-t} $\ast$s)
+\item 
+{\bf rtcp\_\-event\_\-t} $\ast$ {\bf schedule\_\-earliest\_\-event} ({\bf schedule\_\-t} $\ast$s, double $\ast$k)
+\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\index{schedule.h@{schedule.h}!schedule_destroy@{schedule\_\-destroy}}
+\index{schedule_destroy@{schedule\_\-destroy}!schedule.h@{schedule.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void schedule\_\-destroy ({\bf schedule\_\-t} $\ast$ {\em s})}\label{schedule_8h_a1}
+
+
+\index{schedule.h@{schedule.h}!schedule_earliest_event@{schedule\_\-earliest\_\-event}}
+\index{schedule_earliest_event@{schedule\_\-earliest\_\-event}!schedule.h@{schedule.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf rtcp\_\-event\_\-t}$\ast$ schedule\_\-earliest\_\-event ({\bf schedule\_\-t} $\ast$ {\em s}, double $\ast$ {\em k})}\label{schedule_8h_a5}
+
+
+\index{schedule.h@{schedule.h}!schedule_init@{schedule\_\-init}}
+\index{schedule_init@{schedule\_\-init}!schedule.h@{schedule.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int schedule\_\-init ({\bf schedule\_\-t} $\ast$ {\em s})}\label{schedule_8h_a0}
+
+
+\index{schedule.h@{schedule.h}!schedule_print@{schedule\_\-print}}
+\index{schedule_print@{schedule\_\-print}!schedule.h@{schedule.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void schedule\_\-print ({\bf schedule\_\-t} $\ast$ {\em s})}\label{schedule_8h_a4}
+
+
+\index{schedule.h@{schedule.h}!schedule_reschedule@{schedule\_\-reschedule}}
+\index{schedule_reschedule@{schedule\_\-reschedule}!schedule.h@{schedule.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void schedule\_\-reschedule ({\bf schedule\_\-t} $\ast$ {\em s}, double {\em t}, {\bf rtcp\_\-event\_\-t} $\ast$ {\em e})}\label{schedule_8h_a3}
+
+
+\index{schedule.h@{schedule.h}!schedule_schedule@{schedule\_\-schedule}}
+\index{schedule_schedule@{schedule\_\-schedule}!schedule.h@{schedule.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void schedule\_\-schedule ({\bf schedule\_\-t} $\ast$ {\em s}, double $\ast$ {\em t}, {\bf rtcp\_\-event\_\-t} $\ast$ {\em e})}\label{schedule_8h_a2}
+
+

@@ -1,0 +1,111 @@
+\section{mysock.h File Reference}
+\label{mysock_8h}\index{mysock.h@{mysock.h}}
+{\tt \#include $<$sys/types.h$>$}\par
+{\tt \#include $<$sys/socket.h$>$}\par
+{\tt \#include $<$netinet/in.h$>$}\par
+{\tt \#include $<$arpa/inet.h$>$}\par
+{\tt \#include $<$sys/time.h$>$}\par
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int {\bf my\_\-socket} (int domain, int type, int protocol)
+\item 
+int {\bf my\_\-setsockopt} (int s, int level, int optname, const void $\ast$optval, int optlen)
+\item 
+int {\bf my\_\-bind} (int s, const struct sockaddr $\ast$name, int namelen)
+\item 
+int {\bf my\_\-listen} (int s, int backlog)
+\item 
+int {\bf my\_\-accept} (int s, struct sockaddr $\ast$addr, int $\ast$addrlen)
+\item 
+int {\bf my\_\-connect} (int s, const struct sockaddr $\ast$name, int namelen)
+\item 
+int {\bf my\_\-recv} (int s, void $\ast$buf, size\_\-t len, int flags)
+\item 
+int {\bf my\_\-send} (int s, const void $\ast$msg, size\_\-t len, int flags)
+\item 
+int {\bf my\_\-sendto} (int s, const void $\ast$msg, size\_\-t len, int flags, const struct sockaddr $\ast$to, int tolen)
+\item 
+int {\bf my\_\-recvfrom} (int s, void $\ast$buf, size\_\-t len, int flags, struct sockaddr $\ast$from, int $\ast$fromlen)
+\item 
+int {\bf my\_\-inet\_\-aton} (const char $\ast$cp, struct in\_\-addr $\ast$pin)
+\item 
+int {\bf my\_\-select} (int nfds, fd\_\-set $\ast$readfds, fd\_\-set $\ast$writefds, fd\_\-set $\ast$exceptfds, struct timeval $\ast$timeout)
+\item 
+int {\bf my\_\-readv} (int filedes, const struct iovec $\ast$iov, int iovcnt)
+\item 
+int {\bf my\_\-writev} (int filedes, const struct iovec $\ast$iov, int iovcnt)
+\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\index{mysock.h@{mysock.h}!my_accept@{my\_\-accept}}
+\index{my_accept@{my\_\-accept}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-accept (int {\em s}, struct sockaddr $\ast$ {\em addr}, int $\ast$ {\em addrlen})}\label{mysock_8h_a4}
+
+
+\index{mysock.h@{mysock.h}!my_bind@{my\_\-bind}}
+\index{my_bind@{my\_\-bind}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-bind (int {\em s}, const struct sockaddr $\ast$ {\em name}, int {\em namelen})}\label{mysock_8h_a2}
+
+
+\index{mysock.h@{mysock.h}!my_connect@{my\_\-connect}}
+\index{my_connect@{my\_\-connect}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-connect (int {\em s}, const struct sockaddr $\ast$ {\em name}, int {\em namelen})}\label{mysock_8h_a5}
+
+
+\index{mysock.h@{mysock.h}!my_inet_aton@{my\_\-inet\_\-aton}}
+\index{my_inet_aton@{my\_\-inet\_\-aton}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-inet\_\-aton (const char $\ast$ {\em cp}, struct in\_\-addr $\ast$ {\em pin})}\label{mysock_8h_a10}
+
+
+\index{mysock.h@{mysock.h}!my_listen@{my\_\-listen}}
+\index{my_listen@{my\_\-listen}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-listen (int {\em s}, int {\em backlog})}\label{mysock_8h_a3}
+
+
+\index{mysock.h@{mysock.h}!my_readv@{my\_\-readv}}
+\index{my_readv@{my\_\-readv}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-readv (int {\em filedes}, const struct iovec $\ast$ {\em iov}, int {\em iovcnt})}\label{mysock_8h_a12}
+
+
+\index{mysock.h@{mysock.h}!my_recv@{my\_\-recv}}
+\index{my_recv@{my\_\-recv}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-recv (int {\em s}, void $\ast$ {\em buf}, size\_\-t {\em len}, int {\em flags})}\label{mysock_8h_a6}
+
+
+\index{mysock.h@{mysock.h}!my_recvfrom@{my\_\-recvfrom}}
+\index{my_recvfrom@{my\_\-recvfrom}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-recvfrom (int {\em s}, void $\ast$ {\em buf}, size\_\-t {\em len}, int {\em flags}, struct sockaddr $\ast$ {\em from}, int $\ast$ {\em fromlen})}\label{mysock_8h_a9}
+
+
+\index{mysock.h@{mysock.h}!my_select@{my\_\-select}}
+\index{my_select@{my\_\-select}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-select (int {\em nfds}, fd\_\-set $\ast$ {\em readfds}, fd\_\-set $\ast$ {\em writefds}, fd\_\-set $\ast$ {\em exceptfds}, struct timeval $\ast$ {\em timeout})}\label{mysock_8h_a11}
+
+
+\index{mysock.h@{mysock.h}!my_send@{my\_\-send}}
+\index{my_send@{my\_\-send}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-send (int {\em s}, const void $\ast$ {\em msg}, size\_\-t {\em len}, int {\em flags})}\label{mysock_8h_a7}
+
+
+\index{mysock.h@{mysock.h}!my_sendto@{my\_\-sendto}}
+\index{my_sendto@{my\_\-sendto}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-sendto (int {\em s}, const void $\ast$ {\em msg}, size\_\-t {\em len}, int {\em flags}, const struct sockaddr $\ast$ {\em to}, int {\em tolen})}\label{mysock_8h_a8}
+
+
+\index{mysock.h@{mysock.h}!my_setsockopt@{my\_\-setsockopt}}
+\index{my_setsockopt@{my\_\-setsockopt}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-setsockopt (int {\em s}, int {\em level}, int {\em optname}, const void $\ast$ {\em optval}, int {\em optlen})}\label{mysock_8h_a1}
+
+
+\index{mysock.h@{mysock.h}!my_socket@{my\_\-socket}}
+\index{my_socket@{my\_\-socket}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-socket (int {\em domain}, int {\em type}, int {\em protocol})}\label{mysock_8h_a0}
+
+
+\index{mysock.h@{mysock.h}!my_writev@{my\_\-writev}}
+\index{my_writev@{my\_\-writev}!mysock.h@{mysock.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int my\_\-writev (int {\em filedes}, const struct iovec $\ast$ {\em iov}, int {\em iovcnt})}\label{mysock_8h_a13}
+
+

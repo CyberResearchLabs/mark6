@@ -1,0 +1,528 @@
+Adding sighandler(), siginit() to handle:
+    checking of control stream
+    rate control
+    
+         If a signal is caught during the system calls listed below, the call may
+     be forced to terminate with the error EINTR, the call may return with a
+     data transfer shorter than requested, or the call may be restarted.
+     Restart of pending calls is requested by setting the SA_RESTART bit in
+     sa_flags.  The affected system calls include open(2), read(2), write(2),
+     sendto(2), recvfrom(2), sendmsg(2) and recvmsg(2) on a communications
+     channel or a slow device (such as a terminal, but not a regular file) and
+     during a wait(2) or ioctl(2).  However, calls that have already committed
+     are not restarted, but instead return a partial success (for example, a
+     short read count).
+client.c make multi-threaded
+
+
+    init_threads
+    rtcp_proc
+    rtp_proc
+    
+    added _OSX_ for specific options
+    added _DEBUG flag for degbugging with GDB
+    
+    V_0_4
+    
+    Encapsulating all of the socket information into the vtp module;
+    
+   Adding RTP framing to control and data.
+   
+     Only weak validity checks are possible on an RTP data packet from a
+   source that has not been heard before:
+   o  RTP version field must equal 2.
+   o  The payload type must be known, and in particular it must not be
+      equal to SR or RR.
+   o  If the P bit is set, then the last octet of the packet must
+      contain a valid octet count, in particular, less than the total
+      packet length minus the header size.
+   o  The X bit must be zero if the profile does not specify that the
+      header extension mechanism may be used.  Otherwise, the extension
+      length field must be less than the total packet size minus the
+      fixed header length and padding.
+   o  The length of the packet must be consistent with CC and payload
+      type (if payloads have a known length).
+   The last three checks are somewhat complex and not always possible,
+   leaving only the first two which total just a few bits.  If the SSRC
+   identifier in the packet is one that has been received before, then
+   the packet is probably valid and checking if the sequence number is
+   in the expected range provides further validation.  If the SSRC
+   identifier has not been seen before, then data packets carrying that
+   identifier may be considered invalid until a small number of them
+   arrive with consecutive sequence numbers.  Those invalid packets MAY
+   be discarded or they MAY be stored and delivered once validation has
+   been achieved if the resulting delay is acceptable.
+   
+   
+   When a new source is heard for the first time, that is, its SSRC
+   identifier is not in the table (see Section 8.2), and the per-source
+   state is allocated for it, s->probation is set to the number of
+   sequential packets required before declaring a source valid
+   (parameter MIN_SEQUENTIAL) and other variables are initialized:
+
+      init_seq(s, seq);
+      s->max_seq = seq - 1;
+      s->probation = MIN_SEQUENTIAL;
+      
+      A.2 RTCP Header Validity Checks
+
+   The following checks should be applied to RTCP packets.
+
+   o  RTP version field must equal 2.
+
+   o  The payload type field of the first RTCP packet in a compound
+      packet must be equal to SR or RR.
+
+   o  The padding bit (P) should be zero for the first packet of a
+      compound RTCP packet because padding should only be applied, if it
+      is needed, to the last packet.
+
+   o  The length fields of the individual RTCP packets must add up to
+      the overall length of the compound RTCP packet as received.  This
+      is a fairly strong check.
+
+      
+
+Added test.[ch] for testing new stuff.
+Also added new mode 't' for development testing.
+
+Added new abstraction layer for transport: dsock.
+
+/*
+ * $Source: /usr/local/cvsroot/mit/vtp/doc/00NOTES,v $
+ * $Revision: 1.1 $
+ * $Date: 2003/09/10 00:32:43 $
+ * $State: Exp $
+ * $Author: davidlapsley $
+ *
+ * $Log: 00NOTES,v $
+ * Revision 1.1  2003/09/10 00:32:43  davidlapsley
+ * *** empty log message ***
+ *
+ * Revision 1.9  2003/09/10 00:21:16  davidlapsley
+ * Modified build system.
+ *
+ * Revision 1.8  2003/09/09 22:30:14  davidlapsley
+ * - Added XML parser to the main branch. Converted configuration from
+ * command line driven to configuration file driven (too many parameters
+ * for the command line).
+ * - Integrated server with RTP/RTCP logic.
+ *
+ * Revision 1.7  2003/09/09 05:57:41  davidlapsley
+ * - Removed members and senders from rtcp_member_t (this logic already
+ * maintained in OnReceive).
+ * - Completed rtcp_send_report(), rtcp_send_bye() functions.
+ * - Made buffer sizes in rtcp_session_t an initialization parameter.
+ * - client.c: integrating rtcp module
+ *
+ * Revision 1.6  2003/09/08 21:54:27  davidlapsley
+ * - Added random module for generating random 32 bit integers.
+ * - Replaced u_intXX style typedefs with standard u_intXX_t types.
+ * - Added variables to rtcp_t session member.
+ * - Added code file template: template.h which includes the MIT license
+ * header.
+ *
+ * Revision 1.5  2003/09/04 22:07:51  davidlapsley
+ * Added new module: members to encapsulate the member tree. The member
+ * tree consists of a struct: members_t that encapsulates a glib balances
+ * tree. This tree is used to store a list of session members and their
+ * state.
+ *
+ * Revision 1.4  2003/09/04 12:39:40  davidlapsley
+ * Daily release.
+ *
+ * Revision 1.3  2003/09/03 18:05:39  davidlapsley
+ * Added and tested schedule functionality.
+ *
+ *
+ *
+ */
+ 6.3. RTCP Packet Send and Receive Rules
+
+      
+      
+   The rules for how to send, and what to do when receiving an RTCP
+   packet are outlined here.  An implementation that allows operation in
+   a multicast environment or a multipoint unicast environment MUST meet
+   the requirements in Section 6.2.  Such an implementation MAY use the
+   algorithm defined in this section to meet those requirements, or MAY
+   use some other algorithm so long as it provides equivalent or better
+   performance.  An implementation which is constrained to two-party
+   unicast operation SHOULD still use randomization of the RTCP
+   transmission interval to avoid unintended synchronization of multiple
+   instances operating in the same environment, but MAY omit the "timer
+   reconsideration" and "reverse reconsideration" algorithms in Sections
+   6.3.3, 6.3.6 and 6.3.7.
+
+   To execute these rules, a session participant must maintain several
+   pieces of state:
+
+   tp: the last time an RTCP packet was transmitted;
+
+   tc: the current time;
+
+   tn: the next scheduled transmission time of an RTCP packet;
+
+   pmembers: the estimated number of session members at the time tn
+      was last recomputed;
+
+   members: the most current estimate for the number of session
+      members;
+
+   senders: the most current estimate for the number of senders in
+      the session;
+
+   rtcp_bw: The target RTCP bandwidth, i.e., the total bandwidth
+      that will be used for RTCP packets by all members of this session,
+      in octets per second.  This will be a specified fraction of the
+      "session bandwidth" parameter supplied to the application at
+      startup.
+
+   we_sent: Flag that is true if the application has sent data
+      since the 2nd previous RTCP report was transmitted.
+
+   avg_rtcp_size: The average compound RTCP packet size, in octets,
+      over all RTCP packets sent and received by this participant.  The
+      size includes lower-layer transport and network protocol headers
+      (e.g., UDP and IP) as explained in Section 6.2.
+
+   initial: Flag that is true if the application has not yet sent
+      an RTCP packet.
+
+   Many of these rules make use of the "calculated interval" between
+   packet transmissions.  This interval is described in the following
+   section.
+
+ 6.3.2. Initialization
+
+      
+      
+   Upon joining the session, the participant initializes tp to 0, tc to
+   0, senders to 0, pmembers to 1, members to 1, we_sent to false,
+   rtcp_bw to the specified fraction of the session bandwidth, initial
+   to true, and avg_rtcp_size to the probable size of the first RTCP
+   packet that the application will later construct.  The calculated
+   interval T is then computed, and the first packet is scheduled for
+
+   time tn = T.  This means that a transmission timer is set which
+   expires at time T.  Note that an application MAY use any desired
+   approach for implementing this timer.
+
+   The participant adds its own SSRC to the member table.
+
+ 6.3.3. Receiving an RTP or Non-BYE RTCP Packet
+
+      
+      
+   When an RTP or RTCP packet is received from a participant whose SSRC
+   is not in the member table, the SSRC is added to the table, and the
+   value for members is updated once the participant has been validated
+   as described in Section 6.2.1.  The same processing occurs for each
+   CSRC in a validated RTP packet.
+
+   When an RTP packet is received from a participant whose SSRC is not
+   in the sender table, the SSRC is added to the table, and the value
+   for senders is updated.
+
+   For each compound RTCP packet received, the value of avg_rtcp_size is
+   updated:
+
+      avg_rtcp_size = (1/16) * packet_size + (15/16) * avg_rtcp_size
+
+   where packet_size is the size of the RTCP packet just received.
+
+
+      
+      
+      
+
+6.3.4. Receiving an RTCP BYE Packet
+
+      
+      
+   Except as described in Section 6.3.7 for the case when an RTCP BYE is
+   to be transmitted, if the received packet is an RTCP BYE packet, the
+   SSRC is checked against the member table.  If present, the entry is
+   removed from the table, and the value for members is updated.  The
+   SSRC is then checked against the sender table.  If present, the entry
+   is removed from the table, and the value for senders is updated.
+
+   Furthermore, to make the transmission rate of RTCP packets more
+   adaptive to changes in group membership, the following "reverse
+   reconsideration" algorithm SHOULD be executed when a BYE packet is
+   received that reduces members to a value less than pmembers:
+
+   o  The value for tn is updated according to the following formula:
+
+         tn = tc + (members/pmembers) * (tn - tc)
+
+   o  The value for tp is updated according the following formula:
+
+         tp = tc - (members/pmembers) * (tc - tp).
+
+   o  The next RTCP packet is rescheduled for transmission at time tn,
+      which is now earlier.
+
+   o  The value of pmembers is set equal to members.
+
+   This algorithm does not prevent the group size estimate from
+   incorrectly dropping to zero for a short time due to premature
+   timeouts when most participants of a large session leave at once but
+   some remain.  The algorithm does make the estimate return to the
+   correct value more rapidly.  This situation is unusual enough and the
+   consequences are sufficiently harmless that this problem is deemed
+   only a secondary concern.
+
+
+      
+      
+      
+
+6.3.5. Timing Out an SSRC
+
+      
+      
+   At occasional intervals, the participant MUST check to see if any of
+   the other participants time out.  To do this, the participant
+   computes the deterministic (without the randomization factor)
+   calculated interval Td for a receiver, that is, with we_sent false.
+   Any other session member who has not sent an RTP or RTCP packet since
+   time tc - MTd (M is the timeout multiplier, and defaults to 5) is
+   timed out.  This means that its SSRC is removed from the member list,
+   and members is updated.  A similar check is performed on the sender
+   list.  Any member on the sender list who has not sent an RTP packet
+   since time tc - 2T (within the last two RTCP report intervals) is
+   removed from the sender list, and senders is updated.
+
+   If any members time out, the reverse reconsideration algorithm
+   described in Section 6.3.4 SHOULD be performed.
+
+   The participant MUST perform this check at least once per RTCP
+   transmission interval.
+
+
+      
+      
+      
+
+6.3.6. Expiration of Transmission Timer
+
+      
+      
+   When the packet transmission timer expires, the participant performs
+   the following operations:
+
+   o  The transmission interval T is computed as described in Section
+      6.3.1, including the randomization factor.
+
+   o  If tp + T is less than or equal to tc, an RTCP packet is
+      transmitted.  tp is set to tc, then another value for T is
+      calculated as in the previous step and tn is set to tc + T.  The
+      transmission timer is set to expire again at time tn.  If tp + T
+      is greater than tc, tn is set to tp + T.  No RTCP packet is
+      transmitted.  The transmission timer is set to expire at time tn.
+
+   o  pmembers is set to members.
+
+   If an RTCP packet is transmitted, the value of initial is set to
+   FALSE.  Furthermore, the value of avg_rtcp_size is updated:
+
+      avg_rtcp_size = (1/16) * packet_size + (15/16) * avg_rtcp_size
+
+   where packet_size is the size of the RTCP packet just transmitted.
+
+
+      
+      
+      
+
+6.3.7. Transmitting a BYE Packet
+
+      
+      
+   When a participant wishes to leave a session, a BYE packet is
+   transmitted to inform the other participants of the event.  In order
+   to avoid a flood of BYE packets when many participants leave the
+   system, a participant MUST execute the following algorithm if the
+   number of members is more than 50 when the participant chooses to
+   leave.  This algorithm usurps the normal role of the members variable
+   to count BYE packets instead:
+
+   o  When the participant decides to leave the system, tp is reset to
+      tc, the current time, members and pmembers are initialized to 1,
+      initial is set to 1, we_sent is set to false, senders is set to 0,
+      and avg_rtcp_size is set to the size of the compound BYE packet.
+      The calculated interval T is computed.  The BYE packet is then
+      scheduled for time tn = tc + T.
+
+   o  Every time a BYE packet from another participant is received,
+      members is incremented by 1 regardless of whether that participant
+      exists in the member table or not, and when SSRC sampling is in
+      use, regardless of whether or not the BYE SSRC would be included
+      in the sample.  members is NOT incremented when other RTCP packets
+      or RTP packets are received, but only for BYE packets.  Similarly,
+      avg_rtcp_size is updated only for received BYE packets.  senders
+      is NOT updated when RTP packets arrive; it remains 0.
+
+   o  Transmission of the BYE packet then follows the rules for
+      transmitting a regular RTCP packet, as above.
+
+   This allows BYE packets to be sent right away, yet controls their
+   total bandwidth usage.  In the worst case, this could cause RTCP
+   control packets to use twice the bandwidth as normal (10%) -- 5% for
+   non-BYE RTCP packets and 5% for BYE.
+
+   A participant that does not want to wait for the above mechanism to
+   allow transmission of a BYE packet MAY leave the group without
+   sending a BYE at all.  That participant will eventually be timed out
+   by the other group members.
+
+   If the group size estimate members is less than 50 when the
+   participant decides to leave, the participant MAY send a BYE packet
+   immediately.  Alternatively, the participant MAY choose to execute
+   the above BYE backoff algorithm.
+
+   In either case, a participant which never sent an RTP or RTCP packet
+   MUST NOT send a BYE packet when they leave the group.
+
+
+      
+      
+      
+
+6.3.8. Updating we_sent
+
+      
+      
+   The variable we_sent contains true if the participant has sent an RTP
+   packet recently, false otherwise.  This determination is made by
+   using the same mechanisms as for managing the set of other
+   participants listed in the senders table.  If the participant sends
+   an RTP packet when we_sent is false, it adds itself to the sender
+   table and sets we_sent to true.  The reverse reconsideration
+   algorithm described in Section 6.3.4 SHOULD be performed to possibly
+   reduce the delay before sending an SR packet.  Every time another RTP
+   packet is sent, the time of transmission of that packet is maintained
+   in the table.  The normal sender timeout algorithm is then applied to
+   the participant -- if an RTP packet has not been transmitted since
+   time tc - 2T, the participant removes itself from the sender table,
+   decrements the sender count, and sets we_sent to false.
+
+
+      
+      
+      
+
+6.3.9. Allocation of Source Description Bandwidth
+
+      
+      
+   This specification defines several source description (SDES) items in
+   addition to the mandatory CNAME item, such as NAME (personal name)
+   and EMAIL (email address).  It also provides a means to define new
+   application-specific RTCP packet types.  Applications should exercise
+   caution in allocating control bandwidth to this additional
+   information because it will slow down the rate at which reception
+   reports and CNAME are sent, thus impairing the performance of the
+   protocol.  It is RECOMMENDED that no more than 20% of the RTCP
+   bandwidth allocated to a single participant be used to carry the
+   additional information.  Furthermore, it is not intended that all
+   SDES items will be included in every application.  Those that are
+   included SHOULD be assigned a fraction of the bandwidth according to
+   their utility.  Rather than estimate these fractions dynamically, it
+   is recommended that the percentages be translated statically into
+   report interval counts based on the typical length of an item.
+
+   For example, an application may be designed to send only CNAME, NAME
+   and EMAIL and not any others.  NAME might be given much higher
+   priority than EMAIL because the NAME would be displayed continuously
+   in the application's user interface, whereas EMAIL would be displayed
+   only when requested.  At every RTCP interval, an RR packet and an
+   SDES packet with the CNAME item would be sent.  For a small session
+
+   operating at the minimum interval, that would be every 5 seconds on
+   the average.  Every third interval (15 seconds), one extra item would
+   be included in the SDES packet.  Seven out of eight times this would
+   be the NAME item, and every eighth time (2 minutes) it would be the
+   EMAIL item.
+
+   When multiple applications operate in concert using cross-application
+   binding through a common CNAME for each participant, for example in a
+   multimedia conference composed of an RTP session for each medium, the
+   additional SDES information MAY be sent in only one RTP session.  The
+   other sessions would carry only the CNAME item.  In particular, this
+   approach should be applied to the multiple sessions of a layered
+   encoding scheme (see Section 2.4).
+
+
+      
+      
+
+6.4. Sender and Receiver Reports
+
+      
+      
+   RTP receivers provide reception quality feedback using RTCP report
+   packets which may take one of two forms depending upon whether or not
+   the receiver is also a sender.  The only difference between the
+   sender report (SR) and receiver report (RR) forms, besides the packet
+   type code, is that the sender report includes a 20-byte sender
+   information section for use by active senders.  The SR is issued if a
+   site has sent any data packets during the interval since issuing the
+   last report or the previous one, otherwise the RR is issued.
+
+   Both the SR and RR forms include zero or more reception report
+   blocks, one for each of the synchronization sources from which this
+   receiver has received RTP data packets since the last report.
+   Reports are not issued for contributing sources listed in the CSRC
+   list.  Each reception report block provides statistics about the data
+   received from the particular source indicated in that block.  Since a
+   maximum of 31 reception report blocks will fit in an SR or RR packet,
+   additional RR packets SHOULD be stacked after the initial SR or RR
+   packet as needed to contain the reception reports for all sources
+   heard during the interval since the last report.  If there are too
+   many sources to fit all the necessary RR packets into one compound
+   RTCP packet without exceeding the MTU of the network path, then only
+   the subset that will fit into one MTU SHOULD be included in each
+   interval.  The subsets SHOULD be selected round-robin across multiple
+   intervals so that all sources are reported.
+
+   The next sections define the formats of the two reports, how they may
+   be extended in a profile-specific manner if an application requires
+   additional feedback information, and how the reports may be used.
+   Details of reception reporting by translators and mixers is given in
+   Section 7.
+
+
+/**
+ *
+ *	@param
+ *	@return
+ */
+ 
+ The MIT License
+
+
+ 
+
+Copyright (c) <year> <copyright holders>
+
+
+
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+
+
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+
+
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+TODO: need to increase checking and return codes for member and schedule classes.
+
+

@@ -1,0 +1,185 @@
+/*
+ *  Socket.h
+ *  vrtp
+ *
+ *  Created by David Lapsley on Fri Feb 20 2004.
+ *  Copyright (c) 2004 __MyCompanyName__. All rights reserved.
+ *
+ */
+
+#ifndef SOCKET_H
+#define SOCKET_H
+
+#include <common.h>
+#include <string>
+#include <vector>
+#include <iostream>
+#ifdef LINUX
+#include <unistd.h>
+#endif // LINUX
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <Object.h>
+
+///
+using namespace std;
+
+/// SocketBuffer;
+typedef vector<unsigned char> SocketBuffer;
+
+/// Control Block!
+struct SocketBufferCtrlBlk {
+///
+	int _bytes_to_send;
+///
+	int _bytes_sent;
+///
+	int _bytes_to_rcv;
+///
+	int _bytes_rcvd;
+///
+	SocketBufferCtrlBlk() {
+		_bytes_to_send=_bytes_sent=0;
+		_bytes_to_rcv=_bytes_rcvd=0;
+	}
+///
+	~SocketBufferCtrlBlk() {}
+};
+
+/// Used for error detection/processing.
+class SocketException {
+private:
+    ///
+    string _message;
+public:
+    ///
+    SocketException(const string& s):
+	_message(s) { }
+    ///
+    ~SocketException()
+    {
+    }
+    ///
+    const char* what() {
+        return (_message.c_str());
+    }
+};
+
+/** Here are some more comments.
+  * Blah.
+  */
+class Socket: public Object {
+protected:
+	/** Encapsulated socket descriptor. 
+		More stuff..
+		More stuff..
+		End
+		*/
+    int _sockd;
+///
+	int _type;
+	/** Maximum Transmission Unit for this socket. */
+	int _mtu;
+	/// Total number of bytes sent.
+	int _bytes_sent;
+	/** Total number of bytes received. */
+    int _bytes_rcvd;
+	/** Total number of calls to send. */
+    int _send_calls;
+	/** Total number of calls to recv. */
+    int _recv_calls;
+	/** Current value of socket option. */
+	int _so_reuseaddr;
+	/** Current value of socket option. */
+	struct linger _so_linger;
+	/** Current value of socket option. */
+	int _so_rcvbuf;
+	/** Current value of socket option. */
+	int _so_sndbuf;
+	/** Current value of socket option. */
+	int _so_rcvlowat;
+	/** Current value of socket option. */
+	int _so_sndlowat;
+	/** Current value of tcp option. */
+	int _tcp_nodelay;
+	/** Current value of ip option. */
+	int _ip_tos;
+	/** Current value of socket option. */
+	int _blocking;
+	/** Stored value of blocking flags. */
+	int _blocking_flags;
+public:
+	/** Constant flag value used in set_blocking(). */
+	static const int blocking;
+	/** Constant flag value used in set_blocking(). */
+	static const int nonblocking;
+	// Constructors/Destructors.
+	/** 
+	  * @param type of socket (as per C socket() call).
+	  * @return none
+	  * @doc constructs a Socket object.
+	  */
+    Socket(const int& type);
+///
+	Socket(const int& type, const int& s, const int&m);
+    ///
+    Socket();
+///
+	virtual ~Socket();
+	/// Member access.
+	int get_sockd() const;
+///
+	int get_type() const;
+///
+	int get_mtu() const;
+///
+	int get_bytes_sent() const;
+///
+	int get_bytes_rcvd() const;
+///
+	int get_send_calls() const;
+///
+	int get_recv_calls() const;
+	/// Options.
+	int set_so_reuseaddr(const int& yes);
+///
+	int get_so_reuseaddr() const;
+///
+	int set_so_linger(const int& onoff, const int& time);
+///
+	const struct linger& get_so_linger() const;
+///
+	int set_so_rcvbuf(const int& sz);
+///
+	int get_so_rcvbuf() const;
+///
+	int set_so_sndbuf(const int& sz);
+///
+	int get_so_sndbuf() const;
+///
+	int set_so_rcvlowat(const int& m);
+///
+	int get_so_rcvlowat() const;
+///
+	int set_so_sndlowat(const int& m);	
+///
+	int get_so_sndlowat() const;	
+///
+	int set_tcp_nodelay(const int& n);	
+///
+	int get_tcp_nodelay() const;	
+	/// Blocking.
+	int set_blocking(const int& b);
+///
+	int get_blocking() const;
+	/// Socket connection termination...
+    const int shutdown(const int& how);
+    ///
+    const int close();
+};
+
+#endif
+
+

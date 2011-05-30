@@ -1,0 +1,21 @@
+AC_INIT(src/app/main.cpp)
+AM_INIT_AUTOMAKE(vsocket.app, 0.7.g)
+dnl checks for programs
+AC_PROG_CXX
+AC_PROG_RANLIB
+dnl checks for libraries
+dnl checks for header files
+dnl checks for types
+AC_CHECK_TYPES(socklen_t)
+AC_C_BIGENDIAN
+AC_SYS_LARGEFILE
+dnl checks for structures
+dnl checks for compiler characteristics
+dnl checks for library functions
+dnl checks for system services
+CXXFLAGS="-DHELLO2"
+AC_CONFIG_AUX_DIR(config)
+AM_CONFIG_HEADER(config.h)
+AC_OUTPUT(Makefile src/Makefile src/dutils/Makefile src/vsocket/Makefile src/app/Makefile)
+
+

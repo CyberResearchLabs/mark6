@@ -1,0 +1,209 @@
+\section{vtp.h File Reference}
+\label{vtp_8h}\index{vtp.h@{vtp.h}}
+{\tt \#include $<$stdlib.h$>$}\par
+{\tt \#include $<$unistd.h$>$}\par
+{\tt \#include $<$ctype.h$>$}\par
+{\tt \#include $<$sys/types.h$>$}\par
+{\tt \#include $<$time.h$>$}\par
+{\tt \#include $<$netinet/in.h$>$}\par
+{\tt \#include $<$sys/socket.h$>$}\par
+{\tt \#include $<$string.h$>$}\par
+{\tt \#include $<$stdio.h$>$}\par
+{\tt \#include $<$glib.h$>$}\par
+\subsection*{Compounds}
+\begin{CompactItemize}
+\item 
+struct {\bf vtp\_\-ctrl\_\-hdr\_\-t}
+\item 
+struct {\bf vtp\_\-data\_\-hdr\_\-t}
+\item 
+struct {\bf vtp\_\-options\_\-t}
+\item 
+struct {\bf vtp\_\-rtcp\_\-init\_\-t}
+\item 
+struct {\bf vtp\_\-rtp\_\-init\_\-t}
+\end{CompactItemize}
+\subsection*{Defines}
+\begin{CompactItemize}
+\item 
+\#define {\bf VTP\_\-VERSION}\ 31415
+\item 
+\#define {\bf MAX\_\-WINDOW\_\-SIZE}\ 1000;
+\end{CompactItemize}
+\subsection*{Enumerations}
+\begin{CompactItemize}
+\item 
+enum {\bf vtp\_\-mode\_\-t} \{ {\bf CLIENT}, 
+{\bf SERVER}, 
+{\bf TEST}
+ \}
+\item 
+enum {\bf vtp\_\-pt\_\-t} \{ \par
+{\bf CTRL\_\-START} =  0x1, 
+{\bf CTRL\_\-STOP} =  0x2, 
+{\bf CTRL\_\-ACK} =  0x4, 
+{\bf CTRL\_\-PROBE} =  0x8, 
+\par
+{\bf DATA} =  0x10
+ \}
+\item 
+enum {\bf vtp\_\-state\_\-t} \{ \par
+{\bf INIT} =  0, 
+{\bf CONNECTED} =  1, 
+{\bf ACKING} =  2, 
+{\bf PROBING} =  3, 
+\par
+{\bf CLOSING} =  4
+ \}
+\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+int {\bf vtp\_\-foption} (int argc, const char $\ast$argv[$\,$], {\bf vtp\_\-options\_\-t} $\ast$options)
+\item 
+void {\bf vtp\_\-usage} (FILE $\ast$out)
+\item 
+int {\bf vtp\_\-init} (char $\ast$remote\_\-ip, u\_\-int16\_\-t ctrl\_\-port, u\_\-int16\_\-t data\_\-port)
+\item 
+int {\bf vtp\_\-check\_\-ctrl} (int {\bf ctrl\_\-connect\_\-sock}, u\_\-int8\_\-t $\ast${\bf ctrl\_\-rcv\_\-buf}, int sz\_\-ctrl\_\-rcv\_\-buf, struct timeval $\ast$timeout)
+\item 
+int {\bf vtp\_\-send\_\-ctrl} (int {\bf ctrl\_\-connect\_\-sock}, u\_\-int8\_\-t $\ast${\bf ctrl\_\-snd\_\-buf}, int sz\_\-ctrl\_\-snd\_\-buf, {\bf vtp\_\-pt\_\-t} type)
+\item 
+int {\bf vtp\_\-check\_\-data} (int {\bf data\_\-sock}, u\_\-int8\_\-t $\ast${\bf data\_\-rcv\_\-buf}, int sz\_\-data\_\-rcv\_\-buf, struct timeval $\ast$timeout)
+\item 
+int {\bf vtp\_\-send\_\-data} (int {\bf data\_\-sock}, u\_\-int8\_\-t $\ast$hdr\_\-buf, int sz\_\-hdr\_\-buf, u\_\-int8\_\-t $\ast$data\_\-to\_\-snd, int sz\_\-data\_\-to\_\-snd)
+\item 
+int {\bf vtp\_\-read\_\-data} (FILE $\ast$inf, u\_\-int8\_\-t $\ast${\bf data\_\-buf}, int sz\_\-data\_\-buf)
+\item 
+int {\bf vtp\_\-write\_\-data} (FILE $\ast$outf, u\_\-int8\_\-t $\ast${\bf data\_\-buf}, int sz\_\-data\_\-buf)
+\item 
+int {\bf vtp\_\-signal} (int signo, void($\ast$func)())
+\end{CompactItemize}
+
+
+\subsection{Define Documentation}
+\index{vtp.h@{vtp.h}!MAX_WINDOW_SIZE@{MAX\_\-WINDOW\_\-SIZE}}
+\index{MAX_WINDOW_SIZE@{MAX\_\-WINDOW\_\-SIZE}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}\#define MAX\_\-WINDOW\_\-SIZE\ 1000;}\label{vtp_8h_a1}
+
+
+\index{vtp.h@{vtp.h}!VTP_VERSION@{VTP\_\-VERSION}}
+\index{VTP_VERSION@{VTP\_\-VERSION}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}\#define VTP\_\-VERSION\ 31415}\label{vtp_8h_a0}
+
+
+
+
+\subsection{Enumeration Type Documentation}
+\index{vtp.h@{vtp.h}!vtp_mode_t@{vtp\_\-mode\_\-t}}
+\index{vtp_mode_t@{vtp\_\-mode\_\-t}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}enum {\bf vtp\_\-mode\_\-t}}\label{vtp_8h_a25}
+
+
+\begin{Desc}
+\item[Enumeration values: ]\par
+\begin{description}
+\index{CLIENT@{CLIENT}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!CLIENT@{CLIENT}}\item[{\em 
+{\em CLIENT}\label{vtp_8h_a25a2}
+}]\index{SERVER@{SERVER}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!SERVER@{SERVER}}\item[{\em 
+{\em SERVER}\label{vtp_8h_a25a3}
+}]\index{TEST@{TEST}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!TEST@{TEST}}\item[{\em 
+{\em TEST}\label{vtp_8h_a25a4}
+}]\end{description}
+\end{Desc}
+
+\index{vtp.h@{vtp.h}!vtp_pt_t@{vtp\_\-pt\_\-t}}
+\index{vtp_pt_t@{vtp\_\-pt\_\-t}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}enum {\bf vtp\_\-pt\_\-t}}\label{vtp_8h_a26}
+
+
+\begin{Desc}
+\item[Enumeration values: ]\par
+\begin{description}
+\index{CTRL_START@{CTRL\_\-START}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!CTRL_START@{CTRL\_\-START}}\item[{\em 
+{\em CTRL\_\-START}\label{vtp_8h_a26a5}
+}]\index{CTRL_STOP@{CTRL\_\-STOP}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!CTRL_STOP@{CTRL\_\-STOP}}\item[{\em 
+{\em CTRL\_\-STOP}\label{vtp_8h_a26a6}
+}]\index{CTRL_ACK@{CTRL\_\-ACK}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!CTRL_ACK@{CTRL\_\-ACK}}\item[{\em 
+{\em CTRL\_\-ACK}\label{vtp_8h_a26a7}
+}]\index{CTRL_PROBE@{CTRL\_\-PROBE}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!CTRL_PROBE@{CTRL\_\-PROBE}}\item[{\em 
+{\em CTRL\_\-PROBE}\label{vtp_8h_a26a8}
+}]\index{DATA@{DATA}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!DATA@{DATA}}\item[{\em 
+{\em DATA}\label{vtp_8h_a26a9}
+}]\end{description}
+\end{Desc}
+
+\index{vtp.h@{vtp.h}!vtp_state_t@{vtp\_\-state\_\-t}}
+\index{vtp_state_t@{vtp\_\-state\_\-t}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}enum {\bf vtp\_\-state\_\-t}}\label{vtp_8h_a27}
+
+
+\begin{Desc}
+\item[Enumeration values: ]\par
+\begin{description}
+\index{INIT@{INIT}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!INIT@{INIT}}\item[{\em 
+{\em INIT}\label{vtp_8h_a27a10}
+}]\index{CONNECTED@{CONNECTED}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!CONNECTED@{CONNECTED}}\item[{\em 
+{\em CONNECTED}\label{vtp_8h_a27a11}
+}]\index{ACKING@{ACKING}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!ACKING@{ACKING}}\item[{\em 
+{\em ACKING}\label{vtp_8h_a27a12}
+}]\index{PROBING@{PROBING}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!PROBING@{PROBING}}\item[{\em 
+{\em PROBING}\label{vtp_8h_a27a13}
+}]\index{CLOSING@{CLOSING}!vtp.h@{vtp.h}}\index{vtp.h@{vtp.h}!CLOSING@{CLOSING}}\item[{\em 
+{\em CLOSING}\label{vtp_8h_a27a14}
+}]\end{description}
+\end{Desc}
+
+
+
+\subsection{Function Documentation}
+\index{vtp.h@{vtp.h}!vtp_check_ctrl@{vtp\_\-check\_\-ctrl}}
+\index{vtp_check_ctrl@{vtp\_\-check\_\-ctrl}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-check\_\-ctrl (int {\em ctrl\_\-connect\_\-sock}, u\_\-int8\_\-t $\ast$ {\em ctrl\_\-rcv\_\-buf}, int {\em sz\_\-ctrl\_\-rcv\_\-buf}, struct timeval $\ast$ {\em timeout})}\label{vtp_8h_a18}
+
+
+\index{vtp.h@{vtp.h}!vtp_check_data@{vtp\_\-check\_\-data}}
+\index{vtp_check_data@{vtp\_\-check\_\-data}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-check\_\-data (int {\em data\_\-sock}, u\_\-int8\_\-t $\ast$ {\em data\_\-rcv\_\-buf}, int {\em sz\_\-data\_\-rcv\_\-buf}, struct timeval $\ast$ {\em timeout})}\label{vtp_8h_a20}
+
+
+\index{vtp.h@{vtp.h}!vtp_foption@{vtp\_\-foption}}
+\index{vtp_foption@{vtp\_\-foption}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-foption (int {\em argc}, const char $\ast$ {\em argv}[$\,$], {\bf vtp\_\-options\_\-t} $\ast$ {\em options})}\label{vtp_8h_a15}
+
+
+\index{vtp.h@{vtp.h}!vtp_init@{vtp\_\-init}}
+\index{vtp_init@{vtp\_\-init}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-init (char $\ast$ {\em remote\_\-ip}, u\_\-int16\_\-t {\em ctrl\_\-port}, u\_\-int16\_\-t {\em data\_\-port})}\label{vtp_8h_a17}
+
+
+\index{vtp.h@{vtp.h}!vtp_read_data@{vtp\_\-read\_\-data}}
+\index{vtp_read_data@{vtp\_\-read\_\-data}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-read\_\-data (FILE $\ast$ {\em inf}, u\_\-int8\_\-t $\ast$ {\em data\_\-buf}, int {\em sz\_\-data\_\-buf})}\label{vtp_8h_a22}
+
+
+\index{vtp.h@{vtp.h}!vtp_send_ctrl@{vtp\_\-send\_\-ctrl}}
+\index{vtp_send_ctrl@{vtp\_\-send\_\-ctrl}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-send\_\-ctrl (int {\em ctrl\_\-connect\_\-sock}, u\_\-int8\_\-t $\ast$ {\em ctrl\_\-snd\_\-buf}, int {\em sz\_\-ctrl\_\-snd\_\-buf}, {\bf vtp\_\-pt\_\-t} {\em type})}\label{vtp_8h_a19}
+
+
+\index{vtp.h@{vtp.h}!vtp_send_data@{vtp\_\-send\_\-data}}
+\index{vtp_send_data@{vtp\_\-send\_\-data}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-send\_\-data (int {\em data\_\-sock}, u\_\-int8\_\-t $\ast$ {\em hdr\_\-buf}, int {\em sz\_\-hdr\_\-buf}, u\_\-int8\_\-t $\ast$ {\em data\_\-to\_\-snd}, int {\em sz\_\-data\_\-to\_\-snd})}\label{vtp_8h_a21}
+
+
+\index{vtp.h@{vtp.h}!vtp_signal@{vtp\_\-signal}}
+\index{vtp_signal@{vtp\_\-signal}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-signal (int {\em signo}, void($\ast$ {\em func})())}\label{vtp_8h_a24}
+
+
+\index{vtp.h@{vtp.h}!vtp_usage@{vtp\_\-usage}}
+\index{vtp_usage@{vtp\_\-usage}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void vtp\_\-usage (FILE $\ast$ {\em out})}\label{vtp_8h_a16}
+
+
+\index{vtp.h@{vtp.h}!vtp_write_data@{vtp\_\-write\_\-data}}
+\index{vtp_write_data@{vtp\_\-write\_\-data}!vtp.h@{vtp.h}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int vtp\_\-write\_\-data (FILE $\ast$ {\em outf}, u\_\-int8\_\-t $\ast$ {\em data\_\-buf}, int {\em sz\_\-data\_\-buf})}\label{vtp_8h_a23}
+
+
