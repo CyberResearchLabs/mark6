@@ -1,6 +1,6 @@
 include ../Makefile.inc
 
-LIBS=		-lpthread \
+LIBS	=	-lpthread \
 		-ldl \
 		-lboost_program_options-mt \
 		-lboost_system-mt \
@@ -8,7 +8,9 @@ LIBS=		-lpthread \
 		-lm \
 		-llog4cxx 
 
-SOURCES=	main.cc
+SOURCES	=	main.cc \
+		SocketBuffer.cc \
+		UDPSocket.cc
 
 OBJECTS=$(SOURCES:.cc=.o)
 
@@ -27,6 +29,7 @@ tar: ${SOURCES} ${HDR}
 clean:
 	$(ECHO) cleaning up in src
 	-$(RM) -f $(EXECUTABLE) $(OBJECTS)
+	-$(RM) -f *.log
 
 dist:	
 	$(ECHO) creating distribution

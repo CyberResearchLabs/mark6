@@ -1,39 +1,27 @@
 /*
- *  Created by David Lapsley on Mon May 30 2011.
+ * Created by David Lapsley on Mon May 30 2011.
  *
- * This software is released under the terms of the MIT License(included below). 
+ * Copyright 2003, 2011 MIT Haystack Observatory 
  *  
- * Copyright (c) 2003, 2011 MIT Haystack Observatory 
- *  
- * Permission is hereby granted, free of charge, to any person obtaining a   
- * copy of this software and associated documentation files (the "Software"),    
- * to deal in the Software without restriction, including without limitation   
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,   
- * and/or sell copies of the Software, and to permit persons to whom the  
- * Software is furnished to do so, subject to the following conditions: 
- *  
- * The above copyright notice and this permission notice shall be included in    
- * all copies or substantial portions of the Software. 
- *   
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE  
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER   
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
- * SOFTWARE. 
+ * This file is part of mark6.
+ *
+ * mark6 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * mark6 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with mark6.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
 
 
 // C includes.
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 // C++ includes.
 #include <iostream>
@@ -44,12 +32,9 @@
 // Framework includes.
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <log4cxx/logger.h>
-#include <log4cxx/helpers/exception.h>
-#include <log4cxx/propertyconfigurator.h>
 
 // Local includes.
-
+#include <Mark6.h>
 
 #if 0
 #include <iostream>
@@ -69,10 +54,6 @@
 
 // Namespaces.
 namespace po = boost::program_options;
-using namespace log4cxx;
-using namespace log4cxx::helpers;
-
-extern LoggerPtr logger;
 
 // Run simple tests.
 void run_tests() {
@@ -83,8 +64,8 @@ void run_tests() {
 // @return None.
 void
 usage(const po::options_description& desc) {
-  std::cout
-    << "mark6 [options]" << std::endl
+  cout
+    << "mark6 [options]" << endl
     << desc;
 }
 
@@ -96,13 +77,13 @@ LoggerPtr logger(Logger::getLogger("mark6"));
 int main (int argc, char* argv[])
 {
   // Variables to store options.
-  std::string log_config; 
+  string log_config; 
   int port = 0;
-  std::string data_file;
-  std::string hash_type;
-  std::string config;
-  std::string schema_config;
-  std::string cdr_select_string;
+  string data_file;
+  string hash_type;
+  string config;
+  string schema_config;
+  string cdr_select_string;
   int topx_size = 0;
   int window_size = 0;
   int reorder_window = 0;
@@ -116,29 +97,29 @@ int main (int argc, char* argv[])
     ("run-tests", "Run test programs")
     (
      "data-file",
-     po::value<std::string>(&data_file)->default_value(std::string("mark6.dat")),
+     po::value<string>(&data_file)->default_value(string("mark6.dat")),
      "Output data file name"
      )
     (
      "config",
-     po::value<std::string>(&config)->default_value(std::string("mark6.xml")),
+     po::value<string>(&config)->default_value(string("mark6.xml")),
      "XML configuration file name"
      )
     (
      "schema-config",
-     po::value<std::string>(&schema_config)
-     ->default_value(std::string("mark6-schema.cfg")),
+     po::value<string>(&schema_config)
+     ->default_value(string("mark6-schema.cfg")),
      "schema configuration file name"
      )
     (
      "log-config",
-     po::value<std::string>(&log_config)
-     ->default_value(std::string("mark6-log.cfg")),
+     po::value<string>(&log_config)
+     ->default_value(string("mark6-log.cfg")),
      "Log configuration file name"
      )
     (
      "hash-type",
-     po::value<std::string>(&hash_type)->default_value(std::string("static")),
+     po::value<string>(&hash_type)->default_value(string("static")),
      "Hash type to use (static | dynamic)"
      )
     (
@@ -168,9 +149,9 @@ int main (int argc, char* argv[])
      )
     (
      "cdr-select",
-     po::value<std::string>(&cdr_select_string)
-     ->default_value(std::string("SELECT * FROM cdrs;")),
-     "CDR select std::string."
+     po::value<string>(&cdr_select_string)
+     ->default_value(string("SELECT * FROM cdrs;")),
+     "CDR select string."
      );
 
   // Parse options.
@@ -188,9 +169,8 @@ int main (int argc, char* argv[])
   }
 
   if (vm.count("v")) {
-    std::cout << "Netbloom version: "
-         << "$Id: main.cc,v 1.14 2009-06-12 13:44:01 dlapsley Exp $"
-         << std::endl;
+    cout << "Mark6 version: 0.1.0"
+         << endl;
     return 1;
   }
 
@@ -226,7 +206,7 @@ int main (int argc, char* argv[])
     LOG4CXX_INFO(logger, "Starting reactor.");
     // IO_SERVICE.run();
   } catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
+    cerr << e.what() << endl;
   }
 
   return 0;

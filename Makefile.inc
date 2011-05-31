@@ -15,6 +15,7 @@ CC=		g++
 CFLAGS=		-c \
 		-Wall
 INCLUDES=	-I/opt/src/mark6/include \
+		-I/opt/src/mark6/src \
 		-I/opt/local/include
 DEFINES=	-DLINUX
 LDFLAGS=	-L/opt/local/lib
