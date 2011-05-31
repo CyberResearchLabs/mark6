@@ -1,0 +1,24 @@
+This directory contains the source code and documentation
+for the MIT Haystack Mark6 data acquisition software.
+
+It is distributed under the terms set out in the LICENSE file.
+
+This directory contains the following directories and files:
+
+INSTALL		Describes how to install the software environment.
+LICENSE		Describes the license under which this software is distributed.
+NEWS		Describes the release notes for each release.
+docs		User documentation is stored in this directory.
+src		Source code, test code, release configuration files are 
+		stored in this directory.
+tools		Configuration, build, test, and release tools.
+Makefile	Build, test, release managemement.
+src		mark6 source in here.
+include		mark6 include files in here.
+
+This program is written in the Erlang programming language (www.erlang.org).
+Erlang is a highly available, concurrent, distributed, functional programming
+language designed for massively distributed systems.
+
+Please direct any questions, comments, suggestions, or bug reports to 
+<del@haystack.mit.edu>.
