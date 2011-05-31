@@ -42,18 +42,10 @@
 
 #if 0
 #include <iostream>
-#include <exception>
 #include <TCPSocket.h>
-#include <UDPSocket.h>
-#include <Options.h>
-#include <SocketBuffer.h>
 #include <Client.h>
 #include <Server.h>
 #include <Test.h>
-#include <RTP.h>
-#include <RTPSession.h>
-#include <Logsystem.h>
-#include <Logger.h>
 #endif
 
 // Namespaces.
@@ -88,9 +80,9 @@ usage(const po::options_description& desc) {
 // Global logger definition.
 LoggerPtr logger(Logger::getLogger("mark6"));
 
-
 // Program entry point.
-int main (int argc, char* argv[])
+int
+main (int argc, char* argv[])
 {
   // Variables to store options.
   string log_config; 
