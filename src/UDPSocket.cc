@@ -43,9 +43,9 @@ UDPSocket::UDPSocket():
 UDPSocket::UDPSocket(int s):
   vtp::Socket()
 {
-  LOG4CXX_DEBUG(logger, "UDPSocket::UDPSocket()\n");
+  LOG4CXX_DEBUG(logger, "UDPSocket::UDPSocket()");
   if (_sockd!=-1) {
-        
+    LOG4CXX_ERROR(logger, "UDPSocket::UDPSocket() - overwriting descriptor.");
   }
   _sockd=s;
 }
@@ -59,7 +59,7 @@ UDPSocket::~UDPSocket()
 
 void UDPSocket::bind(string ip, int port)
 {
-  LOG4CXX_DEBUG(logger, "UDPSocket::bind()\n");
+  LOG4CXX_DEBUG(logger, "UDPSocket::bind()");
   char* p=(char*)ip.data();
   struct sockaddr_in addr;
   int ret=0;

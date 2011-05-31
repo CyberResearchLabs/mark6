@@ -22,12 +22,14 @@
 
 
 // C includes.
+#include <unistd.h>
 
 // C++ includes.
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <bitset>
+#include <sstream>
 
 // Framework includes.
 #include <boost/program_options.hpp>
@@ -35,6 +37,8 @@
 
 // Local includes.
 #include <Mark6.h>
+#include <SocketBuffer.h>
+#include <UDPSocket.h>
 
 #if 0
 #include <iostream>
@@ -56,7 +60,19 @@
 namespace po = boost::program_options;
 
 // Run simple tests.
-void run_tests() {
+void run_tests(std::string src_ip, int src_port) {
+  LOG4CXX_INFO(logger, "Running tests.");
+  SocketBuffer b;
+  UDPSocket s;
+  std::string address("0.0.0.0");
+  s.bind(address, 8042);
+  while (true) {
+    stringstream ss;
+    int n = s.recvfrom(src_ip, src_port, b);
+    ss << "Received " << n << " bytes.";
+    LOG4CXX_INFO(logger, ss.str());
+  }
+  s.close();
 }
 
 // Print usage message.
@@ -88,6 +104,9 @@ int main (int argc, char* argv[])
   int window_size = 0;
   int reorder_window = 0;
   int rt_flag = 0;
+
+  string src_ip;
+  int src_port;
 
   // Declare supported options.
   po::options_description desc("Allowed options");
@@ -152,7 +171,20 @@ int main (int argc, char* argv[])
      po::value<string>(&cdr_select_string)
      ->default_value(string("SELECT * FROM cdrs;")),
      "CDR select string."
-     );
+     )
+
+    (
+     "src-ip",
+     po::value<string>(&src_ip)
+     ->default_value(string("127.0.0.1")),
+     "Source IP."
+     )
+    (
+     "src-port",
+     po::value<int>(&src_port)->default_value(5000),
+     "Source port (5000)"
+    )
+    ;
 
   // Parse options.
   po::variables_map vm;
@@ -175,7 +207,7 @@ int main (int argc, char* argv[])
   }
 
   if (vm.count("run-tests")) {
-    run_tests();
+    run_tests(src_ip, src_port);
     return 0;
   }
 

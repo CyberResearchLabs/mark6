@@ -29,7 +29,7 @@
 
 SocketBuffer::SocketBuffer() {
     _max_size=DEFAULT_SOCKET_BUFFER_SIZE;
-    _buf=new char(_max_size);
+    _buf=new char[_max_size];
     memset(_buf, 0, _max_size); // XXX
     _size=0;
     _req_size=_max_size;
@@ -37,7 +37,7 @@ SocketBuffer::SocketBuffer() {
 
 SocketBuffer::SocketBuffer(const string& s) {
     _max_size=s.length()+1;
-    _buf=new char(_max_size);
+    _buf=new char[_max_size];
     _size=_req_size=_max_size;
     s.copy(_buf, s.length());
     _buf[_max_size]=0;
@@ -45,7 +45,7 @@ SocketBuffer::SocketBuffer(const string& s) {
 
 SocketBuffer::SocketBuffer(int s) {
     _max_size=s;
-    _buf=new char(_max_size);
+    _buf=new char[_max_size];
     _req_size=_max_size;
     _size=0;
 }
@@ -53,7 +53,7 @@ SocketBuffer::SocketBuffer(int s) {
 SocketBuffer::SocketBuffer(const SocketBuffer& s)
 {
     _max_size=s.get_max_size();
-    _buf=new char(_max_size);
+    _buf=new char[_max_size];
     _size=s.get_size();
     _req_size=s.get_req_size();
     strncpy(_buf, s.get_buf(), s.get_size());
@@ -63,8 +63,8 @@ SocketBuffer& SocketBuffer::operator=(const SocketBuffer& s)
 {
     if (_max_size!=s.get_max_size()) {
         _max_size=s.get_max_size();
-        delete(_buf);
-        _buf=new char(_max_size);
+        delete []_buf;
+        _buf=new char[_max_size];
     }
     strncpy(_buf, s.get_buf(), s.get_size());
     _size=s.get_size();
@@ -84,9 +84,9 @@ SocketBuffer& SocketBuffer::operator+=(const SocketBuffer& s)
     // no room. need to enlarge buffer.
     const int buf_factor=2;
     const int new_max_size=buf_factor*(_size+s.get_size());
-    char* tmp_buf=new char(new_max_size);
+    char* tmp_buf=new char[new_max_size];
     strncpy(tmp_buf, _buf, _size);
-    delete(_buf);
+    delete [] _buf;
     _buf=tmp_buf;
     tmp_buf+=_size;	
     strncpy(tmp_buf, s.get_buf(), s.get_size());
@@ -97,7 +97,7 @@ SocketBuffer& SocketBuffer::operator+=(const SocketBuffer& s)
 
 SocketBuffer::~SocketBuffer() 
 {
-    delete(_buf);
+    delete [] _buf;
 }
 
 int SocketBuffer::get_size() const 
