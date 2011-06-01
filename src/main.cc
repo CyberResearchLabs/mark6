@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include <sys/resource.h>
 
 // C++ includes.
 #include <iostream>
@@ -39,11 +40,14 @@
 #include <boost/foreach.hpp>
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
 
 // Local includes.
 #include <Mark6.h>
 #include <SocketBuffer.h>
 #include <UDPSocket.h>
+#include <Timer.h>
+#include <IO.h>
 
 #if 0
 #include <iostream>
@@ -57,7 +61,7 @@
 namespace po = boost::program_options;
 
 // Run simple tests.
-void run_network_tests(std::string src_ip, int src_port) {
+void run_tests(std::string src_ip, int src_port) {
   LOG4CXX_INFO(logger, "Running tests.");
   SocketBuffer b;
   UDPSocket s;
@@ -81,43 +85,82 @@ void build_select_list(fd_set& fdset, int& max_fd, int* fds, int fd_len) {
   }
 }
 
-void run_tests(std::string src_ip, int src_port) {
+struct WriteThread {
+	operator(int fd) () {
+		std::cout << "WriteThread: " << fd << std::endl;
+	}
+};
+
+void test_hd(const int write_block_size, const int write_mbytes) {
+	// Priority.
+	std::cout << "Priority: " << getpriority(PRIO_PROCESS, 0) << std::endl;
+	// setpriority(PRIO_PROCESS, 0, -1);
+	std::cout << "Priority: " << getpriority(PRIO_PROCESS, 0) << std::endl;
 
   // Initialize file descriptors.
-  const int N = 16;
-  const int BUF_SIZE = 9000;
-  char buf[BUF_SIZE];
+  const int N = 32;
+  const int BUF_SIZE = write_block_size;
+  char *buf = new char[BUF_SIZE];
   int fds[N];
 
   for (int i=0; i<N; ++i) {
+		if (i==3)
+			continue;
+
     stringstream ss;
-    ss << "scan_" << i << ".dat";
-    fds[i] = open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK);
+    ss << "/mnt/disk" << i << "/scan" << ".m6";
+    fds[i] = open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK,
+								S_IRWXU);
     if (fds[i] < 0) {
       std::cerr << "Unable to open: " << ss.str() << std::endl;
     }
   }
 
+  long mbytes_left = write_mbytes;
+	long mbyte_fraction = 0;
+
   fd_set fdset;
   int max_fd;
-  const int M = 100;
   struct timeval timeout;
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
   int ready_fds = 0;
 
-  for (int i=0; i<M; ++i) {
+	// Write data to disk.
+	Timer t;
+	t.start();
+	long bytes_written = 0;
+  while (mbytes_left > 0) {
     max_fd = 0;
     build_select_list(fdset, max_fd, fds, N);
     ready_fds = select(max_fd + 1, (fd_set*)0, &fdset, (fd_set*)0, &timeout);
 
     for (int j=0; j<N; ++j) {
+			if (j==3)
+				continue;
       if (FD_ISSET(fds[j], &fdset)) {
-	write(fds[j], buf, BUF_SIZE);
+				int nb = writen(fds[j], buf, BUF_SIZE);
+				bytes_written += nb;
+				mbyte_fraction += nb;
+				if (mbyte_fraction > 1000000) {
+					--mbytes_left;
+					mbyte_fraction = 0;
+				}
       }
     }
   }
-
+	t.stop();
+	double duration = t.duration();
+	std::cout << "Duration:   " << duration << std::endl;
+	std::cout << "MBytes:     " << bytes_written/1000000 << std::endl;
+	std::cout << "Rate(Mbps): " << 8*bytes_written/(duration*1000000) << std::endl;
+	std::cout
+		<< "STATS "
+		<< write_mbytes << " " 
+		<< duration << " " 
+		<< write_block_size << " " 
+		<< bytes_written*8/(duration*1000000.0) 
+		<< std::endl;
 }
 
 // Print usage message.
@@ -152,6 +195,7 @@ main (int argc, char* argv[])
 
   string src_ip;
   int src_port;
+	int write_block_size, write_mbytes;
 
   // Declare supported options.
   po::options_description desc("Allowed options");
@@ -159,6 +203,7 @@ main (int argc, char* argv[])
     ("help", "produce help message")
     ("v", "print version message")
     ("run-tests", "Run test programs")
+    ("test-hd", "Test HD performance")
     (
      "data-file",
      po::value<string>(&data_file)->default_value(string("mark6.dat")),
@@ -229,6 +274,16 @@ main (int argc, char* argv[])
      po::value<int>(&src_port)->default_value(5000),
      "Source port (5000)"
     )
+    (
+     "write-mbytes",
+     po::value<int>(&write_mbytes)->default_value(1024),
+     "Write MBytes (1024)"
+    )
+    (
+     "write-block-size",
+     po::value<int>(&write_block_size)->default_value(1024),
+     "Write block size (1024)"
+    )
     ;
 
   // Parse options.
@@ -253,6 +308,11 @@ main (int argc, char* argv[])
 
   if (vm.count("run-tests")) {
     run_tests(src_ip, src_port);
+    return 0;
+  }
+
+  if (vm.count("test-hd")) {
+    test_hd(write_block_size, write_mbytes);
     return 0;
   }
 

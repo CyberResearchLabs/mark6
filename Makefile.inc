@@ -19,7 +19,8 @@ PREQ		=	liblog4cxx10-dev \
 # Compiler macros.
 CC		=   g++
 CFLAGS		=   -c \
-		    -Wall
+				    -Wall \
+						-O4
 INCLUDES	=   -I$(MARK6_ROOT)/include \
 		    -I$(MARK6_ROOT)/src \
 		    -I/usr/include

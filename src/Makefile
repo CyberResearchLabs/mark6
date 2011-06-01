@@ -10,7 +10,8 @@ LIBS	=	-lpthread \
 
 SOURCES	=	main.cc \
 		SocketBuffer.cc \
-		UDPSocket.cc
+		UDPSocket.cc \
+		IO.cc
 
 OBJECTS=$(SOURCES:.cc=.o)
 
