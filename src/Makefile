@@ -30,6 +30,7 @@ clean:
 	$(ECHO) cleaning up in src
 	-$(RM) -f $(EXECUTABLE) $(OBJECTS)
 	-$(RM) -f *.log
+	-$(RM) -f *.dat
 
 dist:	
 	$(ECHO) creating distribution

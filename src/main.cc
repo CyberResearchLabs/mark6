@@ -23,6 +23,9 @@
 
 // C includes.
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/select.h>
+#include <unistd.h>
 
 // C++ includes.
 #include <iostream>
@@ -30,8 +33,10 @@
 #include <string>
 #include <bitset>
 #include <sstream>
+#include <list>
 
 // Framework includes.
+#include <boost/foreach.hpp>
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -52,7 +57,7 @@
 namespace po = boost::program_options;
 
 // Run simple tests.
-void run_tests(std::string src_ip, int src_port) {
+void run_network_tests(std::string src_ip, int src_port) {
   LOG4CXX_INFO(logger, "Running tests.");
   SocketBuffer b;
   UDPSocket s;
@@ -65,6 +70,54 @@ void run_tests(std::string src_ip, int src_port) {
     LOG4CXX_INFO(logger, ss.str());
   }
   s.close();
+}
+
+void build_select_list(fd_set& fdset, int& max_fd, int* fds, int fd_len) {
+  FD_ZERO(&fdset);
+  for (int i=0; i<fd_len; ++i) {
+    if (fds[i] > max_fd)
+      max_fd = fds[i];
+    FD_SET(fds[i], &fdset);
+  }
+}
+
+void run_tests(std::string src_ip, int src_port) {
+
+  // Initialize file descriptors.
+  const int N = 16;
+  const int BUF_SIZE = 9000;
+  char buf[BUF_SIZE];
+  int fds[N];
+
+  for (int i=0; i<N; ++i) {
+    stringstream ss;
+    ss << "scan_" << i << ".dat";
+    fds[i] = open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK);
+    if (fds[i] < 0) {
+      std::cerr << "Unable to open: " << ss.str() << std::endl;
+    }
+  }
+
+  fd_set fdset;
+  int max_fd;
+  const int M = 100;
+  struct timeval timeout;
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+  int ready_fds = 0;
+
+  for (int i=0; i<M; ++i) {
+    max_fd = 0;
+    build_select_list(fdset, max_fd, fds, N);
+    ready_fds = select(max_fd + 1, (fd_set*)0, &fdset, (fd_set*)0, &timeout);
+
+    for (int j=0; j<N; ++j) {
+      if (FD_ISSET(fds[j], &fdset)) {
+	write(fds[j], buf, BUF_SIZE);
+      }
+    }
+  }
+
 }
 
 // Print usage message.
