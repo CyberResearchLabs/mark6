@@ -1,4 +1,6 @@
 Dependancies:
 
 - log4cxx
+	liblog4cxx10 (ubuntu)
 - boost C++
+	libboost1.40-all-dev (ubuntu)

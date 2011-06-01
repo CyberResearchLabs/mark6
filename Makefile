@@ -9,7 +9,7 @@ run:
 	${MARK6_APP} console
 
 preq:
-	sudo /usr/bin/apt-get -y install ${PREQ}
+	sudo /usr/bin/apt-get -y install $(PREQ)
 
 install:	preq
 	cd ${OTP_DIR}
