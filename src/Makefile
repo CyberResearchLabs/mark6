@@ -1,20 +1,17 @@
 include ../Makefile.inc
 
-all:	clean $(EXECUTABLE) $(GEN)
-
-run:
-	${MARK6_APP} console
+all:	clean $(DIM) $(DOM)
 
 $(DIM):
 	cd dim; $(MAKE) $(DIM)
 
-$(GEN):
-	cd gen; $(MAKE) 
+$(DOM):
+	cd dom; $(MAKE) $(DOM)
 
 tests:
 	cd dim; $(MAKE) tests
-	cd gen; $(MAKE) tests
+	cd dom; $(MAKE) tests
 
 clean:
 	cd dim; $(MAKE) clean
-	cd gen; $(MAKE) clean
+	cd dom; $(MAKE) clean

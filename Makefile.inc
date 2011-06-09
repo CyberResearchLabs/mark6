@@ -8,7 +8,7 @@ CP		=	/bin/cp
 RM		=	/bin/rm
 ECHO		=	/bin/echo
 DIM		=	mark6
-GEN		=	gen6
+DOM		=	dom6
 
 # Ubuntu pre-requisite packages.
 PREQ		=	liblog4cxx10-dev \

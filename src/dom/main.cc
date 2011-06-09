@@ -50,13 +50,13 @@ namespace po = boost::program_options;
 
 // Constants
 // Entry point for regression tests.
-const std::string TEST_CONFIG_FILE("gen.xml");
-const std::string LOGGER_NAME("gen6");
+const std::string DEFAULT_CONFIG_FILE("dom6.xml");
+const std::string LOGGER_NAME("dom6");
 
 void
 run_tests() {
   Configuration c;
-  c.load(TEST_CONFIG_FILE);
+  c.load(DEFAULT_CONFIG_FILE);
   std::cout << c;
 
 
@@ -68,7 +68,7 @@ run_tests() {
 void
 usage(const po::options_description& desc) {
   cout
-    << "gen6 [options]" << endl
+    << "dom6 [options]" << endl
     << desc;
 }
 
@@ -91,13 +91,13 @@ main (int argc, char* argv[])
     ("run-tests", "Run test programs")
     (
      "config",
-     po::value<string>(&config)->default_value(string("gen6.xml")),
+     po::value<string>(&config)->default_value(string(DEFAULT_CONFIG_FILE)),
      "XML configuration file name"
      )
     (
      "log-config",
      po::value<string>(&log_config)
-     ->default_value(string("gen6-log.cfg")),
+     ->default_value(string("dom6-log.cfg")),
      "Log configuration file name"
      )
     ;
@@ -117,7 +117,7 @@ main (int argc, char* argv[])
   }
 
   if (vm.count("v")) {
-    cout << "Gen6 version: 0.1.0"
+    cout << "Dom6 version: 0.1.0"
          << endl;
     return 1;
   }
@@ -129,7 +129,7 @@ main (int argc, char* argv[])
 
   // Start processing.
   try {
-    LOG4CXX_INFO(logger, "Creating mark6 manager.");
+    LOG4CXX_INFO(logger, "Creating dom6 manager.");
 
     // Create the server.
     LOG4CXX_INFO(logger, "Creating tcp server.");

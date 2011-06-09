@@ -3,7 +3,7 @@ include Makefile.inc
 # Ubuntu pre-requisite packages.
 # PREQ="ncurses-dev libssl-dev build-essential git-core"
 
-all:	clean $(DIM) $(GEN)
+all:	clean $(DIM) $(DOM)
 
 run:
 	${MARK6_APP} console
@@ -24,8 +24,8 @@ install:	preq
 $(DIM):
 	cd src; $(MAKE) $(DIM)
 
-$(GEN):
-	cd src; $(MAKE) $(GEN)
+$(DOM):
+	cd src; $(MAKE) $(DOM)
 
 tests:
 	cd src; $(MAKE) tests

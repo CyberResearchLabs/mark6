@@ -12,10 +12,10 @@ SOURCES	=	main.cc
 
 OBJECTS=$(SOURCES:.cc=.o)
 
-all:	$(SOURCES) $(GEN)
+all:	$(SOURCES) $(DOM)
 
-$(GEN):	$(OBJECTS)
-	$(ECHO) building $(GEN)
+$(DOM):	$(OBJECTS)
+	$(ECHO) building $(DOM)
 	$(CC) $(LDFLAGS) $(INCLUDES) $(OBJECTS) $(LIBS) -o $@
 
 .cc.o:
@@ -26,7 +26,7 @@ tar: $(SOURCES)
 
 clean:
 	$(ECHO) cleaning up in src
-	-$(RM) -f $(EXECUTABLE) $(OBJECTS)
+	-$(RM) -f $(DOM) $(OBJECTS)
 	-$(RM) -f *.log
 	-$(RM) -f *.dat
 
