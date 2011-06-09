@@ -48,8 +48,10 @@
 // Namespaces.
 namespace po = boost::program_options;
 
+// Constants
 // Entry point for regression tests.
 const std::string TEST_CONFIG_FILE("gen.xml");
+const std::string LOGGER_NAME("gen6");
 
 void
 run_tests() {
@@ -71,7 +73,7 @@ usage(const po::options_description& desc) {
 }
 
 // Global logger definition.
-LoggerPtr logger(Logger::getLogger("mark6"));
+LoggerPtr logger(Logger::getLogger(LOGGER_NAME));
 
 // Program entry point.
 int
@@ -79,20 +81,7 @@ main (int argc, char* argv[])
 {
   // Variables to store options.
   string log_config; 
-  int port = 0;
-  string data_file;
-  string hash_type;
   string config;
-  string schema_config;
-  string cdr_select_string;
-  int topx_size = 0;
-  int window_size = 0;
-  int reorder_window = 0;
-  int rt_flag = 0;
-
-  string src_ip;
-  int src_port;
-	int write_block_size, write_mbytes;
 
   // Declare supported options.
   po::options_description desc("Allowed options");
@@ -100,87 +89,17 @@ main (int argc, char* argv[])
     ("help", "produce help message")
     ("v", "print version message")
     ("run-tests", "Run test programs")
-    ("test-hd", "Test HD performance")
-    (
-     "data-file",
-     po::value<string>(&data_file)->default_value(string("mark6.dat")),
-     "Output data file name"
-     )
     (
      "config",
-     po::value<string>(&config)->default_value(string("mark6.xml")),
+     po::value<string>(&config)->default_value(string("gen6.xml")),
      "XML configuration file name"
-     )
-    (
-     "schema-config",
-     po::value<string>(&schema_config)
-     ->default_value(string("mark6-schema.cfg")),
-     "schema configuration file name"
      )
     (
      "log-config",
      po::value<string>(&log_config)
-     ->default_value(string("mark6-log.cfg")),
+     ->default_value(string("gen6-log.cfg")),
      "Log configuration file name"
      )
-    (
-     "hash-type",
-     po::value<string>(&hash_type)->default_value(string("static")),
-     "Hash type to use (static | dynamic)"
-     )
-    (
-     "port",
-     po::value<int>(&port)->default_value(10000),
-     "Listening port"
-     )
-    (
-     "topx-size",
-     po::value<int>(&topx_size)->default_value(10),
-     "Size of topx list"
-     )
-    (
-     "window-size",
-     po::value<int>(&window_size)->default_value(900),
-     "Size of accumulation window(s)"
-     )
-    (
-     "reorder-window",
-     po::value<int>(&reorder_window)->default_value(3600),
-     "Size of reordering buffer(s)"
-     )
-    (
-     "rt-flag",
-     po::value<int>(&rt_flag)->default_value(0),
-     "Enable real time processing(1) or batch processing (0)"
-     )
-    (
-     "cdr-select",
-     po::value<string>(&cdr_select_string)
-     ->default_value(string("SELECT * FROM cdrs;")),
-     "CDR select string."
-     )
-
-    (
-     "src-ip",
-     po::value<string>(&src_ip)
-     ->default_value(string("127.0.0.1")),
-     "Source IP."
-     )
-    (
-     "src-port",
-     po::value<int>(&src_port)->default_value(5000),
-     "Source port (5000)"
-    )
-    (
-     "write-mbytes",
-     po::value<int>(&write_mbytes)->default_value(1024),
-     "Write MBytes (1024)"
-    )
-    (
-     "write-block-size",
-     po::value<int>(&write_block_size)->default_value(1024),
-     "Write block size (1024)"
-    )
     ;
 
   // Parse options.
@@ -198,7 +117,7 @@ main (int argc, char* argv[])
   }
 
   if (vm.count("v")) {
-    cout << "Mark6 version: 0.1.0"
+    cout << "Gen6 version: 0.1.0"
          << endl;
     return 1;
   }
@@ -208,19 +127,6 @@ main (int argc, char* argv[])
     return 0;
   }
 
-  /*
-  if (vm.count("test-hd")) {
-    test_hd(write_block_size, write_mbytes);
-    return 0;
-  }
-
-  if (!vm.count("port") || !vm.count("data-file")
-      || !vm.count("config") ) {
-    usage(desc);
-    return 1;
-  }
-  */
-
   // Start processing.
   try {
     LOG4CXX_INFO(logger, "Creating mark6 manager.");
@@ -228,15 +134,6 @@ main (int argc, char* argv[])
     // Create the server.
     LOG4CXX_INFO(logger, "Creating tcp server.");
     // TCPServer server(IO_SERVICE, port, BLOOM_MANAGER);
-
-    // Initialize the timer.
-    if (rt_flag) {
-      LOG4CXX_INFO(logger, "Initializing timers.");
-      // PROC_TIMER.expires_from_now(boost::posix_time::seconds(PROC_INTERVAL));
-      // PROC_TIMER.async_wait(proc_cb);
-    } else {
-      LOG4CXX_INFO(logger, "Operating in batch mode.");
-    }
 
     // Fire up the reactor.
     LOG4CXX_INFO(logger, "Starting reactor.");

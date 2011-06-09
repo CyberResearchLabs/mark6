@@ -49,11 +49,22 @@ typedef std::set<IPEndpoint, IPEndpoint> IPEndpointSet;
 //    </destinations>
 //  </gen>
 struct Configuration {
+  // UDP endpoints for data streams.
   IPEndpointSet _destinations;
+
+  // Stream rate in bps.
   unsigned int _stream_rate;
+
+  // Duration of run (in seconds).
   unsigned int _duration;
+
+  // Write block size (bytes).
+  unsigned int _write_block_size;
+
+  // Format of data ("random", "vdif", "Mark5C").
   std::string _format;
 
+  // Constructor.
   Configuration()
   : _stream_rate(1024),
     _duration(10),
@@ -68,6 +79,7 @@ struct Configuration {
     _stream_rate = pt.get<unsigned int>("gen.data.<xmlattr>.stream_rate");
     _duration = pt.get<unsigned int>("gen.data.<xmlattr>.duration");
     _format = pt.get<std::string>("gen.data.<xmlattr>.format");
+    _write_block_size = pt.get<unsigned int>("gen.data.<xmlattr>.write_block_size");
 
     BOOST_FOREACH(ptree::value_type &v,
 		  pt.get_child("gen.receivers")) {
@@ -79,6 +91,7 @@ struct Configuration {
     }
   }
 
+  // Ostream serializer.
   friend ostream& operator<<(ostream& out, Configuration c) {
     out << "Configuration {\n";
 
@@ -89,9 +102,9 @@ struct Configuration {
     out
       << "_stream_rate:" << c._stream_rate << std::endl
       << "_duration:" << c._duration << std::endl
-      << "_format:" << c._format << std::endl;
-
-    out << "}\n";
+      << "_format:" << c._format << std::endl
+      << "_write_block_size:" << c._write_block_size << std::endl
+      << "}\n";
 
     return out;
   }
