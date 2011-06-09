@@ -55,6 +55,9 @@ void
 run_tests() {
   Configuration c;
   c.load(TEST_CONFIG_FILE);
+  std::cout << c;
+
+
 }
 
 // Print usage message.

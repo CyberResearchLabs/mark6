@@ -1,4 +1,9 @@
 <gen>
+	<data
+		stream_rate="2048"
+		duration="10"
+		format="random"
+	/>
 	<receivers>
 		<receiver ip="10.0.0.1" port="7000"/>
 		<receiver ip="10.0.0.1" port="7001"/>

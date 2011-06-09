@@ -26,18 +26,19 @@
 // C++ includes
 #include <string>
 #include <set>
+#include <iostream>
 
 // Framework includes.
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
+// Local includes.
+#include <Mark6.h>
+
 // Namespaces.
 using boost::property_tree::ptree;
 
-struct IPEndpoint {
-  std::string _ip_address;
-  int _port;
-};
+typedef std::set<IPEndpoint, IPEndpoint> IPEndpointSet;
 
 // Load/save information from XML configuration file.
 // Format of configuration file:
@@ -48,41 +49,53 @@ struct IPEndpoint {
 //    </destinations>
 //  </gen>
 struct Configuration {
-  // std::set<IPEndpoint> _destinations;
+  IPEndpointSet _destinations;
+  unsigned int _stream_rate;
+  unsigned int _duration;
+  std::string _format;
 
+  Configuration()
+  : _stream_rate(1024),
+    _duration(10),
+    _format("random") {}
+  
   // Load configuration from XML file.
   void load(const std::string &filename) {
     ptree pt;
 
     read_xml(filename, pt);
 
-      // Iterate over the debug.modules section and store all found
-      // modules in the m_modules set. The get_child() function
-      // returns a reference to the child at the specified path; if
-      // there is no such child, it throws. Property tree iterators
-      // are models of BidirectionalIterator.
-      BOOST_FOREACH(ptree::value_type &v,
-      		    pt.get_child("gen.receivers")) {
-      	std::cout << v.first <<  std::endl;
+    _stream_rate = pt.get<unsigned int>("gen.data.<xmlattr>.stream_rate");
+    _duration = pt.get<unsigned int>("gen.data.<xmlattr>.duration");
+    _format = pt.get<std::string>("gen.data.<xmlattr>.format");
 
-	ptree &rt = v.second;
-	std::string ip = rt.get<std::string>("<xmlattr>.ip");
-	std::cout << ip << std::endl;
-
-	/*	const ptree rt = v.second;
-	const ptree::value_type &w = rt.get_child("<xmlattr>");
-	std::cout << w.first << std::endl;
-	*/
-	
-	// ptree::value_type &w = v.second.get_child("<xmlattr>");
-	// std::cout << w.first << std::endl;
-        // m_modules.insert(v.second.data());
-      }
-
+    BOOST_FOREACH(ptree::value_type &v,
+		  pt.get_child("gen.receivers")) {
+      ptree &rt = v.second;
+      IPEndpoint ep;
+      ep._ip_address = rt.get<std::string>("<xmlattr>.ip");
+      ep._port = rt.get<int>("<xmlattr>.port");
+      _destinations.insert(ep);
+    }
   }
 
-  void save(const std::string &filename) {
+  friend ostream& operator<<(ostream& out, Configuration c) {
+    out << "Configuration {\n";
+
+    BOOST_FOREACH(IPEndpoint ep, c._destinations) {
+      out << ep << std::endl;
+    }
+
+    out
+      << "_stream_rate:" << c._stream_rate << std::endl
+      << "_duration:" << c._duration << std::endl
+      << "_format:" << c._format << std::endl;
+
+    out << "}\n";
+
+    return out;
   }
+
 };
 
 #endif // _CONFIGURATION_H_
