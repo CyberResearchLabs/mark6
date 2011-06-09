@@ -49,14 +49,6 @@
 #include <Timer.h>
 #include <IO.h>
 
-#if 0
-#include <iostream>
-#include <TCPSocket.h>
-#include <Client.h>
-#include <Server.h>
-#include <Test.h>
-#endif
-
 // Namespaces.
 namespace po = boost::program_options;
 
@@ -86,7 +78,7 @@ void build_select_list(fd_set& fdset, int& max_fd, int* fds, int fd_len) {
 }
 
 struct WriteThread {
-	operator(int fd) () {
+	void operator() (int fd) {
 		std::cout << "WriteThread: " << fd << std::endl;
 	}
 };

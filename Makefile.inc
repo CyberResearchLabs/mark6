@@ -1,6 +1,5 @@
 # Source root.
 
-MARK6_ROOT	=	/home/dlapsley/mark6
 VERSION		=	0.1.0
 DISTRIB		=	$(MARK6_ROOT)/mark6-$(VERSION).tar.gz
 
@@ -8,7 +7,8 @@ DISTRIB		=	$(MARK6_ROOT)/mark6-$(VERSION).tar.gz
 CP		=	/bin/cp
 RM		=	/bin/rm
 ECHO		=	/bin/echo
-EXECUTABLE	=	mark6
+DIM		=	mark6
+GEN		=	gen6
 
 # Ubuntu pre-requisite packages.
 PREQ		=	liblog4cxx10-dev \
@@ -19,12 +19,14 @@ PREQ		=	liblog4cxx10-dev \
 # Compiler macros.
 CC		=   g++
 CFLAGS		=   -c \
-				    -Wall \
-						-O4
+			-Wall \
+			-O4
 INCLUDES	=   -I$(MARK6_ROOT)/include \
-		    -I$(MARK6_ROOT)/src \
-		    -I/usr/include
-		    # MAC OS X -I/opt/local/include
-# MAC OS  X LDFLAGS		=   -L/opt/local/lib
+		    -I$(MARK6_ROOT)/src/include \
+		    -I/usr/include \
+		    -I/opt/local/include \
+		    -I.
+
 LDFLAGS		=   -L/usr/lib
+LDFLAGS		=   -L/opt/local/lib
 DEFINES		=   -DLINUX

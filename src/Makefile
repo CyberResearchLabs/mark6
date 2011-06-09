@@ -1,39 +1,20 @@
 include ../Makefile.inc
 
-LIBS	=	-lpthread \
-		-ldl \
-		-lboost_program_options-mt \
-		-lboost_system-mt \
-		-lboost_thread-mt \
-		-lm \
-		-llog4cxx 
+all:	clean $(EXECUTABLE) $(GEN)
 
-SOURCES	=	main.cc \
-		SocketBuffer.cc \
-		UDPSocket.cc \
-		IO.cc
+run:
+	${MARK6_APP} console
 
-OBJECTS=$(SOURCES:.cc=.o)
+$(DIM):
+	cd dim; $(MAKE) $(DIM)
 
-all:	$(SOURCES) $(EXECUTABLE)
+$(GEN):
+	cd gen; $(MAKE) 
 
-$(EXECUTABLE):	$(OBJECTS)
-	$(ECHO) building $(EXECUTABLE)
-	$(CC) $(LDFLAGS) $(INCLUDES) $(OBJECTS) $(LIBS) -o $@
-
-.cc.o:
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) $< -o $@
-
-tar: ${SOURCES} ${HDR}
-	tar cf src.tar $(SOURCES) $(HDR) Makefile
+tests:
+	cd dim; $(MAKE) tests
+	cd gen; $(MAKE) tests
 
 clean:
-	$(ECHO) cleaning up in src
-	-$(RM) -f $(EXECUTABLE) $(OBJECTS)
-	-$(RM) -f *.log
-	-$(RM) -f *.dat
-
-dist:	
-	$(ECHO) creating distribution
-	$(CP) $(EXECUTABLE) $(DISTRIB)
-	scp $(EXECUTABLE) oper@mark554:
+	cd dim; $(MAKE) clean
+	cd gen; $(MAKE) clean
