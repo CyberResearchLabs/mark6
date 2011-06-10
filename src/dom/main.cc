@@ -44,6 +44,7 @@
 // Local includes.
 #include <Mark6.h>
 #include <Configuration.h>
+#include <SenderThread.h>
 
 // Namespaces.
 namespace po = boost::program_options;
@@ -59,6 +60,25 @@ run_tests() {
   c.load(DEFAULT_CONFIG_FILE);
   std::cout << c;
 
+  std::list<boost::thread*> _sender_threads;
+  std::string ip("127.0.0.1");
+  boost::uint16_t port = 4242;
+  try {
+    for (int i=0; i<1; ++i) {
+      std::cout << i << std::endl;
+      _sender_threads.push_back(new boost::thread(SenderThread(), ip, port,
+						  c._stream_rate,
+						  c._duration,
+						  c._mtu,
+						  c._write_block_size));
+    }
+  } catch (std::string e) {
+    LOG4CXX_ERROR(logger, e);
+  }
+
+  BOOST_FOREACH(boost::thread* t, _sender_threads) {
+    t->join();
+  }
 
 }
 
@@ -117,7 +137,7 @@ main (int argc, char* argv[])
   }
 
   if (vm.count("v")) {
-    cout << "Dom6 version: 0.1.0"
+    cout << "Dom6 version: 0.1.1"
          << endl;
     return 1;
   }

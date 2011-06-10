@@ -12,7 +12,7 @@ SOURCES	=	main.cc
 
 OBJECTS=$(SOURCES:.cc=.o)
 
-all:	$(SOURCES) $(DOM)
+all:	clean $(SOURCES) $(DOM)
 
 $(DOM):	$(OBJECTS)
 	$(ECHO) building $(DOM)

@@ -24,15 +24,9 @@
 #define MARK6_H_
 
 // Common definitions.
-typedef unsigned int u_int32_t;
-typedef unsigned short int u_int16_t;
-typedef unsigned char u_int8_t;
-
-typedef signed int int32_t;
-typedef signed short int int16_t;
-typedef signed char int8_t;
 
 // Framework includes.
+#include <boost/cstdint.hpp>  // for boost::uint16_t
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <log4cxx/logger.h>
 #include <log4cxx/helpers/exception.h>
@@ -70,6 +64,12 @@ struct IPEndpoint {
       return ep1._port < ep2._port;
     return ep1._ip_address < ep2._ip_address;
   }
+};
+
+// Lightweight buffer container.
+struct Buffer {
+  boost::uint8_t* _buf;
+  boost::uint32_t _len;
 };
 
 #endif /*MARK6_H_*/

@@ -48,6 +48,7 @@ typedef std::set<IPEndpoint, IPEndpoint> IPEndpointSet;
 //      <port>X.X.X.X</port>
 //    </destinations>
 //  </gen>
+
 struct Configuration {
   // UDP endpoints for data streams.
   IPEndpointSet _destinations;
@@ -55,19 +56,39 @@ struct Configuration {
   // Stream rate in bps.
   unsigned int _stream_rate;
 
+  // Stream rate XML path.
+  static const std::string STREAM_RATE_PATH;
+
   // Duration of run (in seconds).
   unsigned int _duration;
+
+  // Duration XML path.
+  static const std::string DURATION_PATH;
+
+  // Maximum Transmission Unit (bytes).
+  unsigned int _mtu;
+
+  // MTU XML path.
+  static const std::string MTU_PATH;
 
   // Write block size (bytes).
   unsigned int _write_block_size;
 
+  // Write block size XML path.
+  static const std::string WRITE_BLOCK_SIZE_PATH;
+
   // Format of data ("random", "vdif", "Mark5C").
   std::string _format;
+
+  // Format XML path.
+  static const std::string FORMAT_PATH;
 
   // Constructor.
   Configuration()
   : _stream_rate(1024),
     _duration(10),
+    _mtu(1500),
+    _write_block_size(4096),
     _format("random") {}
   
   // Load configuration from XML file.
@@ -76,10 +97,11 @@ struct Configuration {
 
     read_xml(filename, pt);
 
-    _stream_rate = pt.get<unsigned int>("gen.data.<xmlattr>.stream_rate");
+    _stream_rate = pt.get<unsigned int>(Configuration::STREAM_RATE_PATH);
     _duration = pt.get<unsigned int>("gen.data.<xmlattr>.duration");
-    _format = pt.get<std::string>("gen.data.<xmlattr>.format");
+    _mtu = pt.get<unsigned int>("gen.data.<xmlattr>.mtu");
     _write_block_size = pt.get<unsigned int>("gen.data.<xmlattr>.write_block_size");
+    _format = pt.get<std::string>("gen.data.<xmlattr>.format");
 
     BOOST_FOREACH(ptree::value_type &v,
 		  pt.get_child("gen.receivers")) {
@@ -102,13 +124,29 @@ struct Configuration {
     out
       << "_stream_rate:" << c._stream_rate << std::endl
       << "_duration:" << c._duration << std::endl
-      << "_format:" << c._format << std::endl
       << "_write_block_size:" << c._write_block_size << std::endl
+      << "_mtu:" << c._mtu << std::endl
+      << "_format:" << c._format << std::endl
       << "}\n";
 
     return out;
   }
 
 };
+
+const std::string
+Configuration::STREAM_RATE_PATH("gen.data.<xmlattr>.stream_rate");
+
+const std::string
+Configuration::DURATION_PATH("gen.data.<xmlattr>.duration");
+
+const std::string
+Configuration::MTU_PATH("gen.data.<xmlattr>.mtu");
+
+const std::string
+Configuration::WRITE_BLOCK_SIZE_PATH("gen.data.<xmlattr>.write_block_size");
+
+const std::string
+Configuration::FORMAT_PATH("gen.data.<xmlattr>.format");
 
 #endif // _CONFIGURATION_H_
