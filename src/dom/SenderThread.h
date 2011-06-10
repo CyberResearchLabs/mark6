@@ -40,18 +40,45 @@
 #include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
 
-struct Message {
+const uint32_t VDIF_HEADER_LENGTH = 64;
+
+struct VDIFFrame {
+  // Word 0.
+  boost::uint32_t invalid:1;
+  boost::uint32_t legacy:1;
+  boost::uint32_t seconds:30;
+
+  // Word 1.
+  boost::uint32_t unassigned:2;
+  boost::uint32_t epoch:6;
+  boost::uint32_t frame:24;
+
+  // Word 2.
+  boost::uint32_t version:3;
+  boost::uint32_t log_num_channels:5;
+  boost::uint32_t data_frame_length:24;
+
+  // Word 3.
+  boost::uint32_t data_type:1;
+  boost::uint32_t bits_per_sample:5;
+  boost::uint32_t thread_id:10;
+  boost::uint32_t station_id:16;
+
+  // Word 4.
+  boost::uint32_t edv:8;
+  boost::uint32_t eud1:24;
   boost::uint32_t sync;
   boost::uint32_t sn;
-  boost::uint32_t len;
   boost::uint32_t crc32;
+
+  // Data.
   boost::uint8_t data[1];
 };
 
 class SenderThread {
  private:
   boost::uint8_t *_buf;
-  struct Message* _m;
+  struct VDIFFrame* _m;
   boost::uint32_t _crc32;
 
  public:
@@ -92,18 +119,18 @@ class SenderThread {
 		  << "addr.sin_port:" << (int)ntohs(addr.sin_port) << " "
 		  << "addr.sin_addr:" << inet_ntoa(addr.sin_addr) );
 
-    // Create TVG packet.
+    // Create TVG frame.
     _buf = new boost::uint8_t[mtu];
-    _m = (struct Message*)_buf;
+    _m = (struct VDIFFrame*)_buf;
     _m->sync = 0xCAFEBABE;
-    _m->len = mtu - 4*4;
-    for (boost::uint32_t i=0; i<_m->len; ++i) {
+    _m->data_frame_length = mtu - VDIF_HEADER_LENGTH;
+    for (boost::uint32_t i=0; i<_m->data_frame_length; ++i) {
       _m->data[i] = static_cast<boost::uint8_t>(i);
     }
 
     boost::crc_32_type computer;
     computer.reset();
-    computer.process_bytes(_m, _m->len);
+    computer.process_bytes(_m, _m->data_frame_length);
     _crc32 = computer.checksum();
     _m->crc32 = _crc32;
 

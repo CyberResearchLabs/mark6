@@ -46,7 +46,6 @@
 #include <Mark6.h>
 #include <SocketBuffer.h>
 #include <UDPSocket.h>
-#include <Timer.h>
 #include <IO.h>
 
 // Namespaces.

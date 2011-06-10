@@ -24,6 +24,7 @@
 #define MARK6_H_
 
 // Common definitions.
+#include <sys/time.h>
 
 // Framework includes.
 #include <boost/cstdint.hpp>  // for boost::uint16_t
@@ -70,6 +71,31 @@ struct IPEndpoint {
 struct Buffer {
   boost::uint8_t* _buf;
   boost::uint32_t _len;
+};
+
+
+class Timer {
+	private:
+		struct timeval _start;
+		struct timeval _stop;
+		struct timeval _duration;
+	public:
+		Timer() {
+			timerclear(&_start);
+			timerclear(&_stop);
+			timerclear(&_duration);
+		}
+		void start() {
+			gettimeofday(&_start, NULL);
+		}
+		void stop() {
+			gettimeofday(&_stop, NULL);
+		}	
+		double duration() {
+			timersub(&_stop, &_start, &_duration);
+			return static_cast<double>(_duration.tv_sec)
+				+ static_cast<double>(_duration.tv_usec)/1000000.0;
+		}
 };
 
 #endif /*MARK6_H_*/
