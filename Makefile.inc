@@ -7,7 +7,7 @@ DISTRIB		=	$(MARK6_ROOT)/mark6-$(VERSION).tar.gz
 CP		=	/bin/cp
 RM		=	/bin/rm
 ECHO		=	/bin/echo
-DIM		=	mark6
+DIM		=	dim6
 DOM		=	dom6
 
 # Ubuntu pre-requisite packages.
@@ -19,8 +19,8 @@ PREQ		=	liblog4cxx10-dev \
 # Compiler macros.
 CC		=   g++
 CFLAGS		=   -c \
-			-Wall \
-			-O4
+		    -Wall \
+		    -O4
 INCLUDES	=   -I$(MARK6_ROOT)/include \
 		    -I$(MARK6_ROOT)/src/include \
 		    -I/usr/include \

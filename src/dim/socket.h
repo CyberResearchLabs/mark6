@@ -23,15 +23,15 @@
  * 
  */
 
+#ifndef _SOCKET_H_
+#define _SOCKET_H_
+
 #include <string>
-#include <SocketBuffer.h>
+#include <socket_buffer.h>
 #ifdef LINUX
 #include <unistd.h>
 #endif // LINUX
 #include <sys/socket.h>
-
-#ifndef _SOCKET_H_
-#define _SOCKET_H_
 
 using namespace std;
 

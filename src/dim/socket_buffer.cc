@@ -24,7 +24,7 @@
  */
 
 #include <string.h>
-#include <SocketBuffer.h>
+#include <socket_buffer.h>
 #include <iostream>
 
 SocketBuffer::SocketBuffer() {

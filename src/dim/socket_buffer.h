@@ -23,12 +23,13 @@
  * 
  */
 
+#ifndef _SOCKET_BUFFER_
+#define _SOCKET_BUFFER_
+
 #include <string>
 #include <string.h>
 #include <stdexcept>
 
-#ifndef _SOCKET_BUFFER_
-#define _SOCKET_BUFFER_
 
 using namespace std;
 

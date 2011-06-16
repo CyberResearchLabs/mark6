@@ -1,10 +1,7 @@
 /*
- *  UDPSocket.h
- *  vrtp
+ * Created by David Lapsley on Mon Jun 6 2011.
  *
- *  Created by David Lapsley on Tue Feb 24 2004.
- *
- * Copyright 2004, 2011 MIT Haystack Observatory 
+ * Copyright 2011 MIT Haystack Observatory 
  *  
  * This file is part of mark6.
  *
@@ -20,32 +17,28 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with mark6.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * 
  */
 
-#include <Socket.h>
-#include <SocketBuffer.h>
+#ifndef _TEST_PARSER_H_
+#define _TEST_PARSER_H_
 
-#ifndef _UDP_SOCKET_H_
-#define _UDP_SOCKET_H_
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
 
-class UDPSocket: public vtp::Socket 
+class TestParser : public CPPUNIT_NS :: TestFixture
 {
-public:
-    UDPSocket();
-    UDPSocket(int s);
-    virtual ~UDPSocket();
-    
-    // Socket API.
-    void bind(string ip, int port);
-    int recvfrom(string ip, int port, SocketBuffer& s);
-    int sendto(string ip, int port, SocketBuffer& s);
-    void close();
-#ifdef _DAVE_DEBUG
-    virtual int test(void*);
-    virtual int dump(void*);
-#endif
+    CPPUNIT_TEST_SUITE (TestParser);
+    CPPUNIT_TEST (test1);
+    CPPUNIT_TEST_SUITE_END ();
+
+    public:
+        void setUp (void);
+        void tearDown (void);
+
+    protected:
+        void test1 (void);
 };
 
-#endif
 
+#endif /*TEST_PARSER_H_*/

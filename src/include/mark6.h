@@ -29,18 +29,12 @@
 // Framework includes.
 #include <boost/cstdint.hpp>  // for boost::uint16_t
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <log4cxx/logger.h>
-#include <log4cxx/helpers/exception.h>
-#include <log4cxx/propertyconfigurator.h>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace boost;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
-using namespace log4cxx;
-using namespace log4cxx::helpers;
-
-extern LoggerPtr logger;
 
 // Convert CDR data/time to epoch.
 extern time_t date_time_to_epoch(const string& start_date,
@@ -96,6 +90,13 @@ class Timer {
 			return static_cast<double>(_duration.tv_sec)
 				+ static_cast<double>(_duration.tv_usec)/1000000.0;
 		}
+};
+
+// Control messages.
+enum  MessageType { START, STOP };
+
+struct ControlMessage {
+  MessageType _type;
 };
 
 #endif /*MARK6_H_*/
