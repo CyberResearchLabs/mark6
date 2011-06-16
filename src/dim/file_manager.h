@@ -44,29 +44,35 @@ class FileManager {
   std::string _mount_prefix;
   int _num_mount_points;
   int* _fds;
+  boost::uint64_t* _write_offset;
+  boost::uint32_t _WRITE_BLOCK_SIZE;
+  boost::uint8_t* _buf;
+  bool _running;
+
 
  public:
   // Default constructor to enable copying in boost::thread.
   FileManager(const std::string mid,
 	      const std::string filename,
 	      const std::string mount_point,
-	      const int num_mount_points);
+	      const int num_mount_points,
+	      const int write_block_size);
   
   //! Destructor.
   ~FileManager();
 
+  // Thread operations
   void start();
-
   void join();
-
   void run();
 
+  // Control operations.
+  bool check_control();
+
+  // File operations.
   int open(const std::string);
-
   int close();
-
   int write(char* buf, int n);
-
   int read(char* buf, int n);
 };
 

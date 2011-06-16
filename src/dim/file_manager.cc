@@ -44,27 +44,34 @@ using namespace boost::filesystem;
 FileManager::FileManager(const std::string mid,
 			 const std::string mount_point,
 			 const std::string mount_prefix,
-			 const int num_mount_points):
+			 const int num_mount_points,
+			 const int write_block_size):
   MAX_QUEUE_SIZE(100),
   MESSAGE_SIZE(sizeof(ControlMessage)),
   _mq(create_only, mid.c_str(), MAX_QUEUE_SIZE, MESSAGE_SIZE), 
   _mid(mid),
   _mount_point(mount_point),
   _mount_prefix(mount_prefix),
-  _num_mount_points(num_mount_points)
+  _num_mount_points(num_mount_points),
+  _WRITE_BLOCK_SIZE(write_block_size),
+  _running(false)
 {
   _fds = new int[num_mount_points];
+  _write_offset = new boost::uint64_t[num_mount_points];
+  _buf = new boost::uint8_t[_WRITE_BLOCK_SIZE];
 }
 
 FileManager::~FileManager()
 {
   close();
   delete [] _fds;
+  delete [] _buf;
   message_queue::remove(_mid.c_str());
 }
 
 void FileManager::start()
 {
+  _running = true;
   _thread = boost::thread(&FileManager::run, this);
 }
 
@@ -72,20 +79,64 @@ void FileManager::run()
 {
   // Main entry point.
   LOG4CXX_INFO(logger, "Running...");
-  try {
-    while (true) {
-      ControlMessage m;
-      unsigned int priority;
-      std::size_t recvd_size;
-      _mq.receive(&m, sizeof(m), recvd_size, priority);
-      LOG4CXX_DEBUG(logger, "Received message type: " << m._type);
+  bool running = true;
 
-      if (m._type == STOP) {
-	LOG4CXX_DEBUG(logger, "Received stop");
-	break;
+  try {
+    while (running) {
+      if (check_control())
+	continue;
+      
+      // Process data.
+
+      // Setup file descriptors.
+      struct timeval timeout;
+      fd_set fdset;
+      int fd_len, max_fd, ready_fds;
+
+      FD_ZERO(&fdset);
+      max_fd = 0;
+      for (int i=0; i<fd_len; ++i) {
+	int fd = _fds[i];
+	if (fd > max_fd)
+	  max_fd = fd;
+	FD_SET(fd, &fdset);
       }
 
-      sleep(1);
+      int bytes_left = 1;
+      while (bytes_left > 0) {
+	// Setup file descriptors.
+	timeout.tv_sec = 1;
+	timeout.tv_usec = 0;
+	fd_len = _num_mount_points;
+	ready_fds = 0;
+
+	FD_ZERO(&fdset);
+	max_fd = 0;
+	for (int i=0; i<fd_len; ++i) {
+	  int fd = _fds[i];
+	  if (fd > max_fd)
+	    max_fd = fd;
+	  FD_SET(fd, &fdset);
+	}
+
+	// Wait for next available writer.
+	ready_fds = ::select(max_fd+1, (fd_set*)0, &fdset, (fd_set*)0,
+			     &timeout);
+
+	// Scan file descriptors writing to next available descriptor.
+	for (int i=0; i<fd_len; ++i) {
+	  int fd = _fds[i];
+
+	  if (FD_ISSET(fd, &fdset)) {
+	    // Write data to disk.
+	    int nb = ::write(fd, _buf, _WRITE_BLOCK_SIZE);
+	    if (nb > 0)
+	      bytes_left -= nb;
+	    if (bytes_left < 0)
+	      break;
+	  }
+	}
+      }    
     }
   } catch(interprocess_exception &ex) {
     LOG4CXX_ERROR(logger, "mq error: " << ex.what());
@@ -95,6 +146,30 @@ void FileManager::run()
 void FileManager::join()
 {
   _thread.join();
+}
+
+bool FileManager::check_control()
+{
+  ControlMessage m;
+  unsigned int priority;
+  std::size_t recvd_size;
+
+  // Read in next control message.
+  bool rcvd_msg = _mq.try_receive(&m, sizeof(m), recvd_size, priority);
+  if (!rcvd_msg) {
+    return false;
+  }
+
+  switch (m._type) {
+  case STOP:
+    LOG4CXX_DEBUG(logger, "Received stop");
+    _running = false;
+    break;
+  default:
+    break;
+  }
+ 
+  return true;
 }
 
 int FileManager::open(const std::string file_name)
@@ -109,6 +184,8 @@ int FileManager::open(const std::string file_name)
 
   int ret=0;
   int i=0;
+  int fd_len = _num_mount_points;
+
   BOOST_FOREACH(std::string p, paths) {
     LOG4CXX_DEBUG(logger, "path: " << p);
 
