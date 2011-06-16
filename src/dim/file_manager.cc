@@ -45,38 +45,44 @@ FileManager::FileManager(const std::string mid,
 			 const std::string mount_point,
 			 const std::string mount_prefix,
 			 const int num_mount_points,
-			 const int write_block_size):
+			 const int write_block_size,
+			 const int poll_timeout):
   MAX_QUEUE_SIZE(100),
   MESSAGE_SIZE(sizeof(ControlMessage)),
   _mq(create_only, mid.c_str(), MAX_QUEUE_SIZE, MESSAGE_SIZE), 
   _mid(mid),
   _mount_point(mount_point),
   _mount_prefix(mount_prefix),
-  _num_mount_points(num_mount_points),
+  _NUM_MOUNT_POINTS(num_mount_points),
+  _fds(0),
+  _NFDS(num_mount_points),
+  _POLL_TIMEOUT(poll_timeout),
+  _write_offset(0),
   _WRITE_BLOCK_SIZE(write_block_size),
-  _running(false)
-{
-  _fds = new int[num_mount_points];
-  _write_offset = new boost::uint64_t[num_mount_points];
+  _buf(0),
+  _running(false) {
+  _fds = new struct pollfd[_NFDS];
+  for (nfds_t i=0; i<_NFDS; ++i)
+    _fds[i].fd = -1;
+
+  _write_offset = new boost::uint64_t[_NUM_MOUNT_POINTS];
   _buf = new boost::uint8_t[_WRITE_BLOCK_SIZE];
 }
 
-FileManager::~FileManager()
-{
+FileManager::~FileManager() {
   close();
-  delete [] _fds;
   delete [] _buf;
+  delete [] _write_offset;
+  delete [] _fds;
   message_queue::remove(_mid.c_str());
 }
 
-void FileManager::start()
-{
+void FileManager::start() {
   _running = true;
   _thread = boost::thread(&FileManager::run, this);
 }
 
-void FileManager::run()
-{
+void FileManager::run() {
   // Main entry point.
   LOG4CXX_INFO(logger, "Running...");
   bool running = true;
@@ -87,69 +93,39 @@ void FileManager::run()
 	continue;
       
       // Process data.
+      int bytes_left = 1;
 
-      // Setup file descriptors.
-      struct timeval timeout;
-      fd_set fdset;
-      int fd_len, max_fd, ready_fds;
-
-      FD_ZERO(&fdset);
-      max_fd = 0;
-      for (int i=0; i<fd_len; ++i) {
-	int fd = _fds[i];
-	if (fd > max_fd)
-	  max_fd = fd;
-	FD_SET(fd, &fdset);
+      // Poll file descriptors.
+      int rv = poll(_fds, _NFDS, _POLL_TIMEOUT);
+      if (rv < 0) {
+	LOG4CXX_ERROR(logger, "poll returns error: " << strerror(errno));
+      } else if (rv == 0) {
+	LOG4CXX_DEBUG(logger, "poll returns 0");
+	continue;
       }
 
-      int bytes_left = 1;
-      while (bytes_left > 0) {
-	// Setup file descriptors.
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
-	fd_len = _num_mount_points;
-	ready_fds = 0;
-
-	FD_ZERO(&fdset);
-	max_fd = 0;
-	for (int i=0; i<fd_len; ++i) {
-	  int fd = _fds[i];
-	  if (fd > max_fd)
-	    max_fd = fd;
-	  FD_SET(fd, &fdset);
+      // Scan file descriptors writing to next available descriptor.
+      for (nfds_t i=0; i<_NFDS; ++i) {
+	int fd = _fds[i].fd;
+	if ( (_fds[i].revents & POLLOUT) == POLLOUT) {
+	  int nb = ::write(fd, _buf, _WRITE_BLOCK_SIZE);
+	  if (nb > 0)
+	    bytes_left -= nb;
+	  if (bytes_left < 0)
+	    break;
 	}
-
-	// Wait for next available writer.
-	ready_fds = ::select(max_fd+1, (fd_set*)0, &fdset, (fd_set*)0,
-			     &timeout);
-
-	// Scan file descriptors writing to next available descriptor.
-	for (int i=0; i<fd_len; ++i) {
-	  int fd = _fds[i];
-
-	  if (FD_ISSET(fd, &fdset)) {
-	    // Write data to disk.
-	    int nb = ::write(fd, _buf, _WRITE_BLOCK_SIZE);
-	    if (nb > 0)
-	      bytes_left -= nb;
-	    if (bytes_left < 0)
-	      break;
-	  }
-	}
-      }    
+      }
     }
   } catch(interprocess_exception &ex) {
     LOG4CXX_ERROR(logger, "mq error: " << ex.what());
   }
 }
 
-void FileManager::join()
-{
+void FileManager::join() {
   _thread.join();
 }
 
-bool FileManager::check_control()
-{
+bool FileManager::check_control() {
   ControlMessage m;
   unsigned int priority;
   std::size_t recvd_size;
@@ -172,10 +148,9 @@ bool FileManager::check_control()
   return true;
 }
 
-int FileManager::open(const std::string file_name)
-{
+int FileManager::open(const std::string file_name) {
   std::vector<std::string> paths;
-  for (int i=0; i<_num_mount_points; ++i) {
+  for (int i=0; i<_NUM_MOUNT_POINTS; ++i) {
     std::ostringstream ss;
     ss << _mount_point << "/" << _mount_prefix << i << "/" << file_name;
     paths.push_back(ss.str());
@@ -184,7 +159,6 @@ int FileManager::open(const std::string file_name)
 
   int ret=0;
   int i=0;
-  int fd_len = _num_mount_points;
 
   BOOST_FOREACH(std::string p, paths) {
     LOG4CXX_DEBUG(logger, "path: " << p);
@@ -193,24 +167,24 @@ int FileManager::open(const std::string file_name)
     if (fd<0) {
       LOG4CXX_ERROR(logger, "Unable to open file: " << p << " - " 
 		    << strerror(errno));
-      _fds[i++] = -1;
+      _fds[i++].fd = -1;
       ret = -1;
     } else {
-      _fds[i++] = fd;
+      _fds[i++].fd = fd;
+      _fds[i++].events = POLLOUT;
     }
   }
 
   return ret;
 }
 
-int FileManager::close()
-{
+int FileManager::close() {
   int ret = 0, RET = 0;
-  for (int i=0; i<_num_mount_points; ++i) {
-    if (_fds[i] > 0) {
-      if ( (ret=::close(_fds[i])) < 0) {
-	LOG4CXX_ERROR(logger, "Unable to close fd: " << _fds[i] << " - " 
-		      << strerror(errno));
+  for (int i=0; i<_NUM_MOUNT_POINTS; ++i) {
+    if (_fds[i].fd > 0) {
+      if ( (ret=::close(_fds[i].fd)) < 0) {
+	LOG4CXX_ERROR(logger, "Unable to close fd: " << _fds[i].fd
+		      << " - " << strerror(errno));
 	RET = ret;
       }
     }
@@ -218,13 +192,11 @@ int FileManager::close()
   return RET;
 }
 
-int FileManager::write(char* buf, int n)
-{
+int FileManager::write(char* buf, int n) {
   return 0;
 }
 
-int FileManager::read(char* buf, int n)
-{
+int FileManager::read(char* buf, int n) {
   return 0;
 }
 

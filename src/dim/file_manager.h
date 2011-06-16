@@ -23,6 +23,9 @@
 #ifndef _FILEMANAGER_H_
 #define _FILEMANAGER_H_
 
+// C includes.
+#include <poll.h>
+
 // Framework includes.
 #include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
@@ -42,8 +45,11 @@ class FileManager {
   std::string _mid;
   std::string _mount_point;
   std::string _mount_prefix;
-  int _num_mount_points;
-  int* _fds;
+  int _NUM_MOUNT_POINTS;
+  struct pollfd* _fds;
+  nfds_t _NFDS;
+  int _POLL_TIMEOUT;
+
   boost::uint64_t* _write_offset;
   boost::uint32_t _WRITE_BLOCK_SIZE;
   boost::uint8_t* _buf;
@@ -56,7 +62,8 @@ class FileManager {
 	      const std::string filename,
 	      const std::string mount_point,
 	      const int num_mount_points,
-	      const int write_block_size);
+	      const int write_block_size,
+	      const int poll_timeout);
   
   //! Destructor.
   ~FileManager();

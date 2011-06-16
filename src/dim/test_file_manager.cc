@@ -67,11 +67,12 @@ TestFileManager::basic(void)
   const std::string mount_prefix("disk");
   const int num_mount_points(32);
   const unsigned int write_block_size(4096);
+  const int poll_timeout = 1000; // ms
 
   message_queue::remove(mid.c_str());
 
   FileManager fm(mid, mount_point, mount_prefix, num_mount_points,
-		 write_block_size);
+		 write_block_size, poll_timeout);
   
   LOG4CXX_DEBUG(logger, "Created file manager.");
 
