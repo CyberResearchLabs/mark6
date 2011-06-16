@@ -21,8 +21,6 @@
  */
 
 // C includes
-#include <stdio.h>
-#include <fcntl.h>
 #include <errno.h>
 #include <string.h>
 
@@ -75,11 +73,20 @@ void FileManager::run()
   // Main entry point.
   LOG4CXX_INFO(logger, "Running...");
   try {
-    ControlMessage m;
-    unsigned int priority;
-    std::size_t recvd_size;
-    _mq.receive(&m, sizeof(m), recvd_size, priority);
-    LOG4CXX_DEBUG(logger, "Received message type: " << m._type);
+    while (true) {
+      ControlMessage m;
+      unsigned int priority;
+      std::size_t recvd_size;
+      _mq.receive(&m, sizeof(m), recvd_size, priority);
+      LOG4CXX_DEBUG(logger, "Received message type: " << m._type);
+
+      if (m._type == STOP) {
+	LOG4CXX_DEBUG(logger, "Received stop");
+	break;
+      }
+
+      sleep(1);
+    }
   } catch(interprocess_exception &ex) {
     LOG4CXX_ERROR(logger, "mq error: " << ex.what());
   }

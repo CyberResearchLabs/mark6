@@ -34,13 +34,16 @@
 
 // Boost includes.
 #include <boost/foreach.hpp>
+#include <boost/interprocess/ipc/message_queue.hpp>
 
 //Local includes.
 #include <mark6.h>
+#include <logger.h>
 #include <file_manager.h>
 #include <test_file_manager.h>
 
 using namespace boost;
+using namespace boost::interprocess;
 
 CPPUNIT_TEST_SUITE_REGISTRATION (TestFileManager);
 
@@ -63,9 +66,28 @@ TestFileManager::basic(void)
   const std::string mount_point("/tmp");
   const std::string mount_prefix("disk");
   const int num_mount_points(32);
+
+  message_queue::remove(mid.c_str());
+
   FileManager fm(mid, mount_point, mount_prefix, num_mount_points);
-
-  std::cout << "Created file manager." << std::endl;
-
   
+  LOG4CXX_DEBUG(logger, "Created file manager.");
+
+  fm.start();
+
+  LOG4CXX_DEBUG(logger, "Started file manager.");
+    
+  message_queue mq(open_only, mid.c_str());
+
+  for(int i = 0; i < 10; ++i){
+    ControlMessage m;
+    m._type = START;
+    mq.send(&m, sizeof(m), 0);
+  }
+  ControlMessage m;
+  m._type = STOP;
+  mq.send(&m, sizeof(m), 0);
+
+  fm.join();
+  LOG4CXX_DEBUG(logger, "Joined file manager.");
 }
