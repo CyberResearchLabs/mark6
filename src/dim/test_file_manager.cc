@@ -65,23 +65,36 @@ TestFileManager::basic(void)
   const std::string mid("fm1");
   const std::string mount_point("/tmp");
   const std::string mount_prefix("disk");
-  const int num_mount_points(32);
-  const unsigned int write_block_size(4096);
-  const int poll_timeout = 1000; // ms
+  const boost::uint32_t num_mount_points(2);
+  const boost::uint32_t write_block_size(4096);
+  const boost::uint32_t write_blocks(100);
+  const boost::uint32_t poll_timeout = 1000; // ms
   const double command_interval = 1; //s
+  const std::string file_name("first.m6");
 
   message_queue::remove(mid.c_str());
 
   FileManager fm(mid, mount_point, mount_prefix, num_mount_points,
-		 write_block_size, poll_timeout, command_interval);
-  
-  LOG4CXX_DEBUG(logger, "Created file manager.");
+		 write_block_size, write_blocks, poll_timeout,
+		 command_interval);
 
   fm.start();
+  fm.open(file_name);
 
   LOG4CXX_DEBUG(logger, "Started file manager.");
     
   message_queue mq(open_only, mid.c_str());
+
+  boost::uint8_t buf[write_block_size];
+  const int NUM_BLOCKS = 100;
+  for (int i=0; i<write_block_size; ++i)
+    buf[i] = static_cast<uint8_t>(i);
+
+  for (int i=0; i<NUM_BLOCKS; ++i) {
+    Buffer* b = new Buffer();
+    b->assign(buf, buf + NUM_BLOCKS);
+    fm.write(b);
+  }
 
   for(int i = 0; i < 10; ++i){
     ControlMessage m;
@@ -93,5 +106,8 @@ TestFileManager::basic(void)
   mq.send(&m, sizeof(m), 0);
 
   fm.join();
+
+  fm.close();
+
   LOG4CXX_DEBUG(logger, "Joined file manager.");
 }

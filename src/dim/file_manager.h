@@ -34,8 +34,15 @@
 #include <cstddef>    // for std::size_t
 #include <boost/thread/thread.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/circular_buffer.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 using namespace boost::interprocess;
+
+// Types.
+typedef std::vector<boost::uint8_t> Buffer;
+typedef boost::circular_buffer<Buffer*> CircularBuffer;
 
 class FileManager {
  private:
@@ -44,8 +51,8 @@ class FileManager {
   std::string _MOUNT_POINT;
   std::string _MOUNT_PREFIX;
   boost::uint32_t _MOUNT_POINTS;
-  nfds_t _NFDS;
   boost::uint32_t _WRITE_BLOCK_SIZE;
+  boost::uint32_t _WRITE_BLOCKS;
   boost::uint32_t _POLL_TIMEOUT;
   double _COMMAND_INTERVAL;
 
@@ -57,11 +64,13 @@ class FileManager {
   // File data structures.
   std::vector<struct pollfd> _fds;
   std::vector<boost::uint64_t> _write_offset;
-  std::vector<boost::uint8_t> _buf;
+  CircularBuffer _cbuf;
 
   // Threading.
   bool _running;
   boost::thread _thread;
+  boost::mutex _cbuf_mutex;
+
  public:
   // Default constructor to enable copying in boost::thread.
   FileManager(const std::string mid,
@@ -69,6 +78,7 @@ class FileManager {
 	      const std::string mount_point,
 	      const boost::uint32_t mount_points,
 	      const boost::uint32_t write_block_size,
+	      const boost::uint32_t write_blocks,
 	      const boost::uint32_t poll_timeout,
 	      const double command_interval);
   
@@ -78,16 +88,22 @@ class FileManager {
   // Thread operations
   void start();
   void join();
+
+  // File operations.
+  int open(const std::string);
+  int close();
+  bool write(Buffer* buf);
+  bool read(Buffer* buf);
+
+ private:
+  // Thread operations
   void run();
 
   // Control operations.
   bool check_control();
 
   // File operations.
-  int open(const std::string);
-  int close();
-  int write(char* buf, int n);
-  int read(char* buf, int n);
+  void write_block(const int fd);
 };
 
 #endif // _FILEMANAGER_H_

@@ -39,44 +39,44 @@
 
 using namespace boost::filesystem;
 
-
 FileManager::FileManager(const std::string mid,
 			 const std::string mount_point,
 			 const std::string mount_prefix,
 			 const boost::uint32_t mount_points,
 			 const boost::uint32_t write_block_size,
+			 const boost::uint32_t write_blocks,
 			 const boost::uint32_t poll_timeout,
 			 const double command_interval):
-  _MID(mid),
-  _MOUNT_POINT(mount_point),
-  _MOUNT_PREFIX(mount_prefix),
-  _MOUNT_POINTS(mount_points),
-  _NFDS(mount_points),
-  _WRITE_BLOCK_SIZE(write_block_size),
-  _POLL_TIMEOUT(poll_timeout),
-  _COMMAND_INTERVAL(command_interval),
-  _MAX_QUEUE_SIZE(100),
-  _MESSAGE_SIZE(sizeof(ControlMessage)),
-  _mq(create_only, mid.c_str(), _MAX_QUEUE_SIZE, _MESSAGE_SIZE),
-  _fds(0),
-  _write_offset(0),
-  _buf(0),
-  _running(false)
+  _MID (mid),
+  _MOUNT_POINT (mount_point),
+  _MOUNT_PREFIX (mount_prefix),
+  _MOUNT_POINTS (mount_points),
+  _WRITE_BLOCK_SIZE (write_block_size),
+  _WRITE_BLOCKS (write_blocks),
+  _POLL_TIMEOUT (poll_timeout),
+  _COMMAND_INTERVAL (command_interval),
+  _MAX_QUEUE_SIZE (100),
+  _MESSAGE_SIZE (sizeof(ControlMessage)),
+  _mq (create_only, mid.c_str(), _MAX_QUEUE_SIZE, _MESSAGE_SIZE),
+  _fds (0),
+  _write_offset (0),
+  _cbuf (_WRITE_BLOCKS),
+  _running (false),
+  _thread(),
+  _cbuf_mutex()
  {
-   _fds.reserve(_NFDS);
-   for (nfds_t i=0; i<_NFDS; ++i) {
+   _fds.reserve(_MOUNT_POINTS);
+   for (nfds_t i=0; i<_MOUNT_POINTS; ++i) {
      struct pollfd pfd;
      pfd.fd = -1;
      _fds.push_back(pfd);
    }
    
    LOG4CXX_DEBUG(logger, "About to dump pdf.");
-
    BOOST_FOREACH(struct pollfd pfd, _fds)
      LOG4CXX_DEBUG(logger, "pfd: " << pfd.fd);
 
    _write_offset.reserve(_MOUNT_POINTS);
-   _buf.reserve(_WRITE_BLOCK_SIZE);
 }
 
 FileManager::~FileManager() {
@@ -104,14 +104,12 @@ void FileManager::run() {
 	if (rcvd)
 	  continue;
       }
-      
-      // Process data.
-      int bytes_left = 1;
 
       // Poll file descriptors.
-      int rv = poll(&_fds[0], _NFDS, _POLL_TIMEOUT);
+      int rv = poll(&_fds[0], (nfds_t)_fds.size(), _POLL_TIMEOUT);
       if (rv < 0) {
 	LOG4CXX_ERROR(logger, "poll returns error: " << strerror(errno));
+	continue;
       } else if (rv == 0) {
 	LOG4CXX_DEBUG(logger, "poll returns 0");
 	continue;
@@ -120,12 +118,8 @@ void FileManager::run() {
       // Scan file descriptors writing to next available descriptor.
       BOOST_FOREACH(struct pollfd pfd, _fds) {
 	int fd = pfd.fd;
-	if ( (pfd.revents & POLLOUT) == POLLOUT) {
-	  int nb = ::write(fd, &_buf[0], _WRITE_BLOCK_SIZE);
-	  if (nb > 0)
-	    bytes_left -= nb;
-	  if (bytes_left < 0)
-	    break;
+	if (pfd.revents & POLLOUT) {
+	  write_block(fd);
 	}
       }
     }
@@ -138,6 +132,72 @@ void FileManager::run() {
 
 void FileManager::join() {
   _thread.join();
+}
+
+
+int FileManager::open(const std::string file_name) {
+  std::vector<std::string> paths;
+  for (boost::uint32_t i=0; i<_MOUNT_POINTS; ++i) {
+    std::ostringstream ss;
+    ss << _MOUNT_POINT << "/" << _MOUNT_PREFIX << i << "/" << file_name;
+    paths.push_back(ss.str());
+    ss.clear();
+  }
+
+  int ret=0;
+  int i=0;
+
+  BOOST_FOREACH(std::string p, paths) {
+    LOG4CXX_DEBUG(logger, "path: " << p);
+
+    int fd = ::open(p.c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
+    if (fd<0) {
+      LOG4CXX_ERROR(logger, "Unable to open file: " << p << " - " 
+		    << strerror(errno));
+      _fds[i].fd = -1;
+      ret = -1;
+    } else {
+      LOG4CXX_ERROR(logger, "Opening file: " << p << " - fd == " 
+		    << fd);
+      _fds[i].fd = fd;
+      _fds[i].events = POLLOUT;
+    }
+    ++i;
+  }
+
+   LOG4CXX_DEBUG(logger, "About to dump pfd.");
+   BOOST_FOREACH(struct pollfd pfd, _fds)
+     LOG4CXX_DEBUG(logger, "pfd: " << pfd.fd);
+
+  return ret;
+}
+
+int FileManager::close() {
+  int ret = 0, RET = 0;
+  for (boost::uint32_t i=0; i<_MOUNT_POINTS; ++i) {
+    if (_fds[i].fd > 0) {
+      if ( (ret=::close(_fds[i].fd)) < 0) {
+	LOG4CXX_ERROR(logger, "Unable to close fd: " << _fds[i].fd
+		      << " - " << strerror(errno));
+	RET = ret;
+      }
+    }
+  }
+  return RET;
+}
+
+bool FileManager::write(Buffer* b) {
+  boost::mutex::scoped_lock lock(_cbuf_mutex);
+  if (_cbuf.full())
+    return false;
+
+  _cbuf.push_back(b);
+
+  return true;
+}
+
+bool FileManager::read(Buffer* b) {
+  return false;
 }
 
 bool FileManager::check_control() {
@@ -167,56 +227,25 @@ bool FileManager::check_control() {
   return true;
 }
 
-int FileManager::open(const std::string file_name) {
-  std::vector<std::string> paths;
-  for (boost::uint32_t i=0; i<_MOUNT_POINTS; ++i) {
-    std::ostringstream ss;
-    ss << _MOUNT_POINT << "/" << _MOUNT_PREFIX << i << "/" << file_name;
-    paths.push_back(ss.str());
-    ss.clear();
+void FileManager::write_block(const int fd) {
+  Buffer* buf;
+
+  // Get next buffer from the circular buffer.
+  if (_cbuf.empty()) {
+    return;
+  } else {
+    boost::mutex::scoped_lock lock(_cbuf_mutex);
+    buf = _cbuf[0];
+    _cbuf.pop_front();
   }
 
-  int ret=0;
-  int i=0;
-
-  BOOST_FOREACH(std::string p, paths) {
-    LOG4CXX_DEBUG(logger, "path: " << p);
-
-    int fd = ::open(p.c_str(),  O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
-    if (fd<0) {
-      LOG4CXX_ERROR(logger, "Unable to open file: " << p << " - " 
-		    << strerror(errno));
-      _fds[i++].fd = -1;
-      ret = -1;
-    } else {
-      _fds[i++].fd = fd;
-      _fds[i++].events = POLLOUT;
+  int bytes_left = _WRITE_BLOCK_SIZE;
+  int bytes_written = 0;
+  while (bytes_left) {
+    int nb = ::write(fd, &buf[bytes_written], _WRITE_BLOCK_SIZE);
+    if (nb > 0) {
+      bytes_left -= nb;
+      bytes_written += nb;
     }
   }
-
-  return ret;
 }
-
-int FileManager::close() {
-  int ret = 0, RET = 0;
-  for (boost::uint32_t i=0; i<_MOUNT_POINTS; ++i) {
-    if (_fds[i].fd > 0) {
-      if ( (ret=::close(_fds[i].fd)) < 0) {
-	LOG4CXX_ERROR(logger, "Unable to close fd: " << _fds[i].fd
-		      << " - " << strerror(errno));
-	RET = ret;
-      }
-    }
-  }
-  return RET;
-}
-
-int FileManager::write(char* buf, int n) {
-  return 0;
-}
-
-int FileManager::read(char* buf, int n) {
-  return 0;
-}
-
-

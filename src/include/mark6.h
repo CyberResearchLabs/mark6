@@ -61,13 +61,6 @@ struct IPEndpoint {
   }
 };
 
-// Lightweight buffer container.
-struct Buffer {
-  boost::uint8_t* _buf;
-  boost::uint32_t _len;
-};
-
-
 class Timer {
  private:
   struct timeval _start;
