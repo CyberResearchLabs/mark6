@@ -22,7 +22,6 @@
 
 // C includes
 #include <errno.h>
-#include <string.h>
 
 // C++ includes.
 #include <sstream>
@@ -32,49 +31,58 @@
 #include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
 #include <boost/filesystem.hpp>
-
-using namespace boost::filesystem;
+#include <boost/timer.hpp>
 
 // Local includes.
 #include <mark6.h>
 #include <logger.h>
 #include <file_manager.h>
 
+using namespace boost::filesystem;
+
 
 FileManager::FileManager(const std::string mid,
 			 const std::string mount_point,
 			 const std::string mount_prefix,
-			 const int num_mount_points,
-			 const int write_block_size,
-			 const int poll_timeout):
-  MAX_QUEUE_SIZE(100),
-  MESSAGE_SIZE(sizeof(ControlMessage)),
-  _mq(create_only, mid.c_str(), MAX_QUEUE_SIZE, MESSAGE_SIZE), 
-  _mid(mid),
-  _mount_point(mount_point),
-  _mount_prefix(mount_prefix),
-  _NUM_MOUNT_POINTS(num_mount_points),
-  _fds(0),
-  _NFDS(num_mount_points),
-  _POLL_TIMEOUT(poll_timeout),
-  _write_offset(0),
+			 const boost::uint32_t mount_points,
+			 const boost::uint32_t write_block_size,
+			 const boost::uint32_t poll_timeout,
+			 const double command_interval):
+  _MID(mid),
+  _MOUNT_POINT(mount_point),
+  _MOUNT_PREFIX(mount_prefix),
+  _MOUNT_POINTS(mount_points),
+  _NFDS(mount_points),
   _WRITE_BLOCK_SIZE(write_block_size),
+  _POLL_TIMEOUT(poll_timeout),
+  _COMMAND_INTERVAL(command_interval),
+  _MAX_QUEUE_SIZE(100),
+  _MESSAGE_SIZE(sizeof(ControlMessage)),
+  _mq(create_only, mid.c_str(), _MAX_QUEUE_SIZE, _MESSAGE_SIZE),
+  _fds(0),
+  _write_offset(0),
   _buf(0),
-  _running(false) {
-  _fds = new struct pollfd[_NFDS];
-  for (nfds_t i=0; i<_NFDS; ++i)
-    _fds[i].fd = -1;
+  _running(false)
+ {
+   _fds.reserve(_NFDS);
+   for (nfds_t i=0; i<_NFDS; ++i) {
+     struct pollfd pfd;
+     pfd.fd = -1;
+     _fds.push_back(pfd);
+   }
+   
+   LOG4CXX_DEBUG(logger, "About to dump pdf.");
 
-  _write_offset = new boost::uint64_t[_NUM_MOUNT_POINTS];
-  _buf = new boost::uint8_t[_WRITE_BLOCK_SIZE];
+   BOOST_FOREACH(struct pollfd pfd, _fds)
+     LOG4CXX_DEBUG(logger, "pfd: " << pfd.fd);
+
+   _write_offset.reserve(_MOUNT_POINTS);
+   _buf.reserve(_WRITE_BLOCK_SIZE);
 }
 
 FileManager::~FileManager() {
   close();
-  delete [] _buf;
-  delete [] _write_offset;
-  delete [] _fds;
-  message_queue::remove(_mid.c_str());
+  message_queue::remove(_MID.c_str());
 }
 
 void FileManager::start() {
@@ -85,30 +93,35 @@ void FileManager::start() {
 void FileManager::run() {
   // Main entry point.
   LOG4CXX_INFO(logger, "Running...");
-  bool running = true;
 
+  boost::timer run_timer;
+  boost::timer command_timer;
+  
   try {
-    while (running) {
-      if (check_control())
-	continue;
+    while (_running) {
+      if (command_timer.elapsed() > _COMMAND_INTERVAL) {
+	if (check_control())
+	  continue;
+	command_timer.restart();
+      }
       
       // Process data.
       int bytes_left = 1;
 
       // Poll file descriptors.
-      int rv = poll(_fds, _NFDS, _POLL_TIMEOUT);
+      int rv = poll(&_fds[0], _NFDS, _POLL_TIMEOUT);
       if (rv < 0) {
 	LOG4CXX_ERROR(logger, "poll returns error: " << strerror(errno));
       } else if (rv == 0) {
 	LOG4CXX_DEBUG(logger, "poll returns 0");
 	continue;
       }
-
+      
       // Scan file descriptors writing to next available descriptor.
-      for (nfds_t i=0; i<_NFDS; ++i) {
-	int fd = _fds[i].fd;
-	if ( (_fds[i].revents & POLLOUT) == POLLOUT) {
-	  int nb = ::write(fd, _buf, _WRITE_BLOCK_SIZE);
+      BOOST_FOREACH(struct pollfd pfd, _fds) {
+	int fd = pfd.fd;
+	if ( (pfd.revents & POLLOUT) == POLLOUT) {
+	  int nb = ::write(fd, &_buf[0], _WRITE_BLOCK_SIZE);
 	  if (nb > 0)
 	    bytes_left -= nb;
 	  if (bytes_left < 0)
@@ -116,6 +129,8 @@ void FileManager::run() {
 	}
       }
     }
+
+    LOG4CXX_DEBUG(logger, "elapsed run time: " << run_timer.elapsed());
   } catch(interprocess_exception &ex) {
     LOG4CXX_ERROR(logger, "mq error: " << ex.what());
   }
@@ -150,9 +165,9 @@ bool FileManager::check_control() {
 
 int FileManager::open(const std::string file_name) {
   std::vector<std::string> paths;
-  for (int i=0; i<_NUM_MOUNT_POINTS; ++i) {
+  for (boost::uint32_t i=0; i<_MOUNT_POINTS; ++i) {
     std::ostringstream ss;
-    ss << _mount_point << "/" << _mount_prefix << i << "/" << file_name;
+    ss << _MOUNT_POINT << "/" << _MOUNT_PREFIX << i << "/" << file_name;
     paths.push_back(ss.str());
     ss.clear();
   }
@@ -180,7 +195,7 @@ int FileManager::open(const std::string file_name) {
 
 int FileManager::close() {
   int ret = 0, RET = 0;
-  for (int i=0; i<_NUM_MOUNT_POINTS; ++i) {
+  for (boost::uint32_t i=0; i<_MOUNT_POINTS; ++i) {
     if (_fds[i].fd > 0) {
       if ( (ret=::close(_fds[i].fd)) < 0) {
 	LOG4CXX_ERROR(logger, "Unable to close fd: " << _fds[i].fd

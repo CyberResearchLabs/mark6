@@ -26,6 +26,9 @@
 // C includes.
 #include <poll.h>
 
+// C++ includes
+#include <vector>
+
 // Framework includes.
 #include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
@@ -36,34 +39,38 @@ using namespace boost::interprocess;
 
 class FileManager {
  private:
-  const boost::uint32_t MAX_QUEUE_SIZE;
-  const boost::uint32_t MESSAGE_SIZE;
+  // Configuration options.
+  std::string _MID;
+  std::string _MOUNT_POINT;
+  std::string _MOUNT_PREFIX;
+  boost::uint32_t _MOUNT_POINTS;
+  nfds_t _NFDS;
+  boost::uint32_t _WRITE_BLOCK_SIZE;
+  boost::uint32_t _POLL_TIMEOUT;
+  double _COMMAND_INTERVAL;
 
-  boost::thread _thread;
+  // Message queue.
+  const boost::uint32_t _MAX_QUEUE_SIZE;
+  const boost::uint32_t _MESSAGE_SIZE;
   message_queue _mq;
 
-  std::string _mid;
-  std::string _mount_point;
-  std::string _mount_prefix;
-  int _NUM_MOUNT_POINTS;
-  struct pollfd* _fds;
-  nfds_t _NFDS;
-  int _POLL_TIMEOUT;
+  // File data structures.
+  std::vector<struct pollfd> _fds;
+  std::vector<boost::uint64_t> _write_offset;
+  std::vector<boost::uint8_t> _buf;
 
-  boost::uint64_t* _write_offset;
-  boost::uint32_t _WRITE_BLOCK_SIZE;
-  boost::uint8_t* _buf;
+  // Threading.
   bool _running;
-
-
+  boost::thread _thread;
  public:
   // Default constructor to enable copying in boost::thread.
   FileManager(const std::string mid,
 	      const std::string filename,
 	      const std::string mount_point,
-	      const int num_mount_points,
-	      const int write_block_size,
-	      const int poll_timeout);
+	      const boost::uint32_t mount_points,
+	      const boost::uint32_t write_block_size,
+	      const boost::uint32_t poll_timeout,
+	      const double command_interval);
   
   //! Destructor.
   ~FileManager();
