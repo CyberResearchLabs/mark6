@@ -44,35 +44,87 @@ using namespace boost::interprocess;
 typedef std::vector<boost::uint8_t> Buffer;
 typedef boost::circular_buffer<Buffer*> CircularBuffer;
 
+/**
+ * Manages high speed writing of data to file.
+ */
 class FileManager {
  private:
-  // Configuration options.
+  /** @name Configuration.
+   * Configuration options.
+   */
+  /**@{**/
+  /** Unique message id for ITC messaging. */
   std::string _MID;
+
+  /** Root mount point on file system (e.g. /mnt). */
   std::string _MOUNT_POINT;
+
+  /** Prefix used for each directory (e.g. disk) */
   std::string _MOUNT_PREFIX;
+
+  /** Number of mounts points (e.g. 32) */
   boost::uint32_t _MOUNT_POINTS;
+
+  /** Size of individual blocks written to disk (e.g. 4096). */
   boost::uint32_t _WRITE_BLOCK_SIZE;
+ 
+  /** Total number of write blocks to buffer in circular buffer. */
   boost::uint32_t _WRITE_BLOCKS;
+
+  /** Poll() timeout in seconds. */
   boost::uint32_t _POLL_TIMEOUT;
+
+  /** Command message queue check interval in seconds. */
   double _COMMAND_INTERVAL;
+  /**@}**/
 
-  // Message queue.
+
+  /** @name MessageQueue.
+   *  Boost-based thread-safe messaging system.
+   */
+  /**@{**/
+  /** Maximum number of messages in the queue. */
   const boost::uint32_t _MAX_QUEUE_SIZE;
+
+  /** Size of individual messages. */
   const boost::uint32_t _MESSAGE_SIZE;
+
+  /** Thread-safe message queue object. */
   message_queue _mq;
+  /**@}**/
 
-  // File data structures.
+
+  /** @name FileStructures.
+   *  File data structures.
+   */
+  /**@{**/
+  /** File descriptor vector. Passed into poll() call. */
   std::vector<struct pollfd> _fds;
-  CircularBuffer _cbuf;
 
-  // Threading.
+  /** Circular buffer for storing data to be written to disk. */
+  CircularBuffer _cbuf;
+  /**@}**/
+
+
+  /** @name Threading.
+   *  Threading data.
+   */
+  /**@{**/
+  /** Flag checked in main processing loop to see whether or not to exit. */
   bool _running;
+
+  /** State variable used in main processing loop. */
   enum { IDLE, WRITE_TO_DISK, STOP } _state;
+
+  /** Thread object. */
   boost::thread _thread;
+
+  /** Mutex that enables thread-safe access to _cbuf. */
   boost::mutex _cbuf_mutex;
+  /**@}**/
 
  public:
-  // Default constructor to enable copying in boost::thread.
+  /** Constructor. */
   FileManager(const std::string mid,
 	      const std::string filename,
 	      const std::string mount_point,
@@ -82,27 +134,47 @@ class FileManager {
 	      const boost::uint32_t poll_timeout,
 	      const double command_interval);
   
-  //! Destructor.
+  /** Constructor. */
   ~FileManager();
 
-  // Thread operations
-  void start();
-  void join();
 
-  // File operations.
+  /** @name ThreadOperations */
+  /**@{*/
+  /** Start main processing loop in a separate thread. */
+  void start();
+  
+  /** Wait for thread to exit. */
+  void join();
+  /**@}*/
+
+
+  /** @name FileOperations */
+  /**@{*/
+  /** Open file descriptors. */
   int open(const std::string);
+
+  /** Close all file descriptors. */
   int close();
+  /**@}*/
+
+
+  /** @name Write/Read API */
+  /**@{*/
+  /** Add buffer to circular buffer. Note that caller owns the dealloc. */
   bool write(Buffer* buf);
+
+  /** TODO. */
   bool read(Buffer* buf);
+  /**@}*/
 
  private:
-  // Thread operations
+  /** Main processing loop. */
   void run();
 
-  // Control operations.
+  /** Check for control messages. Adjust state as necessary. */
   bool check_control();
 
-  // File operations.
+  /** Write a single block to disk. */
   void write_block(const int fd);
 };
 

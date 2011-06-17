@@ -78,17 +78,20 @@ FileManager::FileManager(const std::string mid,
    }
 }
 
-FileManager::~FileManager() {
+FileManager::~FileManager()
+{
   close();
   message_queue::remove(_MID.c_str());
 }
 
-void FileManager::start() {
+void FileManager::start()
+{
   _running = true;
   _thread = boost::thread(&FileManager::run, this);
 }
 
-void FileManager::run() {
+void FileManager::run()
+{
   LOG4CXX_INFO(logger, "Running...");
 
   Timer run_timer;
@@ -156,11 +159,13 @@ void FileManager::run() {
   }
 }
 
-void FileManager::join() {
+void FileManager::join()
+{
   _thread.join();
 }
 
-int FileManager::open(const std::string file_name) {
+int FileManager::open(const std::string file_name)
+{
 
   // Create individual file paths.
   std::vector<std::string> paths;
@@ -200,22 +205,23 @@ int FileManager::open(const std::string file_name) {
   return ret;
 }
 
-int FileManager::close() {
+int FileManager::close()
+{
   int ret = 0;
+
   BOOST_FOREACH(struct pollfd pfd, _fds) {
-    if (pfd.fd > 0) {
-      if (::close(pfd.fd) < 0) {
-	LOG4CXX_ERROR(logger, "Unable to close fd: " << pfd.fd
-		      << " - " << strerror(errno));
-	ret = -1;
-      }
+    if ( (pfd.fd > 0) && (::close(pfd.fd)<0) ) {
+      LOG4CXX_ERROR(logger, "Unable to close fd: " << pfd.fd
+		    << " - " << strerror(errno));
+      ret = -1;
     }
   }
 
   return ret;
 }
 
-bool FileManager::write(Buffer* b) {
+bool FileManager::write(Buffer* b)
+{
   boost::mutex::scoped_lock lock(_cbuf_mutex);
   if (_cbuf.full())
     return false;
@@ -225,11 +231,13 @@ bool FileManager::write(Buffer* b) {
   return true;
 }
 
-bool FileManager::read(Buffer* b) {
+bool FileManager::read(Buffer* b)
+{
   return false;
 }
 
-bool FileManager::check_control() {
+bool FileManager::check_control()
+{
   ControlMessage m;
   unsigned int priority;
   std::size_t recvd_size;
@@ -260,7 +268,8 @@ bool FileManager::check_control() {
   return true;
 }
 
-void FileManager::write_block(const int fd) {
+void FileManager::write_block(const int fd)
+{
   Buffer* buf;
 
   // Get next buffer from the circular buffer.

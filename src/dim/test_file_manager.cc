@@ -97,11 +97,11 @@ TestFileManager::basic(void)
   }
 
   ControlMessage m;
-  m._type = WRITE_TO_DISK;
+  m._type = MSG_WRITE_TO_DISK;
   mq.send(&m, sizeof(m), 0);
 
   sleep(10);
-  m._type = STOP;
+  m._type = MSG_STOP;
   mq.send(&m, sizeof(m), 0);
 
   fm.join();
