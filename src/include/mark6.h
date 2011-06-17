@@ -38,7 +38,7 @@ using namespace boost::gregorian;
 
 // Convert CDR data/time to epoch.
 extern time_t date_time_to_epoch(const string& start_date,
-                          const string& start_time);
+				 const string& start_time);
 
 // Convenience class for keeping IP and port information together.
 struct IPEndpoint {
@@ -69,27 +69,26 @@ struct Buffer {
 
 
 class Timer {
-	private:
-		struct timeval _start;
-		struct timeval _stop;
-		struct timeval _duration;
-	public:
-		Timer() {
-			timerclear(&_start);
-			timerclear(&_stop);
-			timerclear(&_duration);
-		}
-		void start() {
-			gettimeofday(&_start, NULL);
-		}
-		void stop() {
-			gettimeofday(&_stop, NULL);
-		}	
-		double duration() {
-			timersub(&_stop, &_start, &_duration);
-			return static_cast<double>(_duration.tv_sec)
-				+ static_cast<double>(_duration.tv_usec)/1000000.0;
-		}
+ private:
+  struct timeval _start;
+  struct timeval _stop;
+  struct timeval _duration;
+ public:
+  Timer() {
+    timerclear(&_start);
+    timerclear(&_stop);
+    timerclear(&_duration);
+    gettimeofday(&_start, NULL);
+  }
+  void restart() {
+    gettimeofday(&_start, NULL);
+  }
+  double elapsed() {
+    gettimeofday(&_stop, NULL);
+    timersub(&_stop, &_start, &_duration);
+    return static_cast<double>(_duration.tv_sec)
+      + static_cast<double>(_duration.tv_usec)/1000000.0;
+  }
 };
 
 // Control messages.

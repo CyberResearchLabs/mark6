@@ -31,7 +31,6 @@
 #include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
 #include <boost/filesystem.hpp>
-#include <boost/timer.hpp>
 
 // Local includes.
 #include <mark6.h>
@@ -94,15 +93,16 @@ void FileManager::run() {
   // Main entry point.
   LOG4CXX_INFO(logger, "Running...");
 
-  boost::timer run_timer;
-  boost::timer command_timer;
+  Timer run_timer;
+  Timer command_timer;
   
   try {
     while (_running) {
       if (command_timer.elapsed() > _COMMAND_INTERVAL) {
-	if (check_control())
-	  continue;
+	bool rcvd = check_control();
 	command_timer.restart();
+	if (rcvd)
+	  continue;
       }
       
       // Process data.
@@ -156,7 +156,11 @@ bool FileManager::check_control() {
     LOG4CXX_DEBUG(logger, "Received stop");
     _running = false;
     break;
+  case START:
+    LOG4CXX_DEBUG(logger, "Received start");
+    break;
   default:
+    LOG4CXX_DEBUG(logger, "Received unknown.");
     break;
   }
  
