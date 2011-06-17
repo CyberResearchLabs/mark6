@@ -63,11 +63,11 @@ class FileManager {
 
   // File data structures.
   std::vector<struct pollfd> _fds;
-  std::vector<boost::uint64_t> _write_offset;
   CircularBuffer _cbuf;
 
   // Threading.
   bool _running;
+  enum { IDLE, WRITE_TO_DISK, STOP } _state;
   boost::thread _thread;
   boost::mutex _cbuf_mutex;
 

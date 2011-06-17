@@ -87,7 +87,7 @@ TestFileManager::basic(void)
 
   boost::uint8_t buf[write_block_size];
   const int NUM_BLOCKS = 100;
-  for (int i=0; i<write_block_size; ++i)
+  for (boost::uint32_t i=0; i<write_block_size; ++i)
     buf[i] = static_cast<uint8_t>(i);
 
   for (int i=0; i<NUM_BLOCKS; ++i) {
@@ -96,12 +96,11 @@ TestFileManager::basic(void)
     fm.write(b);
   }
 
-  for(int i = 0; i < 10; ++i){
-    ControlMessage m;
-    m._type = START;
-    mq.send(&m, sizeof(m), 0);
-  }
   ControlMessage m;
+  m._type = WRITE_TO_DISK;
+  mq.send(&m, sizeof(m), 0);
+
+  sleep(10);
   m._type = STOP;
   mq.send(&m, sizeof(m), 0);
 

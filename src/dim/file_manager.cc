@@ -22,6 +22,7 @@
 
 // C includes
 #include <errno.h>
+#include <unistd.h>
 
 // C++ includes.
 #include <sstream>
@@ -39,6 +40,7 @@
 
 using namespace boost::filesystem;
 
+
 FileManager::FileManager(const std::string mid,
 			 const std::string mount_point,
 			 const std::string mount_prefix,
@@ -47,6 +49,8 @@ FileManager::FileManager(const std::string mid,
 			 const boost::uint32_t write_blocks,
 			 const boost::uint32_t poll_timeout,
 			 const double command_interval):
+
+  // Initialize data members (in order).
   _MID (mid),
   _MOUNT_POINT (mount_point),
   _MOUNT_PREFIX (mount_prefix),
@@ -59,24 +63,19 @@ FileManager::FileManager(const std::string mid,
   _MESSAGE_SIZE (sizeof(ControlMessage)),
   _mq (create_only, mid.c_str(), _MAX_QUEUE_SIZE, _MESSAGE_SIZE),
   _fds (0),
-  _write_offset (0),
   _cbuf (_WRITE_BLOCKS),
   _running (false),
+  _state (IDLE),
   _thread(),
   _cbuf_mutex()
  {
+   // Reserve space in file descriptor vector.
    _fds.reserve(_MOUNT_POINTS);
    for (nfds_t i=0; i<_MOUNT_POINTS; ++i) {
      struct pollfd pfd;
      pfd.fd = -1;
      _fds.push_back(pfd);
    }
-   
-   LOG4CXX_DEBUG(logger, "About to dump pdf.");
-   BOOST_FOREACH(struct pollfd pfd, _fds)
-     LOG4CXX_DEBUG(logger, "pfd: " << pfd.fd);
-
-   _write_offset.reserve(_MOUNT_POINTS);
 }
 
 FileManager::~FileManager() {
@@ -90,37 +89,64 @@ void FileManager::start() {
 }
 
 void FileManager::run() {
-  // Main entry point.
   LOG4CXX_INFO(logger, "Running...");
 
   Timer run_timer;
   Timer command_timer;
   
   try {
+    // Main processing loop.
     while (_running) {
-      if (command_timer.elapsed() > _COMMAND_INTERVAL) {
-	bool rcvd = check_control();
-	command_timer.restart();
-	if (rcvd)
-	  continue;
-      }
 
-      // Poll file descriptors.
-      int rv = poll(&_fds[0], (nfds_t)_fds.size(), _POLL_TIMEOUT);
-      if (rv < 0) {
-	LOG4CXX_ERROR(logger, "poll returns error: " << strerror(errno));
-	continue;
-      } else if (rv == 0) {
-	LOG4CXX_DEBUG(logger, "poll returns 0");
-	continue;
-      }
-      
-      // Scan file descriptors writing to next available descriptor.
-      BOOST_FOREACH(struct pollfd pfd, _fds) {
-	int fd = pfd.fd;
-	if (pfd.revents & POLLOUT) {
-	  write_block(fd);
+      // State machine.
+      switch (_state) {
+
+      case WRITE_TO_DISK:
+	{
+	  if (command_timer.elapsed() > _COMMAND_INTERVAL) {
+	    check_control();
+	    command_timer.restart();
+	    continue;
+	  }
+
+	  // Poll file descriptors.
+	  int rv = poll(&_fds[0], (nfds_t)_fds.size(), _POLL_TIMEOUT);
+	  if (rv < 0) {
+	    LOG4CXX_ERROR(logger, "poll returns error: " << strerror(errno));
+	    continue;
+	  } else if (rv == 0) {
+	    LOG4CXX_DEBUG(logger, "poll returns 0");
+	    continue;
+	  }
+	
+	  // Scan file descriptors writing to next available descriptor.
+	  BOOST_FOREACH(struct pollfd pfd, _fds) {
+	    int fd = pfd.fd;
+	    if (pfd.revents & POLLOUT) {
+	      write_block(fd);
+	    }
+	  }
 	}
+	break;
+
+      case IDLE:
+	{
+	  if (command_timer.elapsed() > _COMMAND_INTERVAL) {
+	    check_control();
+	    command_timer.restart();
+	    usleep(_COMMAND_INTERVAL*1000000);
+	    continue;
+	  }
+	}
+	break;
+
+      case STOP:
+	_running = false;
+	break;
+
+      default:
+	LOG4CXX_ERROR(logger, "Unknown state.");
+	break;
       }
     }
 
@@ -134,8 +160,9 @@ void FileManager::join() {
   _thread.join();
 }
 
-
 int FileManager::open(const std::string file_name) {
+
+  // Create individual file paths.
   std::vector<std::string> paths;
   for (boost::uint32_t i=0; i<_MOUNT_POINTS; ++i) {
     std::ostringstream ss;
@@ -144,9 +171,9 @@ int FileManager::open(const std::string file_name) {
     ss.clear();
   }
 
+  // Open files for each path.
   int ret=0;
   int i=0;
-
   BOOST_FOREACH(std::string p, paths) {
     LOG4CXX_DEBUG(logger, "path: " << p);
 
@@ -165,6 +192,7 @@ int FileManager::open(const std::string file_name) {
     ++i;
   }
 
+  // Debug message.
    LOG4CXX_DEBUG(logger, "About to dump pfd.");
    BOOST_FOREACH(struct pollfd pfd, _fds)
      LOG4CXX_DEBUG(logger, "pfd: " << pfd.fd);
@@ -173,17 +201,18 @@ int FileManager::open(const std::string file_name) {
 }
 
 int FileManager::close() {
-  int ret = 0, RET = 0;
-  for (boost::uint32_t i=0; i<_MOUNT_POINTS; ++i) {
-    if (_fds[i].fd > 0) {
-      if ( (ret=::close(_fds[i].fd)) < 0) {
-	LOG4CXX_ERROR(logger, "Unable to close fd: " << _fds[i].fd
+  int ret = 0;
+  BOOST_FOREACH(struct pollfd pfd, _fds) {
+    if (pfd.fd > 0) {
+      if (::close(pfd.fd) < 0) {
+	LOG4CXX_ERROR(logger, "Unable to close fd: " << pfd.fd
 		      << " - " << strerror(errno));
-	RET = ret;
+	ret = -1;
       }
     }
   }
-  return RET;
+
+  return ret;
 }
 
 bool FileManager::write(Buffer* b) {
@@ -212,15 +241,19 @@ bool FileManager::check_control() {
   }
 
   switch (m._type) {
-  case STOP:
+
+  case MSG_STOP:
     LOG4CXX_DEBUG(logger, "Received stop");
-    _running = false;
+    _state = STOP;
     break;
-  case START:
-    LOG4CXX_DEBUG(logger, "Received start");
+
+  case MSG_WRITE_TO_DISK:
+    LOG4CXX_DEBUG(logger, "Received WRITE_TO_DISK");
+    _state = WRITE_TO_DISK;
     break;
+
   default:
-    LOG4CXX_DEBUG(logger, "Received unknown.");
+    LOG4CXX_DEBUG(logger, "Received unknown message.");
     break;
   }
  

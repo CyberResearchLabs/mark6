@@ -85,7 +85,7 @@ class Timer {
 };
 
 // Control messages.
-enum  MessageType { START, STOP };
+enum  MessageType { MSG_WRITE_TO_DISK, MSG_READ_FROM_DISK, MSG_STOP };
 
 struct ControlMessage {
   MessageType _type;
