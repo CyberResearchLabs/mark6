@@ -29,8 +29,7 @@
 #include <iostream>
 
 // Framework includes.
-#include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
-#include <cstddef>    // for std::size_t
+#include <boost/crc.hpp>
 #include <boost/filesystem.hpp>
 
 // Local includes.
@@ -180,8 +179,6 @@ int FileManager::open(const std::string file_name)
   int ret=0;
   int i=0;
   BOOST_FOREACH(std::string p, paths) {
-    LOG4CXX_DEBUG(logger, "path: " << p);
-
     int fd = ::open(p.c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
     if (fd<0) {
       LOG4CXX_ERROR(logger, "Unable to open file: " << p << " - " 
@@ -189,8 +186,7 @@ int FileManager::open(const std::string file_name)
       _fds[i].fd = -1;
       ret = -1;
     } else {
-      LOG4CXX_ERROR(logger, "Opening file: " << p << " - fd == " 
-		    << fd);
+      LOG4CXX_ERROR(logger, "Opening file: " << p << " - fd == " << fd);
       _fds[i].fd = fd;
       _fds[i].events = POLLOUT;
     }
@@ -208,9 +204,8 @@ int FileManager::open(const std::string file_name)
 int FileManager::close()
 {
   int ret = 0;
-
   BOOST_FOREACH(struct pollfd pfd, _fds) {
-    if ( (pfd.fd > 0) && (::close(pfd.fd)<0) ) {
+    if ( (pfd.fd>0) && (::close(pfd.fd)<0) ) {
       LOG4CXX_ERROR(logger, "Unable to close fd: " << pfd.fd
 		    << " - " << strerror(errno));
       ret = -1;
@@ -244,10 +239,10 @@ bool FileManager::check_control()
 
   // Read in next control message.
   bool rcvd_msg = _mq.try_receive(&m, sizeof(m), recvd_size, priority);
-  if (!rcvd_msg) {
+  if (!rcvd_msg)
     return false;
-  }
 
+  // Update state machine based on received message.
   switch (m._type) {
 
   case MSG_STOP:
@@ -270,9 +265,8 @@ bool FileManager::check_control()
 
 void FileManager::write_block(const int fd)
 {
+  // Get next buffer.
   Buffer* buf;
-
-  // Get next buffer from the circular buffer.
   if (_cbuf.empty()) {
     return;
   } else {
@@ -281,6 +275,7 @@ void FileManager::write_block(const int fd)
     _cbuf.pop_front();
   }
 
+  // Write buffer to disk.
   int bytes_left = _WRITE_BLOCK_SIZE;
   int bytes_written = 0;
   while (bytes_left) {
