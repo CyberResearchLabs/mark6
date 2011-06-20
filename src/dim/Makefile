@@ -15,14 +15,17 @@ SOURCES	=	main.cc \
 		file_manager.cc \
 		socket_buffer.cc \
 		udp_socket.cc \
+		writer_thread_pool.cc \
 		io.cc
 OBJECTS=$(SOURCES:.cc=.o)
 
 TEST_DIM =	test_$(DIM)
 TEST_SOURCES =	test_file_manager.cc \
 		test_file_writer.cc \
+		test_writer_thread_pool.cc \
 		file_writer.cc \
 		file_manager.cc \
+		writer_thread_pool.cc \
 		logger.cc \
 		test_main.cc
 TEST_OBJECTS =	$(TEST_SOURCES:.cc=.o)

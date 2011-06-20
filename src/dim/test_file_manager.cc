@@ -63,8 +63,7 @@ TestFileManager::basic(void)
 {
   std::cout << "TestFileManager::basic()" << std::endl;
   const std::string mid("fm1");
-  const std::string mount_point("/tmp");
-  const std::string mount_prefix("disk");
+  const std::string mount_prefix("/tmp/disk");
   const boost::uint32_t num_mount_points(2);
   const boost::uint32_t write_block_size(4096);
   const boost::uint32_t write_blocks(100);
@@ -74,7 +73,7 @@ TestFileManager::basic(void)
 
   message_queue::remove(mid.c_str());
 
-  FileManager fm(mid, mount_point, mount_prefix, num_mount_points,
+  FileManager fm(mid, mount_prefix, num_mount_points,
 		 write_block_size, write_blocks, poll_timeout,
 		 command_interval);
 

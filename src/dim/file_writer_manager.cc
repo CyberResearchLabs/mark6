@@ -35,19 +35,19 @@
 // Local includes.
 #include <mark6.h>
 #include <logger.h>
-#include <file_manager.h>
+#include <file_writer_manager.h>
 
 using namespace boost::filesystem;
 
 
-FileManager::FileManager(const std::string mid,
-			 const std::string mount_prefix,
-			 const boost::uint32_t mount_points,
-			 const boost::uint32_t write_block_size,
-			 const boost::uint32_t write_blocks,
-			 const boost::uint32_t poll_timeout,
-			 const double command_interval):
-
+FileWriterManager::FileWriterManager(const std::string mid,
+				     const std::string mount_prefix,
+				     const boost::uint32_t mount_points,
+				     const boost::uint32_t write_block_size,
+				     const boost::uint32_t write_blocks,
+				     const boost::uint32_t poll_timeout,
+				     const double command_interval):
+  
   // Initialize data members (in order).
   _MID (mid),
   _MOUNT_PREFIX (mount_prefix),
@@ -67,27 +67,22 @@ FileManager::FileManager(const std::string mid,
   _cbuf_mutex()
  {
    // Reserve space in file descriptor vector.
-   _fds.reserve(_MOUNT_POINTS);
-   for (nfds_t i=0; i<_MOUNT_POINTS; ++i) {
-     struct pollfd pfd;
-     pfd.fd = -1;
-     _fds.push_back(pfd);
-   }
+   _fws.reserve(_MOUNT_POINTS);
 }
 
-FileManager::~FileManager()
+FileWriterManager::~FileWriterManager()
 {
   close();
   message_queue::remove(_MID.c_str());
 }
 
-void FileManager::start()
+void FileWriterManager::start()
 {
   _running = true;
-  _thread = boost::thread(&FileManager::run, this);
+  _thread = boost::thread(&FileWriterManager::run, this);
 }
 
-void FileManager::run()
+void FileWriterManager::run()
 {
   LOG4CXX_INFO(logger, "Running...");
 
@@ -156,12 +151,12 @@ void FileManager::run()
   }
 }
 
-void FileManager::join()
+void FileWriterManager::join()
 {
   _thread.join();
 }
 
-int FileManager::open(const std::string file_name)
+int FileWriterManager::open(const std::string file_name)
 {
 
   // Create individual file paths.
@@ -199,7 +194,7 @@ int FileManager::open(const std::string file_name)
   return ret;
 }
 
-int FileManager::close()
+int FileWriterManager::close()
 {
   int ret = 0;
   BOOST_FOREACH(struct pollfd pfd, _fds) {
@@ -213,7 +208,7 @@ int FileManager::close()
   return ret;
 }
 
-bool FileManager::write(Buffer* b)
+bool FileWriterManager::write(Buffer* b)
 {
   boost::mutex::scoped_lock lock(_cbuf_mutex);
   if (_cbuf.full())
@@ -224,12 +219,12 @@ bool FileManager::write(Buffer* b)
   return true;
 }
 
-bool FileManager::read(Buffer* b)
+bool FileWriterManager::read(Buffer* b)
 {
   return false;
 }
 
-bool FileManager::check_control()
+bool FileWriterManager::check_control()
 {
   ControlMessage m;
   unsigned int priority;
@@ -261,7 +256,7 @@ bool FileManager::check_control()
   return true;
 }
 
-void FileManager::write_block(const int fd)
+void FileWriterManager::write_block(const int fd)
 {
   // Get next buffer.
   Buffer* buf;

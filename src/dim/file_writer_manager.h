@@ -20,8 +20,8 @@
  * 
  */
 
-#ifndef _FILE_MANAGER_H_
-#define _FILE_MANAGER_H_
+#ifndef _FILE_WRITER_MANAGER_H_
+#define _FILE_WRITER_MANAGER_H_
 
 // C includes.
 #include <poll.h>
@@ -34,10 +34,12 @@
 #include <cstddef>    // for std::size_t
 #include <boost/thread/thread.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/circular_buffer.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
 // Local includes.
+#include <file_writer.h>
 #include <mark6.h>
 
 using namespace boost::interprocess;
@@ -93,8 +95,8 @@ class FileManager {
    *  File data structures.
    */
   /**@{**/
-  /** File descriptor vector. Passed into poll() call. */
-  std::vector<struct pollfd> _fds;
+  /** FileWriter vector. */
+  std::vector<FileWriter> _fws;
 
   /** Circular buffer for storing data to be written to disk. */
   CircularBuffer _cbuf;
@@ -120,16 +122,16 @@ class FileManager {
 
  public:
   /** Constructor. */
-  FileManager(const std::string mid,
-	      const std::string mount_prefix,
-	      const boost::uint32_t mount_points,
-	      const boost::uint32_t write_block_size,
-	      const boost::uint32_t write_blocks,
-	      const boost::uint32_t poll_timeout,
-	      const double command_interval);
+  FileWriterManager(const std::string mid,
+		    const std::string mount_prefix,
+		    const boost::uint32_t mount_points,
+		    const boost::uint32_t write_block_size,
+		    const boost::uint32_t write_blocks,
+		    const boost::uint32_t poll_timeout,
+		    const double command_interval);
   
   /** Constructor. */
-  ~FileManager();
+  ~FileWriterManager();
 
 
   /** @name ThreadOperations */
@@ -172,5 +174,5 @@ class FileManager {
   void write_block(const int fd);
 };
 
-#endif // _FILE_MANAGER_H_
+#endif // _FILE_WRITER_MANAGER_H_
 

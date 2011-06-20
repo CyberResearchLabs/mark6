@@ -38,11 +38,10 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-using namespace boost::interprocess;
+// Local includes
+#include <mark6.h>
 
-// Types.
-typedef std::vector<boost::uint8_t> Buffer;
-typedef boost::circular_buffer<Buffer*> CircularBuffer;
+using namespace boost::interprocess;
 
 /**
  * Manages high speed writing of data to file.

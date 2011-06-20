@@ -30,6 +30,7 @@
 #include <boost/cstdint.hpp>  // for boost::uint16_t
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
+#include <boost/circular_buffer.hpp>
 
 using namespace std;
 using namespace boost;
@@ -90,5 +91,8 @@ enum  MessageType { MSG_WRITE_TO_DISK, MSG_READ_FROM_DISK, MSG_STOP };
 struct ControlMessage {
   MessageType _type;
 };
+
+typedef std::vector<boost::uint8_t> Buffer;
+typedef boost::circular_buffer<Buffer*> CircularBuffer;
 
 #endif /*MARK6_H_*/
