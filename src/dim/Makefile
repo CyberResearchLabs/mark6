@@ -11,6 +11,7 @@ LIBS	=	-lpthread \
 
 SOURCES	=	main.cc \
 		logger.cc \
+		file_writer.cc \
 		file_manager.cc \
 		socket_buffer.cc \
 		udp_socket.cc \
@@ -19,6 +20,8 @@ OBJECTS=$(SOURCES:.cc=.o)
 
 TEST_DIM =	test_$(DIM)
 TEST_SOURCES =	test_file_manager.cc \
+		test_file_writer.cc \
+		file_writer.cc \
 		file_manager.cc \
 		logger.cc \
 		test_main.cc
