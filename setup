@@ -15,11 +15,12 @@ APR_UTIL=apr-util-1.3.12
 LOG4CXX=apache-log4cxx-0.10.0
 
 install_binary_deps() {
-	echo ${PREQ}
+	echo Installing binary dependencies: ${PREQ}
 	sudo ${YUM} install ${PREQ} -y
 }
 
 install_source_deps() {
+	echo Installing ${APR}...
 
 	cd ${MARK6_ROOT}/extern
 	${TAR} xvzf ${APR}.tar.gz
@@ -30,6 +31,7 @@ install_source_deps() {
 	sudo make install
 	cd ..
 
+	echo Installing ${APR_UTIL}...
 	cd ${MARK6_ROOT}/extern
 	${TAR} xvzf ${APR_UTIL}.tar.gz
 	cd ${APR_UTIL}
@@ -39,6 +41,7 @@ install_source_deps() {
 	sudo make install
 	cd ..
 
+	echo Installing ${LOG4CXX}...
 	cd ${MARK6_ROOT}/extern
 	${TAR} xvzf ${LOG4CXX}.tar.gz
 	cd ${LOG4CXX}
@@ -50,7 +53,12 @@ install_source_deps() {
 
 }
 
-install_binary_deps
-install_source_deps
+#install_binary_deps
+#install_source_deps
 
 export MARK6_ROOT
+
+./bootstrap
+./configure --prefix=/opt/haystack/mark6 \
+	BOOST_LIBDIR=/usr/lib64/boost141 \
+	BOOST_INCDIR=/usr/include/boost141

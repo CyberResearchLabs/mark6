@@ -73,7 +73,7 @@ void UDPSocket::bind(string ip, int port)
     throw e;
   }      
   ret=::inet_aton(p, &addr.sin_addr);
-#ifndef LINUX
+#ifdef FIXME
   addr.sin_len=sizeof(addr);
 #endif // LINUX
   addr.sin_family=AF_INET;
@@ -116,7 +116,7 @@ int UDPSocket::recvfrom(string ip, int port, SocketBuffer& s)
     vtp::SocketException e(1, "Zero size buffer");
     throw e;        
   }
-#ifndef LINUX
+#ifdef FIXME
   from.sin_len=sizeof(from);
 #endif // LINUX
   from.sin_family=AF_INET;
@@ -150,7 +150,7 @@ int UDPSocket::sendto(string ip, int port, SocketBuffer& s)
     vtp::SocketException e(1, "Zero size buffer");
     throw e;        
   }
-#ifndef LINUX
+#ifdef FIXME
   to.sin_len=sizeof(to);
 #endif // LINUX
   to.sin_family=AF_INET;

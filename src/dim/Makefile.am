@@ -1,5 +1,38 @@
-bin_PROGRAMS	= dim6 dim6test
-dim6_SOURCES	= 	main.cc \
+bin_PROGRAMS	=	dim6
+check_PROGRAMS	=	dim6test
+
+dim6_SOURCES	= 	main.cc
+
+dim6_LDADD	= 	-L.\
+			-ldim6 \
+			-L@BOOST_LIBDIR@ \
+			-lboost_program_options-mt \
+			-lboost_system-mt \
+			-lboost_thread-mt \
+			-ldl \
+			-llog4cxx \
+			-lm \
+			-lpthread 
+
+dim6test_SOURCES =	test_file_manager.cc \
+			test_file_writer.cc \
+			test_writer_thread_pool.cc \
+			test_main.cc
+
+dim6test_LDADD	= 	-L. \
+			-ldim6 \
+			-L@BOOST_LIBDIR@ \
+			-lboost_program_options-mt \
+			-lboost_system-mt \
+			-lboost_thread-mt \
+			-ldl \
+			-llog4cxx \
+			-lm \
+			-lpthread  \
+			-lcppunit
+
+noinst_LIBRARIES=	libdim6.a
+libdim6_a_SOURCES	= \
 			logger.cc \
 			file_writer.cc \
 			file_manager.cc \
@@ -8,38 +41,10 @@ dim6_SOURCES	= 	main.cc \
 			writer_thread_pool.cc \
 			io.cc
 
-dim6_LDADD	= 	-L/usr/lib64/boost141 \
-			-lpthread \
-			-ldl \
-			-lboost_program_options-mt \
-			-lboost_system-mt \
-			-lboost_thread-mt \
-			-lm \
-			-llog4cxx \
-			-lcppunit
-
-dim6test_SOURCES =	test_file_manager.cc \
-			test_file_writer.cc \
-			test_writer_thread_pool.cc \
-			file_writer.cc \
-			file_manager.cc \
-			writer_thread_pool.cc \
-			logger.cc \
-			test_main.cc
-
-dim6test_LDADD	= 	-L/usr/lib64/boost141 \
-			-lpthread \
-			-ldl \
-			-lboost_program_options-mt \
-			-lboost_system-mt \
-			-lboost_thread-mt \
-			-lm \
-			-llog4cxx \
-			-lcppunit
-
 INCLUDES	= 	-I. \
-			-I../include \
 			-I/usr/include \
-			-I/usr/include/boost141 
+			-I@BOOST_INCDIR@
 			
-AM_CXXFLAGS	= -O3
+AM_CXXFLAGS	= 	-O3
+
+TESTS		=	dim6test

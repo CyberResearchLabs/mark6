@@ -3,13 +3,13 @@
 
 AC_PREREQ(2.59)
 AC_INIT(FULL-PACKAGE-NAME, VERSION, BUG-REPORT-ADDRESS)
-AC_CONFIG_SRCDIR([src/include/mark6.h])
-AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_HEADER([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_RANLIB
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lcppunit':
@@ -41,4 +41,14 @@ AM_INIT_AUTOMAKE(mark6, 0.1)
 AC_CONFIG_FILES([Makefile
                  src/Makefile
                  src/dim/Makefile])
+
+echo BOOST_LIBDIR: $BOOST_LIBDIR
+echo BOOST_INCDIR: $BOOST_INCDIR
+AC_SUBST(BOOST_LIBDIR)
+AC_SUBST(BOOST_INCDIR)
+
+
 AC_OUTPUT
+
+
+
