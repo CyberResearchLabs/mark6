@@ -63,8 +63,15 @@ TestWriterThreadPool::basic(void)
 {
   LOG4CXX_DEBUG(logger, "TestWriterThreadPool::basic()");
 
-  std::string FILE_NAME("/tmp/test.dat");
-  int fd = ::open(FILE_NAME.c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
+  int fds[5];
+
+  std::string FILE_PREFIX("/tmp/test");
+  for (int i=0; i<5; ++i) {
+    ostringstream ss;
+    ss << FILE_PREFIX << i << ".dat";
+    fds[i] = ::open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
+  }
+    
   const boost::uint32_t BUF_SIZE = 4096;
   Buffer b;
   for (boost::uint32_t i=0; i<BUF_SIZE; ++i)
@@ -77,7 +84,7 @@ TestWriterThreadPool::basic(void)
   WriterThreadPool p(TASK_LIST_SIZE, THREAD_POOL_SIZE, THREAD_SLEEP_TIME);
   
   for (boost::uint32_t i=0; i<TASK_LIST_SIZE; ++i) {
-    p.insert_task(WriterTask(i, fd, &b, BUF_SIZE));
+    p.insert_task(WriterTask(i, fds[i%5], &b, BUF_SIZE));
   }
    
   p.start();
@@ -86,6 +93,8 @@ TestWriterThreadPool::basic(void)
 
   p.stop();
 
-  close(fd);
+  for (int i=0; i<5; ++i)
+    close(fds[i]);
+
   LOG4CXX_DEBUG(logger, "Joined file manager.");
 }

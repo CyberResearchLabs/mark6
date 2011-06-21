@@ -35,13 +35,10 @@ void WriterThread::operator() (WriterThreadPool* wtp,
   _writer_thread_pool = wtp;
   
   while (wtp->running()) {
-    LOG4CXX_DEBUG(logger, "Retrieving next task.");
-
     // Get next task.
     try {
       WriterTask w = _writer_thread_pool->next_task();
       w();
-      LOG4CXX_DEBUG(logger, "Completed task.");
     } catch (WriterTaskTimeout &t) {
       LOG4CXX_DEBUG(logger, "Timedout waiting for next task.");
     }
@@ -85,7 +82,8 @@ bool WriterThreadPool::running()
   return _running;
 }
 
-bool WriterThreadPool::insert_task(const WriterTask& w) {
+bool WriterThreadPool::insert_task(const WriterTask& w)
+{
   boost::mutex::scoped_lock lock(_task_list_mutex);    
   if (_task_list.size() < _TASK_LIST_SIZE) {
     _task_list.push_back(w);
