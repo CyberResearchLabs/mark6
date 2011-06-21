@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Date:	6/21/2011
+# Description:
+#	Install build dependencies.
+
+MARK6_ROOT=/home/dlapsley/mark6
+
+YUM=/usr/bin/yum
+TAR=/bin/tar
+
+PREQ="boost141-devel.x86_64 cppunit-devel.x86_64"
+APR=apr-1.4.5
+APR_UTIL=apr-util-1.3.12
+LOG4CXX=apache-log4cxx-0.10.0
+
+install_binary_deps() {
+	echo ${PREQ}
+	sudo ${YUM} install ${PREQ} -y
+}
+
+install_source_deps() {
+
+	cd ${MARK6_ROOT}/extern
+	${TAR} xvzf ${APR}.tar.gz
+	cd ${APR}
+	./configure --prefix=/usr/local \
+		--enable-threads
+	make
+	sudo make install
+	cd ..
+
+	cd ${MARK6_ROOT}/extern
+	${TAR} xvzf ${APR_UTIL}.tar.gz
+	cd ${APR_UTIL}
+	./configure --prefix=/usr/local \
+		--with-apr=../${APR}
+	make
+	sudo make install
+	cd ..
+
+	cd ${MARK6_ROOT}/extern
+	${TAR} xvzf ${LOG4CXX}.tar.gz
+	cd ${LOG4CXX}
+	./configure --prefix=/usr/local \
+		--with-apr-util=../${APR_UTIL}
+	make
+	sudo make install
+	cd ..
+
+}
+
+install_binary_deps
+install_source_deps
+
+export MARK6_ROOT

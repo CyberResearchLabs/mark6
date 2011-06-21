@@ -2,5 +2,7 @@ Dependancies:
 
 - log4cxx
 	liblog4cxx10 (ubuntu)
+	log4cpp.x86_64 (centos)
 - boost C++
 	libboost1.40-all-dev (ubuntu)
+	boost141-devel.x86_64 (centos)
