@@ -4910,7 +4910,7 @@ fi
 
 
 
-                              ac_config_files="$ac_config_files Makefile src/Makefile src/dim/Makefile"
+                                        ac_config_files="$ac_config_files Makefile doc/Makefile src/Makefile src/dim/Makefile"
 
 
 echo BOOST_LIBDIR: $BOOST_LIBDIR
@@ -5476,6 +5476,7 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+  "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/dim/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/dim/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;

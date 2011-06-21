@@ -1,6 +1,6 @@
-
+MAINTAINERCLEANFILES	=	Makefile.in
 EXTRA_DIST	=	setup bin/dim6.sh
-SUBDIRS		=	src
+SUBDIRS		=	src doc
 
 distclean-local:
 	-rm -rf Makefile \
