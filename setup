@@ -5,6 +5,7 @@
 #	Install build dependencies.
 
 MARK6_ROOT=/home/dlapsley/mark6
+EXTERN_ROOT=${MARK6_ROOT}/src/extern
 
 YUM=/usr/bin/yum
 TAR=/bin/tar
@@ -22,7 +23,7 @@ install_binary_deps() {
 install_source_deps() {
 	echo Installing ${APR}...
 
-	cd ${MARK6_ROOT}/extern
+	cd ${EXTERN_ROOT}
 	${TAR} xvzf ${APR}.tar.gz
 	cd ${APR}
 	./configure --prefix=/usr/local \
@@ -32,7 +33,7 @@ install_source_deps() {
 	cd ..
 
 	echo Installing ${APR_UTIL}...
-	cd ${MARK6_ROOT}/extern
+	cd ${EXTERN_ROOT}
 	${TAR} xvzf ${APR_UTIL}.tar.gz
 	cd ${APR_UTIL}
 	./configure --prefix=/usr/local \
@@ -42,7 +43,7 @@ install_source_deps() {
 	cd ..
 
 	echo Installing ${LOG4CXX}...
-	cd ${MARK6_ROOT}/extern
+	cd ${EXTERN_ROOT}
 	${TAR} xvzf ${LOG4CXX}.tar.gz
 	cd ${LOG4CXX}
 	./configure --prefix=/usr/local \

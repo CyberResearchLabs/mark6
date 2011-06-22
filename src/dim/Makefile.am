@@ -21,16 +21,13 @@ dim6_LDADD	= 	-L.\
 			-lpthread 
 
 
-dim6test_SOURCES =	test_main.cc test_writer_thread_pool.h \
-			test_writer_thread_pool.cc
-
-#			test_file_manager.cc \
-#			test_file_manager.h \
-#			test_file_writer.cc \
-#			test_file_writer.h \
-#			test_writer_thread_pool.cc \
-#			test_writer_thread_pool.h \
-#			test_main.cc 
+dim6test_SOURCES =	test_file_manager.cc \
+			test_file_manager.h \
+			test_file_writer.cc \
+			test_file_writer.h \
+			test_writer_thread_pool.cc \
+			test_writer_thread_pool.h \
+			test_main.cc 
 
 dim6test_LDADD	= 	-L. \
 			-ldim6 \
