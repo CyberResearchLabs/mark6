@@ -23,7 +23,7 @@
  *
  */
 
-#include <socket.h>
+#include <sys/socket.h>
 #include <socket_buffer.h>
 
 #ifndef _UDP_SOCKET_H_

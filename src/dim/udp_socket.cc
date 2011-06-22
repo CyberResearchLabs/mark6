@@ -35,7 +35,6 @@
 // Local includes.
 #include <mark6.h>
 #include <logger.h>
-#include <socket.h>
 #include <udp_socket.h>
 
 UDPSocket::UDPSocket():

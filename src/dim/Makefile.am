@@ -1,7 +1,11 @@
 bin_PROGRAMS	=	dim6
 check_PROGRAMS	=	dim6test
 
-dim6_SOURCES	= 	main.cc
+
+dim6_SOURCES	= 	main.cc \
+			mark6.h \
+			configuration.h \
+			receiver_thread.h
 
 dim6_LDADD	= 	-L.\
 			-ldim6 \
@@ -14,10 +18,14 @@ dim6_LDADD	= 	-L.\
 			-lm \
 			-lpthread 
 
+
 dim6test_SOURCES =	test_file_manager.cc \
+			test_file_manager.h \
 			test_file_writer.cc \
+			test_file_writer.h \
 			test_writer_thread_pool.cc \
-			test_main.cc
+			test_writer_thread_pool.h \
+			test_main.cc 
 
 dim6test_LDADD	= 	-L. \
 			-ldim6 \
@@ -31,20 +39,29 @@ dim6test_LDADD	= 	-L. \
 			-lpthread  \
 			-lcppunit
 
+
 noinst_LIBRARIES=	libdim6.a
+
 libdim6_a_SOURCES	= \
 			logger.cc \
+			logger.h \
 			file_writer.cc \
+			file_writer.h \
 			file_manager.cc \
+			file_manager.h \
 			socket_buffer.cc \
-			udp_socket.cc \
+			socket_buffer.h \
 			writer_thread_pool.cc \
-			io.cc
+			writer_thread_pool.h \
+			io.cc \
+			io.h
 
-INCLUDES	= 	-I. \
+
+INCLUDES	= 	-I@top_srcdir@/src/dim \
 			-I/usr/include \
 			-I@BOOST_INCDIR@
 			
 AM_CXXFLAGS	= 	-O3
 
+TESTS_ENVIRONMENT=	LD_LIBRARY_PATH=/usr/local/lib:/usr/lib64/boost141
 TESTS		=	dim6test
