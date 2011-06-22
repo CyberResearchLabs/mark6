@@ -80,17 +80,16 @@ TestWriterThreadPool::basic(void)
   const boost::uint32_t TASK_LIST_SIZE = 100;
   const boost::uint32_t THREAD_POOL_SIZE = 10;
   const int THREAD_SLEEP_TIME = 1;
-  
+
   WriterThreadPool p(TASK_LIST_SIZE, THREAD_POOL_SIZE, THREAD_SLEEP_TIME);
-  
+
+
   for (boost::uint32_t i=0; i<TASK_LIST_SIZE; ++i) {
     p.insert_task(WriterTask(i, fds[i%5], &b, BUF_SIZE));
   }
    
   p.start();
-  
-  sleep(20);
-
+  sleep(10);
   p.stop();
 
   for (int i=0; i<5; ++i)

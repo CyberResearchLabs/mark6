@@ -31,6 +31,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/ptr_container/ptr_list.hpp>
 
 // Local includes.
 #include <mark6.h>
@@ -71,15 +72,20 @@ struct WriterTaskTimeout {
 WriterTaskTimeout(std::string msg): _msg(msg) {}
 };
 
+struct WriterTaskStop {
+  std::string _msg;
+WriterTaskStop(std::string msg): _msg(msg) {}
+};
+
 
 class WriterThreadPool;
 
 
 struct WriterThread {
-  WriterThreadPool* _writer_thread_pool;
   bool _running;
 
   WriterThread();
+  ~WriterThread();
   void operator() (WriterThreadPool* wtp, const int sleep_time);
 };
 
@@ -89,7 +95,7 @@ class WriterThreadPool {
   std::list<WriterTask> _task_list;
   boost::mutex _task_list_mutex;
   boost::condition_variable _task_list_cond;
-  std::list<boost::thread*> _threads;
+  boost::ptr_list<boost::thread> _threads;
 
   boost::uint32_t _TASK_LIST_SIZE;
   boost::uint32_t _THREAD_POOL_SIZE;

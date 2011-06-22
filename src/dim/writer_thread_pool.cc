@@ -25,22 +25,24 @@
 
 //-----------------------------------------------------------------------------
 WriterThread::WriterThread():
-  _writer_thread_pool(0),
-  _running(true)
-{
-}
+  _running(true) 
+{}
+
+WriterThread::~WriterThread()
+{}
   
 void WriterThread::operator() (WriterThreadPool* wtp,
-			       const int sleep_time) {
-  _writer_thread_pool = wtp;
-  
+			       const int sleep_time)
+{
   while (wtp->running()) {
     // Get next task.
     try {
-      WriterTask w = _writer_thread_pool->next_task();
+      WriterTask w = wtp->next_task();
       w();
-    } catch (WriterTaskTimeout &t) {
+    } catch (WriterTaskTimeout t) {
       LOG4CXX_DEBUG(logger, "Timedout waiting for next task.");
+    } catch (WriterTaskStop s) {
+      LOG4CXX_DEBUG(logger, "Stop called waiting for next task.");
     }
   }
 }
@@ -57,24 +59,23 @@ WriterThreadPool::WriterThreadPool(const boost::uint32_t task_list_size,
 }
 
 WriterThreadPool::~WriterThreadPool() {
-  while (!_threads.empty()) {
-    boost::thread* t = _threads.front();
+  while (!_threads.empty())
     _threads.pop_front();
-    delete t;
-  }
 }
   
 void WriterThreadPool::start()
 {
   for (boost::uint32_t i=0; i<_THREAD_POOL_SIZE; ++i) {
-    WriterThread w;
-    _threads.push_back(new boost::thread(w, this, _THREAD_SLEEP_TIME));
+    _threads.push_front(new boost::thread(WriterThread(), this,
+					  _THREAD_SLEEP_TIME));
   }
 }
 
 void WriterThreadPool::stop()
 {
   _running = false;
+  BOOST_FOREACH(boost::thread &t, _threads)
+    t.join();
 }
 
 bool WriterThreadPool::running()
@@ -88,23 +89,24 @@ bool WriterThreadPool::insert_task(const WriterTask& w)
   if (_task_list.size() < _TASK_LIST_SIZE) {
     _task_list.push_back(w);
     _task_list_cond.notify_one();
-      return true;
+    return true;
   }
   return false;
 }
 
 WriterTask WriterThreadPool::next_task() {
-  boost::mutex::scoped_lock lock(_task_list_mutex);
-  
   boost::system_time timeout = boost::get_system_time() 
     + boost::posix_time::milliseconds(_THREAD_SLEEP_TIME*1000);
   
-  while (_threads.empty()) {
+  boost::mutex::scoped_lock lock(_task_list_mutex);
+  while (_task_list.empty()) {
     bool timedout = _task_list_cond.timed_wait(lock, timeout);
     if (!timedout)
       throw WriterTaskTimeout("timedout");
+    if (!running())
+      throw WriterTaskStop("stopped");
   }
-  
+
   WriterTask n = _task_list.front();
   _task_list.pop_front();
   return n;
