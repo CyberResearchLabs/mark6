@@ -10,6 +10,7 @@ EXTERN_ROOT=${MARK6_ROOT}/src/extern
 YUM=/usr/bin/yum
 TAR=/bin/tar
 
+# PREQ="boost141-devel.x86_64 cppunit-devel.x86_64 texinfo.x86_64 texi2html.noarch texinfo-tex.x86_64 apr-devel.x86_64 apr-util-devel.x86_64"
 PREQ="boost141-devel.x86_64 cppunit-devel.x86_64 texinfo.x86_64 texi2html.noarch texinfo-tex.x86_64"
 APR=apr-1.4.5
 APR_UTIL=apr-util-1.3.12
@@ -32,34 +33,40 @@ install_source_deps() {
 	sudo make install
 	cd ..
 
+	# See: http://www.bmplab.com/archives/22
 	echo Installing ${APR_UTIL}...
 	cd ${EXTERN_ROOT}
 	${TAR} xvzf ${APR_UTIL}.tar.gz
 	cd ${APR_UTIL}
 	./configure --prefix=/usr/local \
-		--with-apr=../${APR}
+		--with-expat='builtin' \ 
+		--with-apr=/usr/local
 	make
 	sudo make install
 	cd ..
+
 
 	echo Installing ${LOG4CXX}...
 	cd ${EXTERN_ROOT}
 	${TAR} xvzf ${LOG4CXX}.tar.gz
 	cd ${LOG4CXX}
+
+
 	./configure --prefix=/usr/local \
-		--with-apr-util=../${APR_UTIL}
+		--with-apr=/usr/local \
+		--with-apr-util=/usr/local  
 	make
 	sudo make install
 	cd ..
 
 }
 
-install_binary_deps
-#install_source_deps
-
-export MARK6_ROOT
+# install_binary_deps
+# install_source_deps
 
 ./bootstrap
-./configure --prefix=/opt/haystack/mark6 \
-	BOOST_LIBDIR=/usr/lib64/boost141 \
-	BOOST_INCDIR=/usr/include/boost141
+./configure \
+	--prefix=/opt/haystack \
+	BOOST_INCDIR=/usr/include/boost141 \
+	BOOST_LIBDIR=/usr/lib64/boost141
+make

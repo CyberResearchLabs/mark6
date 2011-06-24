@@ -14,5 +14,10 @@ distclean-local:
 		config.h.in \
 		config.log \
 		config.status \
-		stamp-h1
-
+		stamp-h1 \
+		src/Makefile \
+		src/Makefile.in \
+		src/dim/Makefile \
+		src/extern/apache-log4cxx-0.10.0 \
+		src/extern/apr-1.4.5 \
+		src/extern/apr-util-1.3.12
