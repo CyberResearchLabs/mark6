@@ -32,29 +32,33 @@
 #include <list>
 #include <algorithm>
 
+
 // Boost includes.
 #include <boost/foreach.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/filesystem.hpp>
 
 //Local includes.
 #include <mark6.h>
 #include <logger.h>
-#include <writer_thread_pool.h>
+#include <thread_pool.h>
+#include <writer_task.h>
 #include <test_writer_thread_pool.h>
 
 using namespace boost;
 using namespace boost::interprocess;
+namespace bf = boost::filesystem;
 
 CPPUNIT_TEST_SUITE_REGISTRATION (TestWriterThreadPool);
 
 void
-TestWriterThreadPool :: setUp (void)
+TestWriterThreadPool::setUp (void)
 {
   // set up test environment (initializing objects)
 }
 
 void
-TestWriterThreadPool :: tearDown (void)
+TestWriterThreadPool::tearDown (void)
 {
 }
 
@@ -63,37 +67,70 @@ TestWriterThreadPool::basic(void)
 {
   LOG4CXX_DEBUG(logger, "TestWriterThreadPool::basic()");
 
-  int fds[5];
+  const int NUMBER_OF_FILES = 16;
+  boost::uint32_t i;
+  int fds[NUMBER_OF_FILES];
 
-  std::string FILE_PREFIX("/tmp/test");
-  for (int i=0; i<5; ++i) {
+  // Setup directories.
+  const std::string FILE_PREFIX("/mnt/disk");
+  std::list<std::string> dirs;
+  for (i=0; i<NUMBER_OF_FILES; ++i) {
     ostringstream ss;
-    ss << FILE_PREFIX << i << ".dat";
-    fds[i] = ::open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
+    ss << FILE_PREFIX << i;
+    dirs.push_front(ss.str().c_str());
+  }
+
+  i=0;
+  BOOST_FOREACH(std::string d, dirs) {
+    bf::path p(d);
+    if (!bf::exists(p)) {
+      bf::create_directories(p);
+    }
+    ostringstream ss;
+    ss << d << "/test.dat";
+    fds[i++] = ::open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
   }
     
-  const boost::uint32_t BUF_SIZE = 4096;
-  Buffer b;
-  for (boost::uint32_t i=0; i<BUF_SIZE; ++i)
-    b.push_back(static_cast<boost::uint8_t>(i));
+  const boost::uint32_t BUF_SIZE = 8192;
+  boost::uint8_t b[BUF_SIZE];
+  for (i=0; i<BUF_SIZE; ++i)
+    b[i] = static_cast<boost::uint8_t>(i);
+
+    // b.push_back(static_cast<boost::uint8_t>(i));
   
-  const boost::uint32_t TASK_LIST_SIZE = 100;
+  const boost::uint32_t TASK_LIST_SIZE = 1000;
   const boost::uint32_t THREAD_POOL_SIZE = 10;
+  const boost::uint32_t TOTAL_TASKS = 10000000;
   const int THREAD_SLEEP_TIME = 1;
 
-  WriterThreadPool p(TASK_LIST_SIZE, THREAD_POOL_SIZE, THREAD_SLEEP_TIME);
+  ThreadPool <WriterTask> p(TASK_LIST_SIZE, THREAD_POOL_SIZE, THREAD_SLEEP_TIME);
 
-
-  for (boost::uint32_t i=0; i<TASK_LIST_SIZE; ++i) {
-    p.insert_task(WriterTask(i, fds[i%5], &b, BUF_SIZE));
-  }
-   
   p.start();
-  sleep(10);
+
+  Timer duration;
+  for (boost::uint32_t i=0; i<TOTAL_TASKS; ++i) {
+    p.insert_task(WriterTask(i, fds[i%NUMBER_OF_FILES], b, BUF_SIZE));
+  }   
+
+  sleep(30);
+
   p.stop();
 
-  for (int i=0; i<5; ++i)
+  double elapsed = duration.elapsed();
+  double mbits_written = 8 * TOTAL_TASKS * BUF_SIZE / 1000000;
+  double rate = mbits_written/elapsed; // Mbps
+  
+  LOG4CXX_INFO(logger, "elapsed:" << elapsed);
+  LOG4CXX_INFO(logger, "mbits_written:" << mbits_written);
+  LOG4CXX_INFO(logger, "mbps:" << rate);
+
+  for (int i=0; i<NUMBER_OF_FILES; ++i)
     close(fds[i]);
+
+  // BOOST_FOREACH(std::string d, dirs) {
+  // bf::path p(d);
+  // bf::remove_all(p);
+  // }
 
   LOG4CXX_DEBUG(logger, "Joined file manager.");
 }
