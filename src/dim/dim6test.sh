@@ -3,5 +3,9 @@
 export LD_LIBRARY_PATH=/usr/local/lib
 
 EXEC=dim6test
+NICE_LEVEL=-5
 
-./${EXEC}
+nice ${NICE_LEVEL} ./${EXEC}
+ionice 
+
+echo $PPID

@@ -88,7 +88,8 @@ TestWriterThreadPool::basic(void)
     }
     ostringstream ss;
     ss << d << "/test.dat";
-    fds[i++] = ::open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
+    // fds[i++] = ::open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
+    fds[i++] = ::open(ss.str().c_str(), O_WRONLY | O_CREAT, S_IRWXU);
   }
     
   const boost::uint32_t BUF_SIZE = 8192;
@@ -99,20 +100,35 @@ TestWriterThreadPool::basic(void)
     // b.push_back(static_cast<boost::uint8_t>(i));
   
   const boost::uint32_t TASK_LIST_SIZE = 1000;
-  const boost::uint32_t THREAD_POOL_SIZE = 10;
-  const boost::uint32_t TOTAL_TASKS = 10000000;
+  const boost::uint32_t THREAD_POOL_SIZE = 8;
+  const boost::uint32_t TOTAL_TASKS = 100000000;
+  const boost::uint32_t STATS_UPDATE_INTERVAL = 1;
+  const std::string STATS_FILE("thread.csv");
   const int THREAD_SLEEP_TIME = 1;
 
-  ThreadPool <WriterTask> p(TASK_LIST_SIZE, THREAD_POOL_SIZE, THREAD_SLEEP_TIME);
+  ThreadPool <WriterTask> p(TASK_LIST_SIZE, THREAD_POOL_SIZE,
+			    THREAD_SLEEP_TIME, STATS_FILE,
+			    STATS_UPDATE_INTERVAL);
+
+  LOG4CXX_DEBUG(logger, "Created.");
 
   p.start();
 
+  LOG4CXX_DEBUG(logger, "Started.");
+
+  double last_update = 0;
   Timer duration;
   for (boost::uint32_t i=0; i<TOTAL_TASKS; ++i) {
     p.insert_task(WriterTask(i, fds[i%NUMBER_OF_FILES], b, BUF_SIZE));
+    double now = duration.elapsed();
+    if (duration.elapsed() - last_update > 1) {
+      p.print_stats();
+      p.dump_stats();
+      last_update = now;
+    }
   }   
-
-  sleep(30);
+  
+  sleep(10);
 
   p.stop();
 

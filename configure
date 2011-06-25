@@ -4918,7 +4918,6 @@ echo BOOST_INCDIR: $BOOST_INCDIR
 
 
 
-
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -6332,7 +6331,4 @@ if test "$no_create" != yes; then
   # would make configure fail if this is the last instruction.
   $ac_cs_success || { (exit 1); exit 1; }
 fi
-
-
-
 

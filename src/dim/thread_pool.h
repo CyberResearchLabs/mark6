@@ -25,6 +25,7 @@
 
 // C++ includes.
 #include <list>
+#include <fstream>
 
 // Framework includes.
 #include <boost/thread/thread.hpp>
@@ -62,24 +63,25 @@ class ThreadPool {
 	  w();
 	  wtp->task_completed();
 	} catch (TaskTimeout t) {
-	  LOG4CXX_DEBUG(logger, "Timedout waiting for next task.");
+	  std::cout << "Timedout waiting for next task." << std::endl;
 	} catch (TaskStop s) {
-	  LOG4CXX_DEBUG(logger, "Stop called waiting for next task.");
+	  std::cout << "Stop called waiting for next task." << std::endl;
 	}
       }
     }
   };
-
 
   std::list<TASK> _task_list;
   boost::mutex _task_list_mutex;
   boost::condition_variable _task_list_read_cond;
   boost::condition_variable _task_list_write_cond;
   boost::ptr_list<boost::thread> _threads;
+  std::ofstream _stats_file;
 
   boost::uint32_t _TASK_LIST_SIZE;
   boost::uint32_t _THREAD_POOL_SIZE;
   boost::uint32_t _THREAD_SLEEP_TIME;
+  boost::uint32_t _STATS_UPDATE_INTERVAL;
 
   boost::mutex _tasks_completed_mutex;
   boost::uint32_t _tasks_completed;
@@ -94,7 +96,9 @@ class ThreadPool {
  public:
   ThreadPool(const boost::uint32_t task_list_size,
 	     const boost::uint32_t thread_pool_size,
-	     const int thread_sleep_time);
+	     const boost::uint32_t thread_sleep_time,
+	     const std::string stats_file,
+	     const boost::uint32_t stats_update_interval);
   ~ThreadPool();
   
   void start();
@@ -104,17 +108,30 @@ class ThreadPool {
   void insert_task(const TASK& w);
   TASK next_task();
   void task_completed();
+  void print_stats();
+  void dump_stats();
 };
 
 
 template <class TASK>
 ThreadPool<TASK>::ThreadPool(const boost::uint32_t task_list_size,
-		       const boost::uint32_t thread_pool_size,
-		       const int thread_sleep_time):
+			     const boost::uint32_t thread_pool_size,
+			     const boost::uint32_t thread_sleep_time,
+			     const std::string stats_file,
+			     const boost::uint32_t stats_update_interval):
+  _task_list(),
+  _task_list_mutex(),
+  _task_list_read_cond(),
+  _task_list_write_cond(),
+  _threads(),
+  _stats_file(stats_file.c_str()),
   _TASK_LIST_SIZE(task_list_size),
   _THREAD_POOL_SIZE(thread_pool_size),
   _THREAD_SLEEP_TIME(thread_sleep_time),
+  _STATS_UPDATE_INTERVAL(stats_update_interval),
+  _tasks_completed_mutex(),
   _tasks_completed(0),
+  _last_tasks_completed(0),
   _task_rate(0),
   _timer(),
   _last_update(0),
@@ -126,6 +143,7 @@ template <class TASK>
 ThreadPool<TASK>::~ThreadPool() {
   while (!_threads.empty())
     _threads.pop_front();
+  _stats_file.close();
 }
   
 template <class TASK>
@@ -218,16 +236,39 @@ void ThreadPool<TASK>::task_completed()
     double instant_task_rate = delta_tasks/delta_time;
     double cumulative_task_rate = _tasks_completed/now;
     _task_rate = 0.1*instant_task_rate + 0.9*_task_rate;
-
-    LOG4CXX_DEBUG(logger, "now:" << now
-		  << " completed:" << _tasks_completed 
-		  << " instant_rate:" << instant_task_rate
-		  << " cumulative_rate:" << cumulative_task_rate
-		  << " rate:" << _task_rate);
-    
     _last_update = now;
     _last_tasks_completed = _tasks_completed;
   }
+}
+
+template <class TASK>
+void ThreadPool<TASK>::print_stats()
+{
+  boost::mutex::scoped_lock lock(_tasks_completed_mutex);    
+  double now = _timer.elapsed();
+  double cumulative_task_rate = _tasks_completed/now;
+
+  std::cout
+    << "now:" << now
+    << " completed:" << _tasks_completed 
+    << " cumulative_rate:" << cumulative_task_rate
+    << " rate:" << _task_rate 
+    << std::endl;
+}
+
+template <class TASK>
+void ThreadPool<TASK>::dump_stats()
+{
+  boost::mutex::scoped_lock lock(_tasks_completed_mutex);    
+  double now = _timer.elapsed();
+  double cumulative_task_rate = _tasks_completed/now;
+
+  _stats_file
+    << now << ","
+    << _tasks_completed << ","
+    << cumulative_task_rate << ","
+    << _task_rate << ","
+    << std::endl;
 }
 
 #endif // _THREAD_H_
