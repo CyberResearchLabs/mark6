@@ -20,10 +20,18 @@
  * 
  */
 
+#define _XOPEN_SOURCE 600
+
 // C includes.
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 // C++ includes.
 #include <iostream>
@@ -80,6 +88,21 @@ TestWriterThreadPool::basic(void)
     dirs.push_front(ss.str().c_str());
   }
 
+  // DIRECT stuff.
+  int ps = getpagesize();
+  void * buf;
+  if (posix_memalign(&buf, ps, ps*256) < 0)
+    std::cout << "Memalign failed\n";
+  
+  // const boost::uint32_t BUF_SIZE = 8192;
+  // boost::uint8_t b[BUF_SIZE];
+  const boost::uint32_t BUF_SIZE = ps*256;
+  boost::uint8_t *b = static_cast<boost::uint8_t*>(buf);
+  std::cout << "BUF_SIZE:" << BUF_SIZE << std::endl;
+  for (i=0; i<BUF_SIZE; ++i)
+    b[i] = static_cast<boost::uint8_t>(i);
+
+
   i=0;
   BOOST_FOREACH(std::string d, dirs) {
     bf::path p(d);
@@ -89,14 +112,16 @@ TestWriterThreadPool::basic(void)
     ostringstream ss;
     ss << d << "/test.dat";
     // fds[i++] = ::open(ss.str().c_str(), O_WRONLY | O_CREAT | O_NONBLOCK, S_IRWXU);
-    fds[i++] = ::open(ss.str().c_str(), O_WRONLY | O_CREAT, S_IRWXU);
+    int fd = ::open(ss.str().c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
+    if (fd < 0) {
+      std::cout << "Couldn't open file descriptor: " << strerror(errno) << std::endl;
+      exit(1);
+    } else {
+      std::cout << "fd:" << fd << std::endl;
+      fds[i++] = fd;
+    }
   }
     
-  const boost::uint32_t BUF_SIZE = 8192;
-  boost::uint8_t b[BUF_SIZE];
-  for (i=0; i<BUF_SIZE; ++i)
-    b[i] = static_cast<boost::uint8_t>(i);
-
     // b.push_back(static_cast<boost::uint8_t>(i));
   
   const boost::uint32_t TASK_LIST_SIZE = 1000;
