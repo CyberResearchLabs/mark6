@@ -20,16 +20,15 @@
  * 
  */
 
-#ifndef _TEST_WRITER_THREAD_POOL_H_
-#define _TEST_WRITER_THREAD_POOL_H_
+#ifndef _TEST_QUEUE_H_
+#define _TEST_QUEUE_H_
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-class TestWriterThreadPool : public CPPUNIT_NS :: TestFixture
+class TestQueue : public CPPUNIT_NS :: TestFixture
 {
-    CPPUNIT_TEST_SUITE(TestWriterThreadPool);
-    CPPUNIT_TEST(mem_test);
+    CPPUNIT_TEST_SUITE(TestQueue);
     CPPUNIT_TEST(basic);
     CPPUNIT_TEST_SUITE_END();
 
@@ -39,8 +38,7 @@ class TestWriterThreadPool : public CPPUNIT_NS :: TestFixture
 
     protected:
         void basic(void);
-	void mem_test(void);
 };
 
 
-#endif /*TEST_WRITER_THREAD_POOL_H_*/
+#endif /*TEST_QUEUE_H_*/

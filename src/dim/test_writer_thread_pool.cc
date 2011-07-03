@@ -32,6 +32,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+// Socket includes
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <errno.h>
+
 
 // C++ includes.
 #include <iostream>
@@ -59,6 +67,34 @@ namespace bf = boost::filesystem;
 
 CPPUNIT_TEST_SUITE_REGISTRATION (TestWriterThreadPool);
 
+int setup_socket(const std::string& ip, const int port) {
+  // Setup local interface.
+  const char* p = ip.c_str();
+  struct sockaddr_in addr;
+  int ret = 0;
+
+  ret = ::inet_aton(p, &addr.sin_addr);
+  addr.sin_family  = AF_INET;
+  addr.sin_port = htons(port);
+  if (ret == 0)
+    std::cerr << "Unable to parse IP address\n";
+  
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0) {
+    std::cerr << "Unable to create socket.\n";
+    return sock;
+  }
+
+  // Clean up cast below -- seems to be standard practice though.
+  ret == ::bind(sock, (struct sockaddr*)&addr, sizeof(addr));
+  if (ret < 0) {
+    std::cerr << "Unable to bind socket.\n";
+    return ret;
+  }
+ 
+  return sock;
+}
+
 void
 TestWriterThreadPool::setUp (void)
 {
@@ -71,10 +107,41 @@ TestWriterThreadPool::tearDown (void)
 }
 
 void
+TestWriterThreadPool::mem_test(void)
+{
+  const int N = 1000;
+  const int BUF_SIZE= 1048576;
+  boost::uint8_t* p = 0;
+  boost::uint8_t ref[BUF_SIZE];
+  for (int i=0; i<BUF_SIZE; i++)
+    ref[i] = (boost::uint8_t)i;
+
+  Timer t;
+  for (int i=0; i<N; i++) {
+    p = new boost::uint8_t[BUF_SIZE];
+    memcpy(p, ref, BUF_SIZE);
+    delete p;
+  }
+  const double elapsed = t.elapsed();
+  std::cout << "mem_test()" << std::endl;
+  std::cout << "elapsed:" << elapsed << std::endl;
+  std::cout << "rate:" << N/elapsed << std::endl;
+  std::cout << "per_op_time:" << elapsed/(double)N << std::endl;
+}
+
+void
 TestWriterThreadPool::basic(void)
 {
-  LOG4CXX_DEBUG(logger, "TestWriterThreadPool::basic()");
+  std::cout << "TestWriterThreadPool::basic()" << std::endl;
 
+  // Network stuff.
+  const std::string IP("192.168.7.1");
+  const boost::uint16_t PORT(4242);
+  const int NBUF_SIZE(4096);
+  boost::uint8_t nbuf[NBUF_SIZE];
+  int sockfd = setup_socket(IP, PORT);
+  
+  // Files system stuff.
   const int NUMBER_OF_FILES = 16;
   boost::uint32_t i;
   int fds[NUMBER_OF_FILES];
@@ -89,20 +156,19 @@ TestWriterThreadPool::basic(void)
   }
 
   // DIRECT stuff.
-  int ps = getpagesize();
-  void * buf;
-  if (posix_memalign(&buf, ps, ps*256) < 0)
-    std::cout << "Memalign failed\n";
-  
-  // const boost::uint32_t BUF_SIZE = 8192;
-  // boost::uint8_t b[BUF_SIZE];
+  const int BUF_POOL_SIZE = 16;
+  std::vector<boost::uint8_t*> buf_pool;
+  buf_pool.reserve(BUF_POOL_SIZE);
+  const int ps = getpagesize();
   const boost::uint32_t BUF_SIZE = ps*256;
-  boost::uint8_t *b = static_cast<boost::uint8_t*>(buf);
-  std::cout << "BUF_SIZE:" << BUF_SIZE << std::endl;
-  for (i=0; i<BUF_SIZE; ++i)
-    b[i] = static_cast<boost::uint8_t>(i);
+  void* buf;
 
-
+  for (int i=0; i<BUF_POOL_SIZE; i++) {
+    if (posix_memalign(&buf, ps, ps*256) < 0)
+      std::cout << "Memalign failed\n";
+    buf_pool.push_back(static_cast<boost::uint8_t*>(buf));
+  }
+  
   i=0;
   BOOST_FOREACH(std::string d, dirs) {
     bf::path p(d);
@@ -122,8 +188,6 @@ TestWriterThreadPool::basic(void)
     }
   }
     
-    // b.push_back(static_cast<boost::uint8_t>(i));
-  
   const boost::uint32_t TASK_LIST_SIZE = 1000;
   const boost::uint32_t THREAD_POOL_SIZE = 8;
   const boost::uint32_t TOTAL_TASKS = 100000000;
@@ -141,19 +205,39 @@ TestWriterThreadPool::basic(void)
 
   LOG4CXX_DEBUG(logger, "Started.");
 
+  // Network thread.
   double last_update = 0;
   Timer duration;
+  boost::uint8_t* b = buf_pool.front();
+  boost::uint64_t total_bytes_read = 0;
   for (boost::uint32_t i=0; i<TOTAL_TASKS; ++i) {
-    p.insert_task(WriterTask(i, fds[i%NUMBER_OF_FILES], b, BUF_SIZE));
+    int bytes_left = BUF_SIZE;
+    int bytes_read = 0;
+
+    while (bytes_left > 0) {
+      int nread = ::read(sockfd, b + bytes_read, bytes_left);
+      if (nread > 0) {
+	bytes_read += nread;
+	bytes_left -= nread;
+	total_bytes_read += nread;
+      } else {
+	std::cerr << nread << " bytes read\n";
+      }
+    }
+    // p.insert_task(WriterTask(i, fds[i%NUMBER_OF_FILES], b, BUF_SIZE));
+
     double now = duration.elapsed();
     if (duration.elapsed() - last_update > 1) {
-      p.print_stats();
-      p.dump_stats();
+      double now = duration.elapsed();
+      double rate = 8*total_bytes_read/(1000000*now);
+      std::cout << now << " " << rate << " Mbps" << std::endl;
+      // p.print_stats();
+      // p.dump_stats();
       last_update = now;
     }
   }   
   
-  sleep(10);
+  sleep(120);
 
   p.stop();
 

@@ -21,7 +21,9 @@ dim6_LDADD	= 	-L.\
 			-lpthread 
 
 
-dim6test_SOURCES =	test_writer_thread_pool.h \
+dim6test_SOURCES =	test_queue.h \
+			test_queue.cc \
+			test_writer_thread_pool.h \
 			test_writer_thread_pool.cc \
 			test_main.cc
 #test_file_manager.cc \
@@ -55,6 +57,7 @@ libdim6_a_SOURCES	= \
 			file_writer.h \
 			file_manager.cc \
 			file_manager.h \
+			queue.h \
 			socket_buffer.cc \
 			socket_buffer.h \
 			thread_pool.h \

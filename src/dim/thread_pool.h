@@ -24,25 +24,17 @@
 #define _THREAD_POOL_H_
 
 // C++ includes.
-#include <list>
 #include <fstream>
 
 // Framework includes.
 #include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
 
 // Local includes.
 #include <mark6.h>
 #include <logger.h>
+#include <queue.h>
 
-
-struct TaskTimeout {
-  std::string _msg;
-  TaskTimeout(std::string msg): _msg(msg) {}
-};
 
 struct TaskStop {
   std::string _msg;
@@ -59,11 +51,11 @@ class ThreadPool {
     void operator() (ThreadPool* wtp, const int sleep_time) {
       while (wtp->running()) {
 	try {
-	  TASK w = wtp->next_task();
+	  TASK w = wtp->pop_task();
 	  w();
-	  wtp->task_completed();
-	} catch (TaskTimeout t) {
-	  std::cout << "Timedout waiting for next task." << std::endl;
+	  wtp->push_completed(w);
+	} catch (Timeout t) {
+	  // std::cout << "Timedout waiting for next task." << std::endl;
 	} catch (TaskStop s) {
 	  std::cout << "Stop called waiting for next task." << std::endl;
 	}
@@ -71,68 +63,56 @@ class ThreadPool {
     }
   };
 
-  std::list<TASK> _task_list;
-  boost::mutex _task_list_mutex;
-  boost::condition_variable _task_list_read_cond;
-  boost::condition_variable _task_list_write_cond;
+  Queue<TASK> _task_queue;
+  Queue<TASK> _completed_queue;
+
   boost::ptr_list<boost::thread> _threads;
   std::ofstream _stats_file;
 
-  boost::uint32_t _TASK_LIST_SIZE;
+  boost::uint32_t _TASK_QUEUE_SIZE;
   boost::uint32_t _THREAD_POOL_SIZE;
   boost::uint32_t _THREAD_SLEEP_TIME;
   boost::uint32_t _STATS_UPDATE_INTERVAL;
 
-  boost::mutex _tasks_completed_mutex;
-  boost::uint32_t _tasks_completed;
-  boost::uint32_t _last_tasks_completed;
-  double _task_rate;
-  
   Timer _timer;
   double _last_update;
 
   bool _running;
 
  public:
-  ThreadPool(const boost::uint32_t task_list_size,
+  ThreadPool(const boost::uint32_t task_queue_size,
 	     const boost::uint32_t thread_pool_size,
 	     const boost::uint32_t thread_sleep_time,
 	     const std::string stats_file,
 	     const boost::uint32_t stats_update_interval);
   ~ThreadPool();
-  
   void start();
   void stop();
   void stop_wait();
   bool running();
-  void insert_task(const TASK& w);
-  TASK next_task();
-  void task_completed();
+  void push_task(const TASK& w);
+  TASK pop_task();
+  void push_completed(const TASK& t);
+  TASK pop_completed();
   void print_stats();
   void dump_stats();
 };
 
 
 template <class TASK>
-ThreadPool<TASK>::ThreadPool(const boost::uint32_t task_list_size,
+ThreadPool<TASK>::ThreadPool(const boost::uint32_t task_queue_size,
 			     const boost::uint32_t thread_pool_size,
 			     const boost::uint32_t thread_sleep_time,
 			     const std::string stats_file,
 			     const boost::uint32_t stats_update_interval):
-  _task_list(),
-  _task_list_mutex(),
-  _task_list_read_cond(),
-  _task_list_write_cond(),
+  _task_queue(std::string("tasks"), task_queue_size, thread_sleep_time),
+  _completed_queue(std::string("completed"), task_queue_size, thread_sleep_time),
   _threads(),
   _stats_file(stats_file.c_str()),
-  _TASK_LIST_SIZE(task_list_size),
+  _TASK_QUEUE_SIZE(task_queue_size),
   _THREAD_POOL_SIZE(thread_pool_size),
   _THREAD_SLEEP_TIME(thread_sleep_time),
   _STATS_UPDATE_INTERVAL(stats_update_interval),
-  _tasks_completed_mutex(),
-  _tasks_completed(0),
-  _last_tasks_completed(0),
-  _task_rate(0),
   _timer(),
   _last_update(0),
   _running(true)
@@ -168,12 +148,8 @@ void ThreadPool<TASK>::stop()
 template <class TASK>
 void ThreadPool<TASK>::stop_wait()
 {
-  boost::system_time timeout = boost::get_system_time() 
-    + boost::posix_time::milliseconds(_THREAD_SLEEP_TIME*1000);
-  
-  boost::mutex::scoped_lock lock(_task_list_mutex);
-  while (!_task_list.empty()) {
-    _task_list_write_cond.wait(lock);
+  while (!_task_queue.empty()) {
+    sleep(1);
     // TODO: timeeout.
   }
 
@@ -189,62 +165,45 @@ bool ThreadPool<TASK>::running()
 }
 
 template <class TASK>
-void ThreadPool<TASK>::insert_task(const TASK& w)
+void ThreadPool<TASK>::push_task(const TASK& w)
 {
-  boost::mutex::scoped_lock lock(_task_list_mutex);    
-  while (_task_list.size() >= _TASK_LIST_SIZE) {
-    _task_list_write_cond.wait(lock);
-  }
-
-  _task_list.push_back(w);
-  _task_list_read_cond.notify_one();
-  // TODO: timeout, nonblocking.
-}
-
-template <class TASK>
-TASK ThreadPool<TASK>::next_task() {
-  boost::system_time timeout = boost::get_system_time() 
-    + boost::posix_time::milliseconds(_THREAD_SLEEP_TIME*1000);
-  
-  boost::mutex::scoped_lock lock(_task_list_mutex);
-  while (_task_list.empty()) {
-    bool timedout = _task_list_read_cond.timed_wait(lock, timeout);
-    if (!timedout)
-      throw TaskTimeout("timedout");
-    if (!running())
-      throw TaskStop("stopped");
-  }
-
-  TASK n = _task_list.front();
-  _task_list.pop_front();
-
-  _task_list_write_cond.notify_one();
-
-  return n;
-}
-
-template <class TASK>
-void ThreadPool<TASK>::task_completed()
-{
-  boost::mutex::scoped_lock lock(_tasks_completed_mutex);    
-  ++_tasks_completed;
+  // TOOD For now use ingress timing for reports.
+  // Migrate to a seperate stats thread.
   double now = _timer.elapsed();
-  double delta_time = now - _last_update;
-
-  if (delta_time > 1) {
-    boost::uint32_t delta_tasks = _tasks_completed - _last_tasks_completed;
-    double instant_task_rate = delta_tasks/delta_time;
-    double cumulative_task_rate = _tasks_completed/now;
-    _task_rate = 0.1*instant_task_rate + 0.9*_task_rate;
+  if (now - _last_update > _STATS_UPDATE_INTERVAL) {
+    _task_queue.print_stats();
+    _completed_queue.print_stats();
     _last_update = now;
-    _last_tasks_completed = _tasks_completed;
   }
+
+  _task_queue.push_back(w);
+}
+
+template <class TASK>
+TASK ThreadPool<TASK>::pop_task() {
+  return _task_queue.pop_front();
+  // TODO
+  // if (!running())
+  // throw TaskStop("stopped");
+}
+
+template <class TASK>
+void ThreadPool<TASK>::push_completed(const TASK& t)
+{
+  _completed_queue.push_back(t);
+}
+
+template <class TASK>
+TASK ThreadPool<TASK>::pop_completed() {
+  return _completed_queue.pop_front();
 }
 
 template <class TASK>
 void ThreadPool<TASK>::print_stats()
 {
-  boost::mutex::scoped_lock lock(_tasks_completed_mutex);    
+  // TODO
+  #if 0
+  boost::mutex::scoped_lock lock(_completed_task_queue_mutex);    
   double now = _timer.elapsed();
   double cumulative_task_rate = _tasks_completed/now;
 
@@ -254,12 +213,15 @@ void ThreadPool<TASK>::print_stats()
     << " cumulative_rate:" << cumulative_task_rate
     << " rate:" << _task_rate 
     << std::endl;
+  #endif
 }
 
 template <class TASK>
 void ThreadPool<TASK>::dump_stats()
 {
-  boost::mutex::scoped_lock lock(_tasks_completed_mutex);    
+  // TODO
+  #if 0
+  boost::mutex::scoped_lock lock(_completed_task_queue_mutex);    
   double now = _timer.elapsed();
   double cumulative_task_rate = _tasks_completed/now;
 
@@ -269,6 +231,7 @@ void ThreadPool<TASK>::dump_stats()
     << cumulative_task_rate << ","
     << _task_rate << ","
     << std::endl;
+  #endif
 }
 
 #endif // _THREAD_H_

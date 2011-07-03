@@ -23,6 +23,9 @@
 #ifndef _WRITER_TASK_H_
 #define _WRITER_TASK_H_
 
+// C includes.
+#include <errno.h>
+
 // C++ includes.
 #include <list>
 
@@ -44,24 +47,35 @@ class WriterTask {
   boost::uint32_t _buf_size;
 
  public:
- WriterTask(const boost::uint32_t id, const int fd,
-	    boost::uint8_t buf[], const boost::uint32_t buf_size):
-   _id(id), _fd(fd), _buf(buf), _buf_size(buf_size) {}
+  WriterTask(const boost::uint32_t id, const int fd,
+	     boost::uint8_t *buf, const boost::uint32_t buf_size):
+    _id(id), _fd(fd), _buf(buf), _buf_size(buf_size) {}
+    
+    ~WriterTask() {}
 
-   ~WriterTask() {}
+    void operator() () {
+      // Write buffer to disk.
+      int bytes_left = _buf_size;
+      int bytes_written = 0;
+      while (bytes_left) {
+	int nb = ::write(_fd, _buf + bytes_written, _buf_size);
+	if (nb > 0) {
+	  bytes_left -= nb;
+	  bytes_written += nb;
+	} else {
+	  std::cout << "Unable to write to disk: " << strerror(errno) << std::endl;
+	}
+      }
+      std::cout << _id << " wrote " << bytes_written << std::endl;
+    }
 
-   void operator() () {
-     // Write buffer to disk.
-     int bytes_left = _buf_size;
-     int bytes_written = 0;
-     while (bytes_left) {
-       int nb = ::write(_fd, &_buf[bytes_written], _buf_size);
-       if (nb > 0) {
-	 bytes_left -= nb;
-	 bytes_written += nb;
-       }
-     }
-   }
+    int fd() {
+      return _fd;
+    }
+    
+    boost::uint32_t id() {
+      return _id;
+    }
 };
 
 #endif // _WRITER_TASK_H_
