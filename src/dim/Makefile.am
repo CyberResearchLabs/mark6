@@ -23,6 +23,10 @@ dim6_LDADD	= 	-L.\
 
 dim6test_SOURCES =	test_queue.h \
 			test_queue.cc \
+			test_socket_manager.h \
+			test_socket_manager.cc \
+			test_buffer_manager.h \
+			test_buffer_manager.cc \
 			test_writer_thread_pool.h \
 			test_writer_thread_pool.cc \
 			test_main.cc
@@ -51,6 +55,7 @@ dim6test_LDADD	= 	-L. \
 noinst_LIBRARIES=	libdim6.a
 
 libdim6_a_SOURCES	= \
+			buffer_manager.h \
 			logger.cc \
 			logger.h \
 			file_writer.cc \
@@ -58,6 +63,7 @@ libdim6_a_SOURCES	= \
 			file_manager.cc \
 			file_manager.h \
 			queue.h \
+			socket_manager.h \
 			socket_buffer.cc \
 			socket_buffer.h \
 			thread_pool.h \

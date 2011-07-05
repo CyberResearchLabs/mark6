@@ -48,6 +48,8 @@ class ThreadPool {
   struct Thread {
     Thread() {}
     ~Thread() {}
+
+    // Main entry point for thread.
     void operator() (ThreadPool* wtp, const int sleep_time) {
       while (wtp->running()) {
 	try {
@@ -92,8 +94,10 @@ class ThreadPool {
   bool running();
   void push_task(const TASK& w);
   TASK pop_task();
+  bool empty_task();
   void push_completed(const TASK& t);
   TASK pop_completed();
+  bool empty_completed();
   void print_stats();
   void dump_stats();
 };
@@ -180,6 +184,12 @@ void ThreadPool<TASK>::push_task(const TASK& w)
 }
 
 template <class TASK>
+bool ThreadPool<TASK>::empty_task()
+{
+  return _task_queue.empty();
+}
+
+template <class TASK>
 TASK ThreadPool<TASK>::pop_task() {
   return _task_queue.pop_front();
   // TODO
@@ -196,6 +206,12 @@ void ThreadPool<TASK>::push_completed(const TASK& t)
 template <class TASK>
 TASK ThreadPool<TASK>::pop_completed() {
   return _completed_queue.pop_front();
+}
+
+template <class TASK>
+bool ThreadPool<TASK>::empty_completed()
+{
+  return _completed_queue.empty();
 }
 
 template <class TASK>

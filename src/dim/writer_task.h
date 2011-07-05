@@ -49,7 +49,8 @@ class WriterTask {
  public:
   WriterTask(const boost::uint32_t id, const int fd,
 	     boost::uint8_t *buf, const boost::uint32_t buf_size):
-    _id(id), _fd(fd), _buf(buf), _buf_size(buf_size) {}
+    _id(id), _fd(fd), _buf(buf), _buf_size(buf_size)
+    {}
     
     ~WriterTask() {}
 
@@ -75,6 +76,10 @@ class WriterTask {
     
     boost::uint32_t id() {
       return _id;
+    }
+
+    boost::uint8_t* buf() {
+      return _buf;
     }
 };
 

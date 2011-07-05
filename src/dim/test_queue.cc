@@ -21,24 +21,16 @@
  */
 
 // C includes.
-#include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
 
 // C++ includes.
 #include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <list>
-#include <algorithm>
 
 // Boost includes.
-#include <boost/foreach.hpp>
 
 //Local includes.
 #include <mark6.h>
 #include <logger.h>
-#include <queue.h>
+#include <socket_manager.h>
 #include <test_queue.h>
 
 using namespace boost;
@@ -65,15 +57,13 @@ TestQueue::basic(void)
   const boost::uint32_t timeout(1);
 
   Queue<int> q(id, size, timeout);
-  for (int i=0; i<1000; i++) {
+  for (int i=0; i<size; i++)
     q.push_back(i);
-  }
 
   q.print_stats();
 
-  for (int j=0; j<1000; j++) {
+  for (int i=0; i<size; i++)
     q.pop_front();
-  }
 
   q.print_stats();
 

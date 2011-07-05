@@ -54,13 +54,13 @@ struct InvalidSocketOperation: std::exception {
 
 class SocketManager {
   std::string _IP;
-  int _PORT;
+  boost::uint16_t _PORT;
   int _sock;
 
  public:
   SocketManager(const std::string& id, 
 		const std::string& ip,
-		const int port):
+		const boost::uint16_t port):
     _IP(ip),
     _PORT(port)
     {
@@ -77,6 +77,22 @@ class SocketManager {
       if (sock < 0)
 	throw InvalidSocketOperation();
       
+      int optval;
+      int optlen = sizeof(optlen);
+      if (getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &optval, (socklen_t*)&optlen) < 0)
+	throw InvalidSocketOperation();
+
+      std::cout << "SO_RCVBUF:" << optval << std::endl;
+
+      const int N = 1048576;
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &N, sizeof(N)) < 0)
+	throw InvalidSocketOperation();
+
+      if (getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &optval, (socklen_t*)&optlen) < 0)
+	throw InvalidSocketOperation();
+
+      std::cout << "+SO_RCVBUF:" << optval << std::endl;
+
       // Clean up cast below -- seems to be standard practice though.
       ret == ::bind(sock, (struct sockaddr*)&addr, sizeof(addr));
       if (ret < 0)
