@@ -1,0 +1,18 @@
+Release 0.1	7/5/2011	David Lapsley<del@haystack.mit.edu>
+-------------------------------------------------------------------
+
+DESCRIPTION
+
+First internal release. End to end data path, supporting infrastructure.
+
+FEATURES
+
+- Incorporated PF_RING code and module to get 8 Gbps NIC to Drive throughput.
+- Implemented continuous integration and unit testing framework.
+- Main program with options parsing.
+- Support modules including:
+	- BufferManager
+	- ThreadPool
+	- SocketManager
+	- WriterTask
+
