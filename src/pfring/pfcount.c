@@ -46,12 +46,19 @@
 
 #include "pfring.h"
 
-#define ALARM_SLEEP             1
-/** #define DEFAULT_SNAPLEN       128 */
-/** DAVE */
-#define DEFAULT_SNAPLEN       9000
+/* Constants */
+#define ALARM_SLEEP            1
+#define DEFAULT_SNAPLEN        9000
 #define MAX_NUM_THREADS        64
-#define DEFAULT_DEVICE     "eth0"
+#define DEFAULT_DEVICE         "eth0"
+#define NUMBER_OF_FILES        16
+
+/* Globals */
+int pages_per_buffer;
+int page_size;
+int buffer_size;
+u_char* bufs[NUMBER_OF_FILES];
+int fds[NUMBER_OF_FILES];
 pfring  *pd;
 int verbose = 0, num_threads = 1;
 pfring_stat pfringStats;
@@ -60,6 +67,10 @@ pthread_rwlock_t statsLock;
 static struct timeval startTime;
 unsigned long long numPkts[MAX_NUM_THREADS] = { 0 }, numBytes[MAX_NUM_THREADS] = { 0 };
 u_int8_t wait_for_packet = 1, do_shutdown = 0;
+
+/* Forward declarations. */
+void writer_task(int fd, u_char* buf, int buf_size);
+
 
 /* *************************************** */
 /*
@@ -85,7 +96,6 @@ double delta_time (struct timeval * now,
 }
 
 /* ******************************** */
-
 void print_stats() {
   pfring_stat pfringStat;
   struct timeval endTime;
@@ -154,24 +164,6 @@ void print_stats() {
 }
 
 /* ******************************** */
-
-void add_rule(u_int add_rule) {
-  filtering_rule rule;
-
-  memset(&rule, 0, sizeof(rule));
-
-  rule.rule_id = 5;
-  rule.rule_action = forward_packet_and_stop_rule_evaluation;
-  rule.core_fields.port_low = 80, rule.core_fields.port_high = 80;
-
-  if(pfring_add_filtering_rule(pd, &rule) < 0)
-    printf("pfring_add_hash_filtering_rule(2) failed\n");
-  else
-    printf("Rule added successfully...\n");
-}
-
-/* ******************************** */
-
 void sigproc(int sig) {
   static int called = 0;
 
@@ -187,7 +179,6 @@ void sigproc(int sig) {
 }
 
 /* ******************************** */
-
 void my_sigalarm(int sig) {
   print_stats();
   alarm(ALARM_SLEEP);
@@ -195,7 +186,6 @@ void my_sigalarm(int sig) {
 }
 
 /* ****************************************************** */
-
 static char hex[] = "0123456789ABCDEF";
 
 char* etheraddr_string(const u_char *ep, char *buf) {
@@ -225,7 +215,6 @@ char* etheraddr_string(const u_char *ep, char *buf) {
 }
 
 /* ****************************************************** */
-
 /*
  * A faster replacement for inet_ntoa().
  */
@@ -259,7 +248,6 @@ char* _intoa(unsigned int addr, char* buf, u_short bufLen) {
 }
 
 /* ************************************ */
-
 char* intoa(unsigned int addr) {
   static char buf[sizeof "ff:ff:ff:ff:ff:ff:255.255.255.255"];
 
@@ -267,7 +255,6 @@ char* intoa(unsigned int addr) {
 }
 
 /* ************************************ */
-
 inline char* in6toa(struct in6_addr addr6) {
   static char buf[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"];
 
@@ -283,7 +270,6 @@ inline char* in6toa(struct in6_addr addr6) {
 }
 
 /* ****************************************************** */
-
 char* proto2str(u_short proto) {
   static char protoName[8];
 
@@ -298,7 +284,6 @@ char* proto2str(u_short proto) {
 }
 
 /* ****************************************************** */
-
 static int32_t thiszone;
 
 /* DAVE */
@@ -399,7 +384,6 @@ void dummyProcesssPacket(const struct pfring_pkthdr *h, const u_char *p, const u
 }
 
 /* *************************************** */
-
 int32_t gmt2local(time_t t) {
   int dt, dir;
   struct tm *gmt, *loc;
@@ -427,15 +411,11 @@ int32_t gmt2local(time_t t) {
 }
 
 /* *************************************** */
-
 void printHelp(void) {
   printf("pfcount\n(C) 2005-11 Deri Luca <deri@ntop.org>\n\n");
   printf("-h              Print this help\n");
   printf("-i <device>     Device name. Use device@channel for channels, and dna:ethX for DNA\n");
   printf("-n <threads>    Number of polling threads (default %d)\n", num_threads);
-
-  /* printf("-f <filter>     [pfring filter]\n"); */
-
   printf("-c <cluster id> cluster id\n");
   printf("-e <direction>  0=RX+TX, 1=RX only, 2=TX only\n");
   printf("-s <string>     String to search on packets\n");
@@ -450,9 +430,7 @@ void printHelp(void) {
 }
 
 /* *************************************** */
-
 /* Bind this thread to a specific core */
-
 int bind2core(u_int core_id) {
   cpu_set_t cpuset;
   int s;
@@ -468,16 +446,16 @@ int bind2core(u_int core_id) {
 }
 
 /* *************************************** */
-
 void* packet_consumer_thread(void* _id) {
   long thread_id = (long)_id;
+  int fd = fds[thread_id];
+  u_char* filebuf = bufs[thread_id];
+  u_char* netbuf;
   u_int numCPU = sysconf( _SC_NPROCESSORS_ONLN );
-  u_char *buffer;
-
   u_long core_id = thread_id % numCPU;
   struct pfring_pkthdr hdr;
 
-  /* printf("packet_consumer_thread(%lu)\n", thread_id); */
+  printf("packet_consumer_thread(%lu)\n", thread_id);
 
   if((num_threads > 1) && (numCPU > 1)) {
     if(bind2core(core_id) == 0)
@@ -487,48 +465,86 @@ void* packet_consumer_thread(void* _id) {
   memset(&hdr, 0, sizeof(hdr));
 
   while(1) {
-    int rc;
-    u_int len;
+    if (do_shutdown)
+      break;
 
-    if(do_shutdown) break;
-
-    if(pfring_recv(pd, &buffer, 0, &hdr, wait_for_packet) > 0) {
-      if(do_shutdown) break;
-      dummyProcesssPacket(&hdr, buffer, (u_char*)thread_id);
-
-#ifdef TEST_SEND
-      buffer[0] = 0x99;
-      buffer[1] = 0x98;
-      buffer[2] = 0x97;
-      pfring_send(pd, buffer, hdr.caplen);
-#endif
-    } else {
-      if(wait_for_packet == 0) sched_yield();
-    }
-
-    if(0) {
-      struct simple_stats {
-	u_int64_t num_pkts, num_bytes;
-      };
-      struct simple_stats stats;
-
-      len = sizeof(stats);
-      rc = pfring_get_filtering_rule_stats(pd, 5, (char*)&stats, &len);
-      if(rc < 0)
-	printf("pfring_get_filtering_rule_stats() failed [rc=%d]\n", rc);
-      else {
-	printf("[Pkts=%u][Bytes=%u]\n",
-	       (unsigned int)stats.num_pkts,
-	       (unsigned int)stats.num_bytes);
+    int bytes_left = buffer_size;
+    int bytes_read = 0;
+    while (bytes_left > 0) {
+      if (pfring_recv(pd, &netbuf, 0, &hdr, wait_for_packet) > 0) {
+	if (do_shutdown)
+	  break;
+	
+	// memcpy(filebuf + bytes_read, netbuf, bytes_left);
+	bytes_left -= DEFAULT_SNAPLEN;
+	bytes_read += DEFAULT_SNAPLEN;
+	numPkts[thread_id]++, numBytes[thread_id] += hdr.len;
+      } else {
+	if(wait_for_packet == 0)
+	  sched_yield();
       }
     }
+    writer_task(fd, filebuf, buffer_size);
   }
 
   return(NULL);
 }
 
 /* *************************************** */
+void
+writer_task(int fd, u_char* buf, int buf_size) {
+  // Write buffer to disk.
+  int bytes_left = buf_size;
+  int bytes_written = 0;
+  while (bytes_left) {
+    int nb = write(fd, buf + bytes_written, buf_size);
+    if (nb > 0) {
+      bytes_left -= nb;
+      bytes_written += nb;
+    } else {
+      perror("Unable to write to disk.");
+    }
+  }
+}
 
+/* *************************************** */
+void
+setup() {
+  pages_per_buffer = 256;
+  page_size = getpagesize();
+  buffer_size = pages_per_buffer * page_size;
+
+  char FILE_PREFIX[] = "/mnt/disk";
+  char *PATHS[NUMBER_OF_FILES];
+  int PATH_LENGTH = 255;
+  int i;
+
+  for (i=0; i<NUMBER_OF_FILES; i++) {
+    if (posix_memalign((void*)&bufs[i], page_size, buffer_size) < 0) {
+      perror("Memalign failed.");
+      exit(1);
+    }
+  }
+
+  for (i=0; i<NUMBER_OF_FILES; i++) {
+    PATHS[i] = (char*)malloc(PATH_LENGTH);
+    snprintf(PATHS[i], PATH_LENGTH, "%s%d/test.m6", FILE_PREFIX, i);
+
+    int fd = open(PATHS[i], O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
+    if (fd < 0) {
+      perror("Unable to open file descriptor.");
+      exit(1);
+    } else {
+      printf("fds[%d]=%d\n", i, fd);
+      fds[i] = fd;
+    }
+  }
+
+  printf("page_size: %d", page_size);
+  printf("buffer_size: %d", buffer_size);
+}
+
+/* *************************************** */
 int main(int argc, char* argv[]) {
   char *device = NULL, c, *string = NULL, buf[32];
   u_char mac_address[6];
@@ -596,6 +612,10 @@ int main(int argc, char* argv[]) {
       break;
     }
   }
+
+  setup();
+
+  /* Start */
   
   if(verbose) watermark = 1;
   if(device == NULL) device = DEFAULT_DEVICE;
@@ -682,10 +702,10 @@ int main(int argc, char* argv[]) {
   if(bind_core >= 0)
     bind2core(bind_core);
 
-  if(1) {
-    pfring_loop(pd, dummyProcesssPacket, (u_char*)NULL);
-  } else
-    packet_consumer_thread(0);
+  // if(1) {
+  // pfring_loop(pd, dummyProcesssPacket, (u_char*)NULL);
+  // } else
+  packet_consumer_thread(0);
 
   alarm(0);
   sleep(1);
