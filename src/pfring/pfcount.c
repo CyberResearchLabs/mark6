@@ -475,7 +475,8 @@ void* packet_consumer_thread(void* _id) {
 	if (do_shutdown)
 	  break;
 	
-	// memcpy(filebuf + bytes_read, netbuf, bytes_left);
+	if (bytes_read + bytes_left < buffer_size)
+	  memcpy(filebuf + bytes_read, netbuf, bytes_left);
 	bytes_left -= DEFAULT_SNAPLEN;
 	bytes_read += DEFAULT_SNAPLEN;
 	numPkts[thread_id]++, numBytes[thread_id] += hdr.len;

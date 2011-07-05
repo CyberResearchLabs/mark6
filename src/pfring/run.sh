@@ -1,4 +1,5 @@
 #!/bin/bash
 
 export LD_LIBRARY_PATH=/usr/local/lib
-./pfcount -i eth2 
+./pfcount -i eth2 -n 16 
+
