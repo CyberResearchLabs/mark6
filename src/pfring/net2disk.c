@@ -51,7 +51,7 @@
 #define DEFAULT_SNAPLEN        9000
 #define MAX_NUM_THREADS        64
 #define DEFAULT_DEVICE         "eth0"
-#define NUMBER_OF_FILES       	8 
+#define NUMBER_OF_FILES       	7 
 
 /* Globals */
 int pages_per_buffer;
