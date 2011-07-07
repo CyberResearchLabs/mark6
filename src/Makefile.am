@@ -1,1 +1,1 @@
-SUBDIRS=dim
+SUBDIRS=dim dimino6
