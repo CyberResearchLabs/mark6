@@ -7,11 +7,11 @@
 MARK6_ROOT=/home/dlapsley/mark6
 EXTERN_ROOT=${MARK6_ROOT}/src/extern
 
-YUM=/usr/bin/yum
+INSTALL=/usr/bin/apt-get
 TAR=/bin/tar
 
 # PREQ="boost141-devel.x86_64 cppunit-devel.x86_64 texinfo.x86_64 texi2html.noarch texinfo-tex.x86_64 apr-devel.x86_64 apr-util-devel.x86_64"
-PREQ="boost141-devel.x86_64 cppunit-devel.x86_64 texinfo.x86_64 texi2html.noarch texinfo-tex.x86_64"
+PREQ="libboost-all-dev libcppunit-dev texinfo texi2html libapr1-dev libaprutil1-dev liblog4cxx10-dev automake autoconf build-essential"
 APR=apr-1.4.5
 APR_UTIL=apr-util-1.3.12
 LOG4CXX=apache-log4cxx-0.10.0
@@ -19,7 +19,7 @@ PF_RING=PF_RING-4.7.0
 
 install_binary_deps() {
 	echo Installing binary dependencies: ${PREQ}
-	sudo ${YUM} install ${PREQ} -y
+	sudo ${INSTALL} install ${PREQ} -y
 }
 
 install_source_deps() {
@@ -59,7 +59,9 @@ install_source_deps() {
 	make
 	sudo make install
 	cd ..
+}
 
+install_pf_ring() {
 	echo Installing ${PF_RING}...
 	cd ${EXTERN_ROOT}
 	${TAR} xvzf ${PF_RING}.tar.gz
@@ -78,12 +80,17 @@ install_source_deps() {
 	cd ..
 }
 
-# install_binary_deps
-# install_source_deps
-
-./bootstrap
-./configure \
-	--prefix=/opt/haystack \
-	BOOST_INCDIR=/usr/include/boost141 \
-	BOOST_LIBDIR=/usr/lib64/boost141
+build() {
+	./bootstrap
+	./configure \
+		--prefix=/opt/haystack \
+		BOOST_INCDIR=/usr/include/boost \
+		BOOST_LIBDIR=/usr/lib64/boost
 make
+}
+
+install_binary_deps
+# install_source_deps
+# install_pf_ring
+build
+
