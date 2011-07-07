@@ -1,1 +1,1 @@
-SUBDIRS=dim dimino6
+SUBDIRS=dim dimino6 net2disk
