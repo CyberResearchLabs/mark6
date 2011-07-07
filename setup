@@ -13,8 +13,11 @@ PREQ=$(cat <<EOP
 automake autoconf build-essential flex linux-headers-2.6-amd64 git-core
 byacc iperf texinfo texi2html
 libboost-all-dev libcppunit-dev libapr1-dev libaprutil1-dev liblog4cxx10-dev
+erlang erlang-os-mon 
 EOP
 )
+
+# erlang-base erlang-doc erlang-edoc erlang-eunit erlang-manpages erlang-mnesia erlang-mode
 
 # Source dependencies
 
@@ -25,6 +28,11 @@ PF_RING=PF_RING-4.7.0
 INSTALL=/usr/bin/apt-get
 TAR=/bin/tar
 
+fix_squeeze_bugs() {
+	# Debian squeeze has a dangling symlink that breaks erlang packaging:
+	# lrwxrwxrwx 1 root root 19 Jul  5 13:46 /usr/lib/erlang/man/man1/gserialver.1.gz -> gserialver-4.4.1.gz
+	sudo /bin/rm -f /usr/lib/erlang/man/man1/gserialver.1.gz
+}
 
 install_binary_deps() {
 	echo Installing binary dependencies: ${PREQ}
@@ -64,12 +72,13 @@ build() {
 }
 
 usage() {
-	echo "$0: [-b] [-s] [-p] [-B] [-a] [-h]"
-	echo "    [--binary] [--source] [--pfring] [-all] [--help]"
+	echo "$0: [-b] [-s] [-p] [-B] [-f] [-a] [-h]"
+	echo "    [--binary] [--source] [--pfring] [--fix] [--all] [--help]"
 	echo "  -b, --binary Install binary dependencies"
 	echo "  -s, --source Install source dependencies"
 	echo "  -p, --pfring Install PF_RING"
 	echo "  -B, --build  Build software"
+	echo "  -f, --fix    Fix debian os issues"
 	echo "  -a, --all    Do everything"
 	echo "  -h, --help   Display help message"
 }
@@ -98,7 +107,10 @@ main() {
 					;;
         		-B | --build )	build
 					;;
-        		-a | --all )	install_binary_deps
+        		-f | --fix )	fix_squeeze_bugs
+					;;
+        		-a | --all )	fix_squeeze_bugs
+					install_binary_deps
 					install_source_deps
 					build
 					;;

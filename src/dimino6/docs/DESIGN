@@ -1,0 +1,25 @@
+CLASSES
+
+D6Server
+	Responsible for starting up and managing x3c_client and vsi_server.
+Dimino6
+	Entry point for application. Starts up D6Server and Dimino6 client.
+	Dimino6 client provides command line interpreter and forwards incoming
+	commands to D6Server.
+VSIS
+	Provides VSIS command handling, parsing, processing, and response.
+VSISCommand
+	Provides command parsing of VSIS commands.
+VSISResponse
+	Provides VSIS response generation.
+X3C
+	Provides X3C request handling, transmission to X3C system, response
+	reception and parsing.
+X3CCommand
+	X3C command parsing and generation.
+X3CResponse
+	X3C respond parsing and generation.
+X3CServer
+	Dummy x3c server that implements and manages X3C Mark6 compatibility layer.
+
+
