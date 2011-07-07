@@ -16,9 +16,10 @@ Makefile	Build, test, release managemement.
 src		mark6 source in here.
 include		mark6 include files in here.
 
-This program is written in the Erlang programming language (www.erlang.org).
-Erlang is a highly available, concurrent, distributed, functional programming
-language designed for massively distributed systems.
+This program is written in a combination of the C and Erlang programming
+languages (www.erlang.org).  Erlang is a highly available, concurrent,
+distributed, functional programming language designed for massively
+distributed systems.
 
 Please direct any questions, comments, suggestions, or bug reports to 
 <del@haystack.mit.edu>.
