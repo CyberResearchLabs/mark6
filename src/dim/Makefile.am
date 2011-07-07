@@ -27,8 +27,12 @@ dim6test_SOURCES =	test_queue.h \
 			test_socket_manager.cc \
 			test_buffer_manager.h \
 			test_buffer_manager.cc \
-			test_writer_thread_pool.h \
-			test_writer_thread_pool.cc \
+			test_thread_pool.h \
+			test_thread_pool.cc \
+			test_writer_task.h \
+			test_writer_task.cc \
+			test_net2disk.h \
+			test_net2disk.cc \
 			test_main.cc
 #test_file_manager.cc \
 #test_file_manager.h \
