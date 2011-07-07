@@ -16,3 +16,30 @@ FEATURES
 	- SocketManager
 	- WriterTask
 
+Release 0.2	7/7/2011	David Lapsley<del@haystack.mit.edu>
+-------------------------------------------------------------------
+
+DESCRIPTION
+
+Major performance milestone.
+
+Using a a single 10 GE network interface, and a single disk pack 
+(with only 7 disks, one has failed), able to get ~ 7.6 Gbps net
+to disk throughput (with 3% packet loss and ~95% utilization of a
+single CPU -- out of 16 total CPUs). Throughput on both transmit
+and receive checked, and volume of data written over test interval
+checked. Test duraiton was 30 seconds.
+
+FEATURES
+
+- Ported code to debian squeeze (6.0.2) with 2.6.32 kernel.
+- Removed source dependencies in favor of binary debian packages.
+- Incorporated PF_RING module source into build tree.
+- Upgraded "setup" build script. Includes more user accessible
+  functionality. Also automatically installs all packages required
+  to create a build/development machine from scratch.
+- net2disk module now fully based on PF_RING architecture.
+- Added tools subdirectory with network and disk configuration scripts.
+  Disk configuration scripts include optimizations that disable
+  journaling on ext4 file systems and enable driver level throughput
+  optimizations.
