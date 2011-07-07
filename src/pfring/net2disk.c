@@ -51,7 +51,7 @@
 #define DEFAULT_SNAPLEN        9000
 #define MAX_NUM_THREADS        64
 #define DEFAULT_DEVICE         "eth0"
-#define NUMBER_OF_FILES        16
+#define NUMBER_OF_FILES       	8 
 
 /* Globals */
 int pages_per_buffer;
@@ -445,6 +445,14 @@ int bind2core(u_int core_id) {
   }
 }
 
+void dump_buf(const long thread_id, const u_char* buf) {
+  int i;
+  printf("%ld ", thread_id);
+  for(i=0; i<32; i++)
+    printf("%02X ", buf[i]);
+  printf("\n");
+}
+
 /* *************************************** */
 void* packet_consumer_thread(void* _id) {
   long thread_id = (long)_id;
@@ -472,20 +480,33 @@ void* packet_consumer_thread(void* _id) {
     int bytes_read = 0;
     while (bytes_left > 0) {
       if (pfring_recv(pd, &netbuf, 0, &hdr, wait_for_packet) > 0) {
+	numPkts[thread_id]++, numBytes[thread_id] += hdr.len;
+#if 0
+	dump_buf(thread_id, netbuf);
+#endif
 	if (do_shutdown)
 	  break;
-	
-	if (bytes_read + bytes_left < buffer_size)
-	  memcpy(filebuf + bytes_read, netbuf, bytes_left);
-	bytes_left -= DEFAULT_SNAPLEN;
-	bytes_read += DEFAULT_SNAPLEN;
-	numPkts[thread_id]++, numBytes[thread_id] += hdr.len;
+
+	int buffer_free = buffer_size - bytes_read;
+	if (buffer_free >= DEFAULT_SNAPLEN) {
+	  /* Copy entire received packet. */
+	  memcpy(filebuf + bytes_read, netbuf, DEFAULT_SNAPLEN);
+	  bytes_left -= DEFAULT_SNAPLEN;
+	  bytes_read += DEFAULT_SNAPLEN;
+	} else {
+	  /* Pad out rest of buffer then write. */
+	  memset(filebuf + bytes_read, 0, buffer_free);
+	  writer_task(fd, filebuf, buffer_size);
+
+	  /* Reset. */
+	  bytes_left = buffer_size;
+	  bytes_read = 0;
+	}
       } else {
 	if(wait_for_packet == 0)
 	  sched_yield();
       }
     }
-    writer_task(fd, filebuf, buffer_size);
   }
 
   return(NULL);
@@ -497,6 +518,11 @@ writer_task(int fd, u_char* buf, int buf_size) {
   // Write buffer to disk.
   int bytes_left = buf_size;
   int bytes_written = 0;
+
+#if 0
+  dump_buf((long)fd, buf);
+#endif
+
   while (bytes_left) {
     int nb = write(fd, buf + bytes_written, buf_size);
     if (nb > 0) {
@@ -533,6 +559,7 @@ setup() {
 
     int fd = open(PATHS[i], O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
     if (fd < 0) {
+      printf("i==%d fd==%d\n", i, fd);
       perror("Unable to open file descriptor.");
       exit(1);
     } else {

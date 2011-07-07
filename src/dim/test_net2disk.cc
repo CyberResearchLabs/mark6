@@ -98,7 +98,7 @@ TestNet2Disk::basic(void)
   }
 
   // DIRECT stuff.
-  const int BUF_POOL_SIZE(16);
+  const int BUF_POOL_SIZE(8);
   const int TIMEOUT(1);
   const std::string BM_ID("buffer_manager");
   BufferManager BM(BM_ID, BUF_POOL_SIZE, TIMEOUT);
