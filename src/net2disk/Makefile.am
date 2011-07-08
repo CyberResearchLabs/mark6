@@ -21,6 +21,7 @@ net2disk_LDADD	= 	-L.\
 noinst_LIBRARIES=	libnet2disk.a
 
 libnet2disk_a_SOURCES	= \
+			pfring_util.cc \
 			net2disk.cc \
 			net2disk.h
 

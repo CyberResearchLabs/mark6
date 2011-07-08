@@ -21,30 +21,28 @@
  *
  */
 
-#define _GNU_SOURCE
-#include <signal.h>
-#include <sched.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <sys/poll.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/ip6.h>
-#include <net/ethernet.h>     /* the L2 protocols */
-#include <sys/time.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <monetary.h>
-#include <locale.h>
 
+#include <signal.h>
 #include <net2disk.h>
+
+//----------------------------------------------------------------------------
+void printHelp(void) {
+  printf("pfcount\n(C) 2005-11 Deri Luca <deri@ntop.org>\n\n");
+  printf("-h              Print this help\n");
+  printf("-i <device>     Device name. Use device@channel for channels, and dna:ethX for DNA\n");
+  printf("-n <threads>    Number of polling threads (default %d)\n", num_threads);
+  printf("-c <cluster id> cluster id\n");
+  printf("-e <direction>  0=RX+TX, 1=RX only, 2=TX only\n");
+  printf("-s <string>     String to search on packets\n");
+  printf("-l <len>        Capture length\n");
+  printf("-g <core_id>    Bind this app to a code (only with -n 0)\n");
+  printf("-w <watermark>  Watermark\n");
+  printf("-p <poll wait>  Poll wait (msec)\n");
+  printf("-b <cpu %%>      CPU pergentage priority (0-99)\n");
+  printf("-a              Active packet wait\n");
+  printf("-r              Rehash RSS packets\n");
+  printf("-v              Verbose\n");
+}
 
 //----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
@@ -119,8 +117,11 @@ int main(int argc, char* argv[]) {
 
   /* Start */
   
-  if(verbose) watermark = 1;
-  if(device == NULL) device = DEFAULT_DEVICE;
+  if (verbose)
+    watermark = 1;
+  if (device == NULL)
+    exit(1);
+
   if(num_threads > MAX_NUM_THREADS) num_threads = MAX_NUM_THREADS;
 
   /* hardcode: promisc=1, to_ms=500 */
@@ -142,8 +143,8 @@ int main(int argc, char* argv[]) {
     return(-1);
   } else {
     u_int32_t version;
-
-    pfring_set_application_name(pd, "pfcount");
+    char application_name[] = "net2disk";
+    pfring_set_application_name(pd, application_name);
     pfring_version(pd, &version);
 
     printf("Using PF_RING v.%d.%d.%d\n",

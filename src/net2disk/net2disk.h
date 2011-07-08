@@ -21,33 +21,15 @@
  *
  */
 
-#ifndef _NET2DISK_H__
-#define _NET2DISK_H__
+#ifndef _NET2DISK_H_
+#define _NET2DISK_H_
 
-#define _GNU_SOURCE
-#include <signal.h>
-#include <sched.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <sys/poll.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/ip6.h>
-#include <net/ethernet.h>     /* the L2 protocols */
-#include <sys/time.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <monetary.h>
-#include <locale.h>
+// C++ includes
+#include <string>
 
-#include "pfring.h"
+// Framework includes.
+#include <pfring.h>
+
 
 /* Constants */
 #define ALARM_SLEEP            1
@@ -85,7 +67,7 @@ extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* _intoa(unsigned int addr, char* buf, u_short bufLen);
 char* intoa(unsigned int addr);
 extern inline char* in6toa(struct in6_addr addr6);
-extern char* proto2str(u_short proto);
+extern std::string proto2str(u_short proto);
 extern void dummyProcesssPacket(const struct pfring_pkthdr *h, const u_char *p, const u_char *user_bytes);
 extern int32_t gmt2local(time_t t);
 extern void printHelp(void);
