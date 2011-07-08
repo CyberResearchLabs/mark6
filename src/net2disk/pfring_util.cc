@@ -22,16 +22,14 @@
  */
 
 // C includes.
-#include <net/ethernet.h>     /* the L2 protocols */
+#include <net/ethernet.h>
 #include <netinet/ip.h>
 
 // Local includes.
 #include <net2disk.h>
 
-// Local variable.s.
+// Local variables.
 static char hex[] = "0123456789ABCDEF";
-int verbose = 0;
-uint32_t thiszone;
 
 //---------------------------------------------------------------------------
 char* _intoa(unsigned int addr, char* buf, u_short bufLen) {
@@ -194,6 +192,7 @@ char* etheraddr_string(const u_char *ep, char *buf) {
   return (buf);
 }
 
+#if 0
 void dummyProcesssPacket(const struct pfring_pkthdr *h, const u_char *p, const u_char *user_bytes) {
   long threadId = (long)user_bytes;
 
@@ -285,3 +284,4 @@ void dummyProcesssPacket(const struct pfring_pkthdr *h, const u_char *p, const u
   }
   numPkts[threadId]++, numBytes[threadId] += h->len;
 }
+#endif

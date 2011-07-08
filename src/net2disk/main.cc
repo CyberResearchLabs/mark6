@@ -22,7 +22,11 @@
  */
 
 
+// C includes.
 #include <signal.h>
+
+// Local includes.
+#include <pfring_util.h>
 #include <net2disk.h>
 
 //----------------------------------------------------------------------------

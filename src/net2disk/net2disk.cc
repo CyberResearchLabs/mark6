@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
-#include <net/ethernet.h>     /* the L2 protocols */
+#include <net/ethernet.h>
 #include <sys/time.h>
 #include <time.h>
 #include <sys/socket.h>
@@ -31,26 +31,62 @@
 #include <pfring.h>
 
 // Local includes.
+#include <pfring_util.h>
 #include <net2disk.h>
 
 
-/* Globals */
-int pages_per_buffer;
-int page_size;
-int buffer_size;
-u_char* bufs[NUMBER_OF_FILES];
-int fds[NUMBER_OF_FILES];
-pfring  *pd;
-int num_threads = 1;
-pfring_stat pfringStats;
-pthread_rwlock_t statsLock;
-unsigned long long numPkts[MAX_NUM_THREADS] = { 0 }, numBytes[MAX_NUM_THREADS] = { 0 };
-u_int8_t wait_for_packet = 1, do_shutdown = 0;
-struct timeval startTime;
+Net2Disk::Net2Disk(const int alarm_sleep, const int default_snaplen,
+		   const int num_threads, const std::string& device,
+		   const int num_files):
+  ALARM_SLEEP(alarm_sleep),
+  DEFAULT_SNAPLEN(default_snaplen),
+  NUM_THREADS(num_threads),
+  DEVICE(device),
+  NUM_FILES(num_files),
+  pages_per_buffer(0),
+  page_size(0),
+  buffer_size(0),
+  bufs(0),
+  fds(0),
+  pd(0),
+  num_threads(0),
+  pfrintStats(),
+  statsLock(),
+  startTime(),
+  numPkts(0),
+  numBytes(0),
+  wait_for_packet(1),
+  do_shutdown(0),
+  verbose(0)
+{
+  int i=0;
+
+  bufs = new u_char*[NUM_FILES];
+  for (i = 0; i<NUM_FILES; i++)
+    bufs[i] = 0;
+
+  fds = new int[NUM_FILES];
+  for (i = 0; i<NUM_FILES; i++)
+    fds[i] = 0;
+
+  numPkts = new unsigned long long[NUM_THREADS];
+  for (i = 0; i<NUM_THREADS; i++)
+    numPkts[i] = 0;
+
+  for (i = 0; i<NUM_THREADS; i++)
+    numBytes = new unsigned long long[NUM_THREADS];
+}
+
+Net2Disk::~Net2Disk() {
+  delete [] bufs;
+  delete [] fds;
+  delete [] numPkts;
+  delete [] numBytes;
+}
 
 
 //---------------------------------------------------------------------------
-void print_stats() {
+void Net2Disk::print_stats() {
   pfring_stat pfringStat;
   struct timeval endTime;
   double deltaMillisec;
@@ -118,11 +154,14 @@ void print_stats() {
 }
 
 //---------------------------------------------------------------------------
-void sigproc(int sig) {
+void Net2Disk::sigproc(int sig) {
   static int called = 0;
 
   fprintf(stderr, "Leaving...\n");
-  if(called) return; else called = 1;
+  if (called)
+    return;
+  else
+    called = 1;
   do_shutdown = 1;
   print_stats();
 
@@ -140,7 +179,7 @@ void my_sigalarm(int sig) {
 }
 
 //---------------------------------------------------------------------------
-void dump_buf(const long thread_id, const u_char* buf) {
+void Net2Disk::dump_buf(const long thread_id, const u_char* buf) {
   int i;
   printf("%ld ", thread_id);
   for(i=0; i<32; i++)
@@ -149,7 +188,7 @@ void dump_buf(const long thread_id, const u_char* buf) {
 }
 
 //---------------------------------------------------------------------------
-void* packet_consumer_thread(void* _id) {
+void* Net2Disk::packet_consumer_thread(void* _id) {
   long thread_id = (long)_id;
   int fd = fds[thread_id];
   u_char* filebuf = bufs[thread_id];
@@ -209,7 +248,7 @@ void* packet_consumer_thread(void* _id) {
 
 
 //---------------------------------------------------------------------------
-void writer_task(int fd, u_char* buf, int buf_size) {
+void Net2Disk::writer_task(int fd, u_char* buf, int buf_size) {
   // Write buffer to disk.
   int bytes_left = buf_size;
   int bytes_written = 0;
@@ -230,24 +269,24 @@ void writer_task(int fd, u_char* buf, int buf_size) {
 }
 
 //---------------------------------------------------------------------------
-void setup() {
+void Net2Disk::setup() {
   pages_per_buffer = 256;
   page_size = getpagesize();
   buffer_size = pages_per_buffer * page_size;
 
   char FILE_PREFIX[] = "/mnt/disk";
-  char *PATHS[NUMBER_OF_FILES];
+  char *PATHS[NUM_FILES];
   int PATH_LENGTH = 255;
   int i;
 
-  for (i=0; i<NUMBER_OF_FILES; i++) {
+  for (i=0; i<NUM_FILES; i++) {
     if (posix_memalign((void**)&bufs[i], page_size, buffer_size) < 0) {
       perror("Memalign failed.");
       exit(1);
     }
   }
 
-  for (i=0; i<NUMBER_OF_FILES; i++) {
+  for (i=0; i<NUM_FILES; i++) {
     PATHS[i] = (char*)malloc(PATH_LENGTH);
     snprintf(PATHS[i], PATH_LENGTH, "%s%d/test.m6", FILE_PREFIX, i);
 
