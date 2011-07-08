@@ -41,11 +41,12 @@ AM_INIT_AUTOMAKE(mark6, 0.1)
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  src/Makefile
-                 src/dim/Makefile])
+                 src/dim/Makefile
+		src/net2disk/Makefile
+		])
 
-echo BOOST_LIBDIR: $BOOST_LIBDIR
-echo BOOST_INCDIR: $BOOST_INCDIR
 AC_SUBST(BOOST_LIBDIR)
 AC_SUBST(BOOST_INCDIR)
+AC_SUBST(PFRING_ROOT)
 
 AC_OUTPUT
