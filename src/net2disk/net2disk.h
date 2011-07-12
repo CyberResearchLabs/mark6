@@ -31,58 +31,63 @@
 #include <pfring.h>
 
 
-/* Constants */
-#define ALARM_SLEEP            1
-#define DEFAULT_SNAPLEN        9000
-#define NUM_THREADS        64
-#define DEFAULT_DEVICE         "eth0"
-#define NUM_FILES       	7 
-
 class Net2Disk {
+ public:
   // Constants.
-  cont u_int32_t ALARM_SLEEP;
-  const u_int32_t DEFAULT_SNAPLEN;
+  const u_int32_t SNAPLEN;
   const int NUM_THREADS;
-  const int DEFAULT_DEVICE;
-  const int NUM_FILES;
+  const std::string DEVICE;
+  const int BIND_CORE;
 
+ private:
   /* Globals */
   int pages_per_buffer;
   int page_size;
   int buffer_size;
-  u_char* bufs; // [NUM_FILES];
-  int fds; // [NUM_FILES];
+  u_char** bufs; // [NUM_FILES];
+  int *fds; // [NUM_FILES];
   pfring  *pd;
-  int num_threads;
   pfring_stat pfringStats;
   pthread_rwlock_t statsLock;
 
   struct timeval startTime;
-  unsigned long long numPkts; // [NUM_THREADS];
-  unsigned long long numBytes; // [NUM_THREADS];
+  unsigned long long *numPkts; // [NUM_THREADS];
+  unsigned long long *numBytes; // [NUM_THREADS];
   u_int8_t wait_for_packet;
   u_int8_t do_shutdown;
 
   int verbose;
   uint32_t thiszone;
 
-
+ public:
   // Methods.
-  Net2Disk(const int alarm_sleep, const int default_snaplen,
-	   const int max_num_threads, const int device,
-	   const int number_of_files);
+  Net2Disk(const int snaplen,
+	   const int num_threads,
+	   const std::string& device,
+	   const int BIND_CORE,
+	   const int promisc,
+	   const int wait_for_packet,
+	   const packet_direction direction,
+	   const int clusterId,
+	   const int verbose,
+	   const int watermark,
+	   const int cpu_percentage,
+	   const int poll_duration,
+	   const int rehash_rss);
+
   ~Net2Disk();
 
-  void writer_task(int fd, u_char* buf, int buf_size);
+  void run();
   void print_stats();
-  void sigproc(int sig);
-  void my_sigalarm(int sig);
   inline char* in6toa(struct in6_addr addr6);
-  void printHelp(void);
   void dump_buf(const long thread_id, const u_char* buf);
   void *packet_consumer_thread(void* _id);
   void writer_task(int fd, u_char* buf, int buf_size);
   void setup();
+
+  // Access methods for global signal handler sigproc().
+  void shutdown() { do_shutdown = 1; }
+  void pfring_close() { ::pfring_close(pd); }
 };
 
 #endif // _NET2DISK_H__

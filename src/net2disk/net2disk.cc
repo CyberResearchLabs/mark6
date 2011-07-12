@@ -26,6 +26,7 @@
 
 // C++ includes.
 #include <string>
+#include <iostream>
 
 // Framework includes.
 #include <pfring.h>
@@ -35,22 +36,35 @@
 #include <net2disk.h>
 
 
-Net2Disk::Net2Disk(const int alarm_sleep, const int default_snaplen,
-		   const int num_threads, const std::string& device,
-		   const int num_files):
-  ALARM_SLEEP(alarm_sleep),
-  DEFAULT_SNAPLEN(default_snaplen),
+
+
+Net2Disk::Net2Disk(const int snaplen,
+		   const int num_threads,
+		   const std::string& device,
+		   const int bind_core,
+		   const int promisc,
+		   const int wait_for_packet,
+		   const packet_direction direction,
+		   const int clusterId,
+		   const int verbose,
+		   const int watermark,
+		   const int cpu_percentage,
+		   const int poll_duration,
+		   const int rehash_rss):
+  SNAPLEN(snaplen),
   NUM_THREADS(num_threads),
   DEVICE(device),
-  NUM_FILES(num_files),
+  BIND_CORE(bind_core),
+  //
+
+  //
   pages_per_buffer(0),
   page_size(0),
   buffer_size(0),
   bufs(0),
   fds(0),
   pd(0),
-  num_threads(0),
-  pfrintStats(),
+  pfringStats(),
   statsLock(),
   startTime(),
   numPkts(0),
@@ -59,14 +73,15 @@ Net2Disk::Net2Disk(const int alarm_sleep, const int default_snaplen,
   do_shutdown(0),
   verbose(0)
 {
+  // Allocate memory structures.
   int i=0;
 
-  bufs = new u_char*[NUM_FILES];
-  for (i = 0; i<NUM_FILES; i++)
+  bufs = new u_char*[NUM_THREADS];
+  for (i = 0; i<NUM_THREADS; i++)
     bufs[i] = 0;
 
-  fds = new int[NUM_FILES];
-  for (i = 0; i<NUM_FILES; i++)
+  fds = new int[NUM_THREADS];
+  for (i = 0; i<NUM_THREADS; i++)
     fds[i] = 0;
 
   numPkts = new unsigned long long[NUM_THREADS];
@@ -75,6 +90,95 @@ Net2Disk::Net2Disk(const int alarm_sleep, const int default_snaplen,
 
   for (i = 0; i<NUM_THREADS; i++)
     numBytes = new unsigned long long[NUM_THREADS];
+
+  // Setup buffers etc.
+  this->setup();
+
+  // Do everything else.
+  u_char mac_address[6];
+  char buf[32];
+  int rc;
+
+
+  if (NUM_THREADS > 0)
+    pthread_rwlock_init(&statsLock, NULL);
+
+  if (wait_for_packet && (cpu_percentage > 0)) {
+    pfring_config(cpu_percentage);
+  }
+
+  pd = pfring_open((char*)device.c_str(), promisc,  snaplen,
+		   (NUM_THREADS > 1) ? 1 : 0);
+  if (pd == NULL) {
+    std::cout
+      << "pfring_open error (pf_ring not loaded or perhaps you use quick mode "
+      << " and have already a socket bound to " << device << " ?)\n";
+    exit(1);
+  } else {
+    u_int32_t version;
+    char application_name[] = "net2disk";
+    pfring_set_application_name(pd, application_name);
+    pfring_version(pd, &version);
+
+    std::cout
+      << "Using PF_RING v."
+      << ((version & 0xFFFF0000) >> 16) << "."
+      << ((version & 0x0000FF00) >> 8) << "."
+      << (version & 0x000000FF) << "\n";
+  }
+
+  if (pfring_get_bound_device_address(pd, mac_address) != 0)
+    std::cout << "pfring_get_bound_device_address() failed\n";
+  else
+    std::cout << "Capturing from " << device
+	      << " [" << etheraddr_string(mac_address, buf) << "]\n";
+
+  std::cout
+    << "# Device RX channels: " << pfring_get_num_rx_channels(pd) << std::endl
+    <<"# Polling threads:    " << NUM_THREADS << std::endl;
+
+  if (clusterId > 0) {
+    rc = pfring_set_cluster(pd, clusterId, cluster_round_robin);
+    std::cout <<"pfring_set_cluster returned " << rc << std::endl;
+  }
+
+  if((rc = pfring_set_direction(pd, direction)) != 0)
+    std::cout
+      <<"pfring_set_direction returned [rc=" << rc << "]"
+      << "[direction=" << direction << "]\n";
+
+  if(watermark > 0) {
+    if((rc = pfring_set_poll_watermark(pd, watermark)) != 0)
+      std::cout
+	<< "pfring_set_poll_watermark returned [rc=" << rc << "]"
+	<< "[watermark=" << watermark << "]\n";
+  }
+
+  if(rehash_rss)
+    pfring_enable_rss_rehash(pd);
+
+  if(poll_duration > 0)
+    pfring_set_poll_duration(pd, poll_duration);
+}
+
+void Net2Disk::run() {
+  pfring_enable_ring(pd);
+  if(NUM_THREADS > 1) {
+    pthread_t my_thread;
+    long i;
+
+    for(i=1; i<NUM_THREADS; i++)
+      pthread_create(&my_thread, NULL, packet_consumer_thread, (void*)i);
+  } else {
+    if(BIND_CORE >= 0)
+      bind2core(BIND_CORE);
+  }
+
+  packet_consumer_thread(0);
+
+  alarm(0);
+  sleep(1);
+  ::pfring_close(pd);
 }
 
 Net2Disk::~Net2Disk() {
@@ -110,81 +214,69 @@ void Net2Disk::print_stats() {
     int i;
     unsigned long long nBytes = 0, nPkts = 0;
 
-    for(i=0; i < num_threads; i++) {
+    for(i=0; i < NUM_THREADS; i++) {
       nBytes += numBytes[i];
       nPkts += numPkts[i];
     }
 
     thpt = ((double)8*nBytes)/(deltaMillisec*1000);
 
-    fprintf(stderr, "=========================\n"
-	    "Absolute Stats: [%u pkts rcvd][%u pkts dropped]\n"
-	    "Total Pkts=%u/Dropped=%.1f %%\n",
-	    (unsigned int)pfringStat.recv, (unsigned int)pfringStat.drop,
-	    (unsigned int)(pfringStat.recv+pfringStat.drop),
-	    pfringStat.recv == 0 ? 0 :
-	    (double)(pfringStat.drop*100)/(double)(pfringStat.recv+pfringStat.drop));
-    fprintf(stderr, "%s pkts - %s bytes", 
-	    format_numbers((double)nPkts, buf1, sizeof(buf1), 0),
-	    format_numbers((double)nBytes, buf2, sizeof(buf2), 0));
+    double dropped_percent = pfringStat.recv == 0 ? 0 :
+      (double)(pfringStat.drop*100)/(double)(pfringStat.recv+pfringStat.drop);
+    unsigned int rcv_pkts = pfringStat.recv;
+    unsigned int drp_pkts = pfringStat.drop;
+    unsigned int tot_pkts = rcv_pkts + drp_pkts;
+    double drp_pct = (double)(100*drp_pkts)/(double)(tot_pkts);
 
-    if(print_all)
-      fprintf(stderr, " [%s pkt/sec - %s Mbit/sec]\n",
-	      format_numbers((double)(nPkts*1000)/deltaMillisec, buf1, sizeof(buf1), 1),
-	      format_numbers(thpt, buf2, sizeof(buf2), 1));
+    std::cerr
+      << "=========================\n"
+      << "Absolute Stats: [" << rcv_pkts << " pkts rcvd]"
+      << "[" << drp_pkts << " pkts dropped]\n"
+      << "Total Pkts=" << tot_pkts 
+      <<  "/Dropped="<< drp_pct << " %\n"
+      << format_numbers((double)nPkts, buf1, sizeof(buf1), 0) << " pkts "
+      << "- " << format_numbers((double)nBytes, buf2, sizeof(buf2), 0)
+      << " bytes";
+
+    if (print_all)
+      std::cerr
+	<< "["
+	<< format_numbers((double)(nPkts*1000)/deltaMillisec, buf1,
+			  sizeof(buf1), 1)
+	<< " pkt/sec - " 
+	<< format_numbers(thpt, buf2, sizeof(buf2), 1)
+	<< " Mbit/sec]\n";
     else
-      fprintf(stderr, "\n");
-
+      std::cerr << std::endl;
+    
     if(print_all && (lastTime.tv_sec > 0)) {
       deltaMillisec = delta_time(&endTime, &lastTime);
       diff = nPkts-lastPkts;
-      fprintf(stderr, "=========================\n"
-	      "Actual Stats: %llu pkts [%s ms][%s pkt/sec]\n",
-	      (long long unsigned int)diff,
-	      format_numbers(deltaMillisec, buf1, sizeof(buf1), 1),
-	      format_numbers(((double)diff/(double)(deltaMillisec/1000)),  buf2, sizeof(buf2), 1));
+      "Actual Stats: %llu pkts [%s ms][%s pkt/sec]\n";
+      std::cerr
+	<< "=========================\n"
+	<< "Actual Stats: " << (long long unsigned int)diff << " pkts"
+	<< " [" << format_numbers(deltaMillisec, buf1, sizeof(buf1), 1)
+	<< " ms]"
+	<< "[" << format_numbers(((double)diff/(double)(deltaMillisec/1000)),
+				 buf2, sizeof(buf2), 1)
+	<< " pkt/sec]\n";
     }
-
     lastPkts = nPkts;
   }
 
   lastTime.tv_sec = endTime.tv_sec, lastTime.tv_usec = endTime.tv_usec;
-
-  fprintf(stderr, "=========================\n\n");
+  std::cout << "=========================\n\n";
 }
 
-//---------------------------------------------------------------------------
-void Net2Disk::sigproc(int sig) {
-  static int called = 0;
-
-  fprintf(stderr, "Leaving...\n");
-  if (called)
-    return;
-  else
-    called = 1;
-  do_shutdown = 1;
-  print_stats();
-
-  if(num_threads == 1)
-    pfring_close(pd);
-
-  exit(0);
-}
-
-//---------------------------------------------------------------------------
-void my_sigalarm(int sig) {
-  print_stats();
-  alarm(ALARM_SLEEP);
-  signal(SIGALRM, my_sigalarm);
-}
 
 //---------------------------------------------------------------------------
 void Net2Disk::dump_buf(const long thread_id, const u_char* buf) {
   int i;
-  printf("%ld ", thread_id);
+  std::cout << thread_id << " ";
   for(i=0; i<32; i++)
-    printf("%02X ", buf[i]);
-  printf("\n");
+    std::cout << buf[i];
+  std::cout << "\n";
 }
 
 //---------------------------------------------------------------------------
@@ -197,11 +289,12 @@ void* Net2Disk::packet_consumer_thread(void* _id) {
   u_long core_id = thread_id % numCPU;
   struct pfring_pkthdr hdr;
 
-  printf("packet_consumer_thread(%lu)\n", thread_id);
+  std::cout <<"packet_consumer_thread(" << thread_id << ")\n";
 
-  if((num_threads > 1) && (numCPU > 1)) {
+  if((NUM_THREADS > 1) && (numCPU > 1)) {
     if(bind2core(core_id) == 0)
-      printf("Set thread %lu on core %lu/%u\n", thread_id, core_id, numCPU);
+      std::cout << "Set thread "<< thread_id << " on core "<< core_id << "/"
+		<< numCPU << "\n";
   }
 
   memset(&hdr, 0, sizeof(hdr));
@@ -222,11 +315,11 @@ void* Net2Disk::packet_consumer_thread(void* _id) {
 	  break;
 
 	int buffer_free = buffer_size - bytes_read;
-	if (buffer_free >= DEFAULT_SNAPLEN) {
+	if (buffer_free >= SNAPLEN) {
 	  /* Copy entire received packet. */
-	  memcpy(filebuf + bytes_read, netbuf, DEFAULT_SNAPLEN);
-	  bytes_left -= DEFAULT_SNAPLEN;
-	  bytes_read += DEFAULT_SNAPLEN;
+	  memcpy(filebuf + bytes_read, netbuf, SNAPLEN);
+	  bytes_left -= SNAPLEN;
+	  bytes_read += SNAPLEN;
 	} else {
 	  /* Pad out rest of buffer then write. */
 	  memset(filebuf + bytes_read, 0, buffer_free);
@@ -275,33 +368,33 @@ void Net2Disk::setup() {
   buffer_size = pages_per_buffer * page_size;
 
   char FILE_PREFIX[] = "/mnt/disk";
-  char *PATHS[NUM_FILES];
+  char *PATHS[NUM_THREADS];
   int PATH_LENGTH = 255;
   int i;
 
-  for (i=0; i<NUM_FILES; i++) {
+  for (i=0; i<NUM_THREADS; i++) {
     if (posix_memalign((void**)&bufs[i], page_size, buffer_size) < 0) {
       perror("Memalign failed.");
       exit(1);
     }
   }
 
-  for (i=0; i<NUM_FILES; i++) {
+  for (i=0; i<NUM_THREADS; i++) {
     PATHS[i] = (char*)malloc(PATH_LENGTH);
     snprintf(PATHS[i], PATH_LENGTH, "%s%d/test.m6", FILE_PREFIX, i);
 
     int fd = open(PATHS[i], O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
     if (fd < 0) {
-      printf("i==%d fd==%d\n", i, fd);
+      std::cout <<"i==" << i << " fd=="<< fd <<"\n";
       perror("Unable to open file descriptor.");
       exit(1);
     } else {
-      printf("fds[%d]=%d\n", i, fd);
+      std::cout <<"fds[" << i << "]=" << fd << "\n";
       fds[i] = fd;
     }
   }
 
-  printf("page_size: %d", page_size);
-  printf("buffer_size: %d", buffer_size);
+  std::cout <<"page_size: " << page_size << std::endl;
+  std::cout <<"buffer_size: " << buffer_size << std::endl;
 }
 

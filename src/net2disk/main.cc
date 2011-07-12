@@ -25,19 +25,53 @@
 // C includes.
 #include <signal.h>
 
+// C++ includes.
+#include <string>
+
 // Local includes.
 #include <pfring_util.h>
 #include <net2disk.h>
 
-//----------------------------------------------------------------------------
-void printHelp(void) {
+const int ALARM_SLEEP = 1;
+static Net2Disk* net2disk(0);
+const int DEFAULT_SNAPLEN = 9000;
+const std::string DEFAULT_DEVICE("eth0");
+const int MAX_NUM_THREADS = 16;
+
+//----------------------------------------------------------------------
+void sigproc(int sig) {
+  static int called = 0;
+
+  fprintf(stderr, "Leaving...\n");
+  if (called)
+    return;
+  else
+    called = 1;
+
+  net2disk->shutdown();
+  net2disk->print_stats();
+  if (net2disk->NUM_THREADS == 1)
+    net2disk->pfring_close();
+
+  exit(0);
+}
+
+//----------------------------------------------------------------------
+void my_sigalarm(int sig) {
+  net2disk->print_stats();
+  alarm(ALARM_SLEEP);
+  signal(SIGALRM, my_sigalarm);
+}
+
+//----------------------------------------------------------------------
+void usage(void) {
   printf("pfcount\n(C) 2005-11 Deri Luca <deri@ntop.org>\n\n");
   printf("-h              Print this help\n");
   printf("-i <device>     Device name. Use device@channel for channels, and dna:ethX for DNA\n");
-  printf("-n <threads>    Number of polling threads (default %d)\n", num_threads);
+  printf("-n <threads>    Number of polling threads (default %d)\n",
+	 net2disk->NUM_THREADS);
   printf("-c <cluster id> cluster id\n");
   printf("-e <direction>  0=RX+TX, 1=RX only, 2=TX only\n");
-  printf("-s <string>     String to search on packets\n");
   printf("-l <len>        Capture length\n");
   printf("-g <core_id>    Bind this app to a code (only with -n 0)\n");
   printf("-w <watermark>  Watermark\n");
@@ -48,15 +82,20 @@ void printHelp(void) {
   printf("-v              Verbose\n");
 }
 
-//----------------------------------------------------------------------------
+//----------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-  char *device = NULL, c, *string = NULL, buf[32];
-  u_char mac_address[6];
-  int promisc, snaplen = DEFAULT_SNAPLEN, rc;
+  char *device = NULL;
+  char c;
+
+  int promisc;
+  int snaplen = DEFAULT_SNAPLEN;
   u_int clusterId = 0;
   int bind_core = -1;
   packet_direction direction = rx_and_tx_direction;
-  u_int16_t watermark = 0, poll_duration = 0, cpu_percentage = 0, rehash_rss = 0;
+  u_int16_t watermark = 0;
+  u_int16_t poll_duration = 0;
+  uint16_t cpu_percentage = 0;
+  uint16_t rehash_rss = 0;
 
   startTime.tv_sec = 0;
   thiszone = gmt2local(0);
@@ -66,7 +105,7 @@ int main(int argc, char* argv[]) {
 
     switch(c) {
     case 'h':
-      printHelp();
+      usage();
       return(0);
       break;
     case 'a':
@@ -96,9 +135,6 @@ int main(int argc, char* argv[]) {
     case 'v':
       verbose = 1;
       break;
-    case 's':
-      string = strdup(optarg);
-      break;
     case 'w':
       watermark = atoi(optarg);
       break;
@@ -117,106 +153,40 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  setup();
-
-  /* Start */
-  
+  // Pre-process parameters.
   if (verbose)
     watermark = 1;
   if (device == NULL)
     exit(1);
 
-  if(num_threads > MAX_NUM_THREADS) num_threads = MAX_NUM_THREADS;
+  if (num_threads > MAX_NUM_THREADS)
+    num_threads = MAX_NUM_THREADS;
 
-  /* hardcode: promisc=1, to_ms=500 */
+  if (cpu_percentage > 99)
+    cpu_percentage = 99;
+
+  // hardcode: promisc=1, to_ms=500
   promisc = 1;
 
-  if(num_threads > 0)
-    pthread_rwlock_init(&statsLock, NULL);
+  // Create Net2Disk instance with supplied parameters.
+  net2disk = new Net2Disk(snaplen, num_threads, std::string(device), promisc,
+			  wait_for_packet, direction, clusterId, verbose,
+			  watermark, cpu_percentage, poll_duration, rehash_rss,
+			  bind_core);
 
-  if(wait_for_packet && (cpu_percentage > 0)) {
-    if(cpu_percentage > 99) cpu_percentage = 99;
-    pfring_config(cpu_percentage);
-  }
-
-  pd = pfring_open(device, promisc,  snaplen, (num_threads > 1) ? 1 : 0);
-
-  if(pd == NULL) {
-    printf("pfring_open error (pf_ring not loaded or perhaps you use quick mode and have already a socket bound to %s ?)\n",
-	   device);
-    return(-1);
-  } else {
-    u_int32_t version;
-    char application_name[] = "net2disk";
-    pfring_set_application_name(pd, application_name);
-    pfring_version(pd, &version);
-
-    printf("Using PF_RING v.%d.%d.%d\n",
-	   (version & 0xFFFF0000) >> 16,
-	   (version & 0x0000FF00) >> 8,
-	   version & 0x000000FF);
-  }
-
-  if(pfring_get_bound_device_address(pd, mac_address) != 0)
-    printf("pfring_get_bound_device_address() failed\n");
-  else
-    printf("Capturing from %s [%s]\n", device, etheraddr_string(mac_address, buf));
-
-  printf("# Device RX channels: %d\n", pfring_get_num_rx_channels(pd));
-  printf("# Polling threads:    %d\n", num_threads);
-
-  if(clusterId > 0) {
-    rc = pfring_set_cluster(pd, clusterId, cluster_round_robin);
-    printf("pfring_set_cluster returned %d\n", rc);
-  }
-
-  if((rc = pfring_set_direction(pd, direction)) != 0)
-    printf("pfring_set_direction returned [rc=%d][direction=%d]\n", rc, direction);
-
-  if(watermark > 0) {
-    if((rc = pfring_set_poll_watermark(pd, watermark)) != 0)
-      printf("pfring_set_poll_watermark returned [rc=%d][watermark=%d]\n", rc, watermark);
-  }
-
-  if(rehash_rss)
-    pfring_enable_rss_rehash(pd);
-
-  if(poll_duration > 0)
-    pfring_set_poll_duration(pd, poll_duration);
-
+  // Setup signal handling.
   signal(SIGINT, sigproc);
   signal(SIGTERM, sigproc);
   signal(SIGINT, sigproc);
-
 
   if(!verbose) {
     signal(SIGALRM, my_sigalarm);
     alarm(ALARM_SLEEP);
   }
 
-  pfring_enable_ring(pd);
+  // Start capturing.
+  net2disk->run();
 
-  if(num_threads > 1) {
-    pthread_t my_thread;
-    long i;
-
-    for(i=1; i<num_threads; i++)
-      pthread_create(&my_thread, NULL, packet_consumer_thread, (void*)i);
-
-    bind_core = -1;
-  }
-
-  if(bind_core >= 0)
-    bind2core(bind_core);
-
-  // if(1) {
-  // pfring_loop(pd, dummyProcesssPacket, (u_char*)NULL);
-  // } else
-  packet_consumer_thread(0);
-
-  alarm(0);
-  sleep(1);
-  pfring_close(pd);
-
+  // All done.
   return(0);
 }
