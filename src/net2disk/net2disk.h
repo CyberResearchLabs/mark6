@@ -28,7 +28,20 @@
 #include <string>
 
 // Framework includes.
+#include <boost/thread/thread.hpp>
+#include <boost/ptr_container/ptr_list.hpp>
 #include <pfring.h>
+
+class Net2Disk;
+
+struct PacketConsumerThread {
+  PacketConsumerThread();
+  ~PacketConsumerThread();
+
+  // Main entry point for thread.
+  void operator() (const long id, Net2Disk* net2disk);
+  void writer_task(int fd, u_char* buf, int buf_size);
+};
 
 
 class Net2Disk {
@@ -38,38 +51,43 @@ class Net2Disk {
   const int NUM_THREADS;
   const std::string DEVICE;
   const int BIND_CORE;
-
  private:
   /* Globals */
   int pages_per_buffer;
   int page_size;
+
+ public:
   int buffer_size;
   u_char** bufs; // [NUM_FILES];
   int *fds; // [NUM_FILES];
   pfring  *pd;
+  bool wait_for_packet;
+
+ private:
   pfring_stat pfringStats;
   pthread_rwlock_t statsLock;
-
   struct timeval startTime;
+ public:
   unsigned long long *numPkts; // [NUM_THREADS];
   unsigned long long *numBytes; // [NUM_THREADS];
-  u_int8_t wait_for_packet;
-  u_int8_t do_shutdown;
 
-  int verbose;
+  bool do_shutdown;
+  bool verbose;
   uint32_t thiszone;
+
+  boost::ptr_list<boost::thread> _threads;
 
  public:
   // Methods.
   Net2Disk(const int snaplen,
 	   const int num_threads,
 	   const std::string& device,
-	   const int BIND_CORE,
-	   const int promisc,
-	   const int wait_for_packet,
-	   const packet_direction direction,
+	   const int bind_core,
+	   const bool promisc,
+	   const bool wait_for_packet,
+	   const int direction,
 	   const int clusterId,
-	   const int verbose,
+	   const bool verbose,
 	   const int watermark,
 	   const int cpu_percentage,
 	   const int poll_duration,

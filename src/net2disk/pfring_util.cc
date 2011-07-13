@@ -25,8 +25,11 @@
 #include <net/ethernet.h>
 #include <netinet/ip.h>
 
+// C++ includes.
+#include <string>
+
 // Local includes.
-#include <net2disk.h>
+#include <pfring.h>
 
 // Local variables.
 static char hex[] = "0123456789ABCDEF";

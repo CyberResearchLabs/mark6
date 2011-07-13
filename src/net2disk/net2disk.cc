@@ -29,24 +29,115 @@
 #include <iostream>
 
 // Framework includes.
+#include <boost/thread/thread.hpp>
+#include <boost/ptr_container/ptr_list.hpp>
 #include <pfring.h>
 
 // Local includes.
 #include <pfring_util.h>
 #include <net2disk.h>
 
+PacketConsumerThread::PacketConsumerThread() {
+}
+
+PacketConsumerThread::~PacketConsumerThread() {
+}
+
+void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
+  long thread_id = (long)id;
+  int fd = net2disk->fds[thread_id];
+  u_char* filebuf = net2disk->bufs[thread_id];
+  u_char* netbuf;
+  const int NUM_CPU = sysconf( _SC_NPROCESSORS_ONLN );
+  u_long core_id = thread_id % NUM_CPU;
+  struct pfring_pkthdr hdr;
+  const u_int32_t SNAPLEN = net2disk->SNAPLEN;
+  const int NUM_THREADS = net2disk->NUM_THREADS;
+  const int BUFFER_SIZE = net2disk->buffer_size;
+  pfring* PD = net2disk->pd;
+  const  u_int8_t WAIT_FOR_PACKET = net2disk->wait_for_packet;
+  unsigned long long* NUM_PKTS = net2disk->numPkts;
+  unsigned long long* NUM_BYTES = net2disk->numBytes;
+
+  std::cout <<"packet_consumer_thread(" << thread_id << ")\n";
+
+  if((NUM_THREADS > 1) && (NUM_CPU > 1)) {
+    if(bind2core(core_id) == 0)
+      std::cout << "Set thread "<< thread_id << " on core "<< core_id << "/"
+		<< NUM_CPU << "\n";
+  }
+
+  memset(&hdr, 0, sizeof(hdr));
+
+  while(1) {
+    if (net2disk->do_shutdown)
+      break;
+
+    int bytes_left = BUFFER_SIZE;
+    int bytes_read = 0;
+    while (bytes_left > 0) {
+      if (pfring_recv(PD, &netbuf, 0, &hdr, WAIT_FOR_PACKET) > 0) {
+	NUM_PKTS[thread_id]++, NUM_BYTES[thread_id] += hdr.len;
+#if 0
+	dump_buf(thread_id, netbuf);
+#endif
+	if (net2disk->do_shutdown)
+	  break;
+
+	int buffer_free = BUFFER_SIZE - bytes_read;
+	if (buffer_free >= net2disk->SNAPLEN) {
+	  /* Copy entire received packet. */
+	  memcpy(filebuf + bytes_read, netbuf, SNAPLEN);
+	  bytes_left -= net2disk->SNAPLEN;
+	  bytes_read += net2disk->SNAPLEN;
+	} else {
+	  /* Pad out rest of buffer then write. */
+	  memset(filebuf + bytes_read, 0, buffer_free);
+	  writer_task(fd, filebuf, BUFFER_SIZE);
+
+	  /* Reset. */
+	  bytes_left = BUFFER_SIZE;
+	  bytes_read = 0;
+	}
+      } else {
+	if(net2disk->wait_for_packet == 0)
+	  sched_yield();
+      }
+    }
+  }
+}
+
+void PacketConsumerThread::writer_task(int fd, u_char* buf, int buf_size) {
+  // Write buffer to disk.
+  int bytes_left = buf_size;
+  int bytes_written = 0;
+
+#if 0
+  dump_buf((long)fd, buf);
+#endif
+
+  while (bytes_left) {
+    int nb = write(fd, buf + bytes_written, buf_size);
+    if (nb > 0) {
+      bytes_left -= nb;
+      bytes_written += nb;
+    } else {
+      perror("Unable to write to disk.");
+    }
+  }
+}
 
 
-
+//---------------------------------------------------------------------------
 Net2Disk::Net2Disk(const int snaplen,
 		   const int num_threads,
 		   const std::string& device,
 		   const int bind_core,
-		   const int promisc,
-		   const int wait_for_packet,
-		   const packet_direction direction,
+		   const bool promisc,
+		   const bool wait_for_packet,
+		   const int direction,
 		   const int clusterId,
-		   const int verbose,
+		   const bool verbose,
 		   const int watermark,
 		   const int cpu_percentage,
 		   const int poll_duration,
@@ -69,9 +160,10 @@ Net2Disk::Net2Disk(const int snaplen,
   startTime(),
   numPkts(0),
   numBytes(0),
-  wait_for_packet(1),
-  do_shutdown(0),
-  verbose(0)
+  wait_for_packet(true),
+  do_shutdown(false),
+  verbose(false),
+  _threads()
 {
   // Allocate memory structures.
   int i=0;
@@ -90,6 +182,11 @@ Net2Disk::Net2Disk(const int snaplen,
 
   for (i = 0; i<NUM_THREADS; i++)
     numBytes = new unsigned long long[NUM_THREADS];
+
+
+  // Initialize vars.
+  startTime.tv_sec = 0;
+  thiszone = gmt2local(0);
 
   // Setup buffers etc.
   this->setup();
@@ -142,7 +239,7 @@ Net2Disk::Net2Disk(const int snaplen,
     std::cout <<"pfring_set_cluster returned " << rc << std::endl;
   }
 
-  if((rc = pfring_set_direction(pd, direction)) != 0)
+  if((rc = pfring_set_direction(pd, (packet_direction)direction)) != 0)
     std::cout
       <<"pfring_set_direction returned [rc=" << rc << "]"
       << "[direction=" << direction << "]\n";
@@ -164,22 +261,22 @@ Net2Disk::Net2Disk(const int snaplen,
 void Net2Disk::run() {
   pfring_enable_ring(pd);
   if(NUM_THREADS > 1) {
-    pthread_t my_thread;
-    long i;
 
-    for(i=1; i<NUM_THREADS; i++)
-      pthread_create(&my_thread, NULL, packet_consumer_thread, (void*)i);
+    for (boost::uint32_t i=0; i<NUM_THREADS; i++) {
+      _threads.push_front(new boost::thread(PacketConsumerThread(),
+					    (long)i, this));
+    }
   } else {
-    if(BIND_CORE >= 0)
+    if (BIND_CORE >= 0)
       bind2core(BIND_CORE);
   }
 
-  packet_consumer_thread(0);
 
   alarm(0);
   sleep(1);
   ::pfring_close(pd);
 }
+
 
 Net2Disk::~Net2Disk() {
   delete [] bufs;
@@ -279,87 +376,6 @@ void Net2Disk::dump_buf(const long thread_id, const u_char* buf) {
   std::cout << "\n";
 }
 
-//---------------------------------------------------------------------------
-void* Net2Disk::packet_consumer_thread(void* _id) {
-  long thread_id = (long)_id;
-  int fd = fds[thread_id];
-  u_char* filebuf = bufs[thread_id];
-  u_char* netbuf;
-  u_int numCPU = sysconf( _SC_NPROCESSORS_ONLN );
-  u_long core_id = thread_id % numCPU;
-  struct pfring_pkthdr hdr;
-
-  std::cout <<"packet_consumer_thread(" << thread_id << ")\n";
-
-  if((NUM_THREADS > 1) && (numCPU > 1)) {
-    if(bind2core(core_id) == 0)
-      std::cout << "Set thread "<< thread_id << " on core "<< core_id << "/"
-		<< numCPU << "\n";
-  }
-
-  memset(&hdr, 0, sizeof(hdr));
-
-  while(1) {
-    if (do_shutdown)
-      break;
-
-    int bytes_left = buffer_size;
-    int bytes_read = 0;
-    while (bytes_left > 0) {
-      if (pfring_recv(pd, &netbuf, 0, &hdr, wait_for_packet) > 0) {
-	numPkts[thread_id]++, numBytes[thread_id] += hdr.len;
-#if 0
-	dump_buf(thread_id, netbuf);
-#endif
-	if (do_shutdown)
-	  break;
-
-	int buffer_free = buffer_size - bytes_read;
-	if (buffer_free >= SNAPLEN) {
-	  /* Copy entire received packet. */
-	  memcpy(filebuf + bytes_read, netbuf, SNAPLEN);
-	  bytes_left -= SNAPLEN;
-	  bytes_read += SNAPLEN;
-	} else {
-	  /* Pad out rest of buffer then write. */
-	  memset(filebuf + bytes_read, 0, buffer_free);
-	  writer_task(fd, filebuf, buffer_size);
-
-	  /* Reset. */
-	  bytes_left = buffer_size;
-	  bytes_read = 0;
-	}
-      } else {
-	if(wait_for_packet == 0)
-	  sched_yield();
-      }
-    }
-  }
-
-  return(NULL);
-}
-
-
-//---------------------------------------------------------------------------
-void Net2Disk::writer_task(int fd, u_char* buf, int buf_size) {
-  // Write buffer to disk.
-  int bytes_left = buf_size;
-  int bytes_written = 0;
-
-#if 0
-  dump_buf((long)fd, buf);
-#endif
-
-  while (bytes_left) {
-    int nb = write(fd, buf + bytes_written, buf_size);
-    if (nb > 0) {
-      bytes_left -= nb;
-      bytes_written += nb;
-    } else {
-      perror("Unable to write to disk.");
-    }
-  }
-}
 
 //---------------------------------------------------------------------------
 void Net2Disk::setup() {

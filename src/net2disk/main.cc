@@ -87,18 +87,18 @@ int main(int argc, char* argv[]) {
   char *device = NULL;
   char c;
 
-  int promisc;
+  bool promisc;
+  bool wait_for_packet = true;
+  bool verbose = false;
   int snaplen = DEFAULT_SNAPLEN;
-  u_int clusterId = 0;
+  int num_threads = 0;
+  boost:uint32_t clusterId = 0;
   int bind_core = -1;
   packet_direction direction = rx_and_tx_direction;
-  u_int16_t watermark = 0;
-  u_int16_t poll_duration = 0;
-  uint16_t cpu_percentage = 0;
-  uint16_t rehash_rss = 0;
-
-  startTime.tv_sec = 0;
-  thiszone = gmt2local(0);
+  boost::uint16_t watermark = 0;
+  boost::uint16_t poll_duration = 0;
+  boost::uint16_t cpu_percentage = 0;
+  boost::uint16_t rehash_rss = 0;
 
   while((c = getopt(argc,argv,"hi:c:dl:vs:ae:n:w:p:b:rg:" /* "f:" */)) != '?') {
     if((c == 255) || (c == -1)) break;
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
       return(0);
       break;
     case 'a':
-      wait_for_packet = 0;
+      wait_for_packet = true;
       break;
     case 'e':
       switch(atoi(optarg)) {
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
       num_threads = atoi(optarg);
       break;
     case 'v':
-      verbose = 1;
+      verbose = true;
       break;
     case 'w':
       watermark = atoi(optarg);
