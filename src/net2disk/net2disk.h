@@ -26,6 +26,7 @@
 
 // C++ includes
 #include <string>
+#include <vector>
 
 // Framework includes.
 #include <boost/thread/thread.hpp>
@@ -50,8 +51,8 @@ class Net2Disk {
   const boost::uint32_t SNAPLEN;
   const int NUM_THREADS;
   const std::string DEVICE;
+  std::vector<std::string> DISKS;
   const int BIND_CORE;
-
   int LOCAL_PAGES_PER_BUFFER;
   int LOCAL_PAGE_SIZE;
   int BUFFER_SIZE;
@@ -76,9 +77,10 @@ class Net2Disk {
 
  public:
   // Methods.
-  Net2Disk(const int snaplen,
+  Net2Disk(const int snaple,
 	   const int num_threads,
 	   const std::string& device,
+	   const std::string& disks,
 	   const int bind_core,
 	   const bool promisc,
 	   const bool wait_for_packet,

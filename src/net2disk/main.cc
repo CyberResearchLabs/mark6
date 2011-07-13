@@ -99,8 +99,9 @@ int main(int argc, char* argv[]) {
   boost::uint16_t poll_duration = 0;
   boost::uint16_t cpu_percentage = 0;
   bool rehash_rss = false;
+  std::string disks;
 
-  while((c = getopt(argc,argv,"hi:c:dl:vs:ae:n:w:p:b:rg:" /* "f:" */)) != '?') {
+  while((c = getopt(argc,argv,"hi:c:dl:vs:ae:n:w:p:b:rg:S:" /* "f:" */)) != '?') {
     if((c == 255) || (c == -1)) break;
 
     switch(c) {
@@ -150,6 +151,9 @@ int main(int argc, char* argv[]) {
     case 'g':
       bind_core = atoi(optarg);
       break;
+    case 'S':
+      disks = std::string(optarg);
+      break;
     }
   }
 
@@ -169,10 +173,11 @@ int main(int argc, char* argv[]) {
   promisc = 1;
 
   // Create Net2Disk instance with supplied parameters.
-  net2disk = new Net2Disk(snaplen, num_threads, std::string(device), promisc,
+  net2disk = new Net2Disk(snaplen, num_threads, std::string(device), 
+			  disks, promisc,
 			  wait_for_packet, direction, clusterId, verbose,
-			  watermark, cpu_percentage, poll_duration, rehash_rss,
-			  bind_core);
+			  watermark, cpu_percentage, poll_duration,
+			  rehash_rss, bind_core);
 
   // Setup signal handling.
   signal(SIGINT, sigproc);

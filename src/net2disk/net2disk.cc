@@ -27,10 +27,14 @@
 // C++ includes.
 #include <string>
 #include <iostream>
+#include <vector>
+#include <sstream>
 
 // Framework includes.
+#include <boost/algorithm/string.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
+#include <boost/foreach.hpp>
 #include <pfring.h>
 
 // Local includes.
@@ -78,9 +82,6 @@ void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
     while (bytes_left > 0) {
       if (pfring_recv(PD, &netbuf, 0, &hdr, WAIT_FOR_PACKET) > 0) {
 	NUM_PKTS[thread_id]++, NUM_BYTES[thread_id] += hdr.len;
-#if 0
-	dump_buf(thread_id, netbuf);
-#endif
 	if (net2disk->do_shutdown)
 	  break;
 
@@ -100,7 +101,7 @@ void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
 	  bytes_read = 0;
 	}
       } else {
-	if(net2disk->WAIT_FOR_PACKET == 0)
+	if(not net2disk->WAIT_FOR_PACKET)
 	  sched_yield();
       }
     }
@@ -132,6 +133,7 @@ void PacketConsumerThread::writer_task(int fd, boost::uint8_t* buf, int buf_size
 Net2Disk::Net2Disk(const int snaplen,
 		   const int num_threads,
 		   const std::string& device,
+		   const std::string& disks,
 		   const int bind_core,
 		   const bool promisc,
 		   const bool wait_for_packet,
@@ -145,6 +147,7 @@ Net2Disk::Net2Disk(const int snaplen,
   SNAPLEN(snaplen),
   NUM_THREADS(num_threads),
   DEVICE(device),
+  DISKS(),
   BIND_CORE(bind_core),
   //
 
@@ -187,6 +190,16 @@ Net2Disk::Net2Disk(const int snaplen,
   // Initialize vars.
   startTime.tv_sec = 0;
   thiszone = gmt2local(0);
+  std::vector<std::string> disk_ids;
+  boost::split(disk_ids, disks, boost::is_any_of(","));
+  BOOST_FOREACH(std::string& d, disk_ids) {
+    std::ostringstream ss;
+    ss << "/mnt/disk" << d;
+    DISKS.push_back(ss.str());
+  }
+
+  BOOST_FOREACH(std::string& s, DISKS) 
+    std::cout << s << std::endl;
 
   // Setup buffers etc.
   this->setup();
@@ -392,11 +405,7 @@ void Net2Disk::setup() {
   LOCAL_PAGE_SIZE = getpagesize();
   BUFFER_SIZE = LOCAL_PAGES_PER_BUFFER * LOCAL_PAGE_SIZE;
 
-  char FILE_PREFIX[] = "/mnt/disk";
-  char *PATHS[NUM_THREADS];
-  int PATH_LENGTH = 255;
   int i;
-
   for (i=0; i<NUM_THREADS; i++) {
     if (posix_memalign((void**)&bufs[i], LOCAL_PAGE_SIZE, BUFFER_SIZE) < 0) {
       perror("Memalign failed.");
@@ -404,11 +413,11 @@ void Net2Disk::setup() {
     }
   }
 
-  for (i=0; i<NUM_THREADS; i++) {
-    PATHS[i] = (char*)malloc(PATH_LENGTH);
-    snprintf(PATHS[i], PATH_LENGTH, "%s%d/test.m6", FILE_PREFIX, i);
-
-    int fd = open(PATHS[i], O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
+  i = 0;
+  BOOST_FOREACH(std::string p, DISKS) {
+    std::string file_name = p + "/test.m6";
+    std::cout << "file_name:" << file_name << std::endl;
+    int fd = open(file_name.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
     if (fd < 0) {
       std::cout <<"i==" << i << " fd=="<< fd <<"\n";
       perror("Unable to open file descriptor.");
@@ -417,9 +426,11 @@ void Net2Disk::setup() {
       std::cout <<"fds[" << i << "]=" << fd << "\n";
       fds[i] = fd;
     }
+    i++;
   }
 
   std::cout <<"LOCAL_PAGE_SIZE: " << LOCAL_PAGE_SIZE << std::endl;
   std::cout <<"BUFFER_SIZE: " << BUFFER_SIZE << std::endl;
 }
 
+ 
