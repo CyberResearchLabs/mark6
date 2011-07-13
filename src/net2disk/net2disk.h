@@ -53,15 +53,15 @@ class Net2Disk {
   const int BIND_CORE;
  private:
   /* Globals */
-  int pages_per_buffer;
-  int page_size;
+  int LOCAL_PAGES_PER_BUFFER;
+  int LOCAL_PAGE_SIZE;
 
  public:
-  int buffer_size;
+  int BUFFER_SIZE;
   u_char** bufs; // [NUM_FILES];
   int *fds; // [NUM_FILES];
   pfring  *pd;
-  bool wait_for_packet;
+  bool WAIT_FOR_PACKET;
 
  private:
   pfring_stat pfringStats;

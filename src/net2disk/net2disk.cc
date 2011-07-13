@@ -53,9 +53,9 @@ void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
   struct pfring_pkthdr hdr;
   const boost::uint32_t SNAPLEN = net2disk->SNAPLEN;
   const int NUM_THREADS = net2disk->NUM_THREADS;
-  const int BUFFER_SIZE = net2disk->buffer_size;
+  const int BUFFER_SIZE = net2disk->BUFFER_SIZE;
   pfring* PD = net2disk->pd;
-  const  boost::uint8_t WAIT_FOR_PACKET = net2disk->wait_for_packet;
+  const  boost::uint8_t WAIT_FOR_PACKET = net2disk->WAIT_FOR_PACKET;
   unsigned long long* NUM_PKTS = net2disk->numPkts;
   unsigned long long* NUM_BYTES = net2disk->numBytes;
 
@@ -100,7 +100,7 @@ void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
 	  bytes_read = 0;
 	}
       } else {
-	if(net2disk->wait_for_packet == 0)
+	if(net2disk->WAIT_FOR_PACKET == 0)
 	  sched_yield();
       }
     }
@@ -149,9 +149,9 @@ Net2Disk::Net2Disk(const int snaplen,
   //
 
   //
-  pages_per_buffer(0),
-  page_size(0),
-  buffer_size(0),
+  LOCAL_PAGES_PER_BUFFER(0),
+  LOCAL_PAGE_SIZE(0),
+  BUFFER_SIZE(0),
   bufs(0),
   fds(0),
   pd(0),
@@ -160,7 +160,7 @@ Net2Disk::Net2Disk(const int snaplen,
   startTime(),
   numPkts(0),
   numBytes(0),
-  wait_for_packet(true),
+  WAIT_FOR_PACKET(true),
   do_shutdown(false),
   verbose(false),
   _threads()
@@ -200,7 +200,7 @@ Net2Disk::Net2Disk(const int snaplen,
   if (NUM_THREADS > 0)
     pthread_rwlock_init(&statsLock, NULL);
 
-  if (wait_for_packet && (cpu_percentage > 0)) {
+  if (WAIT_FOR_PACKET && (cpu_percentage > 0)) {
     pfring_config(cpu_percentage);
   }
 
@@ -390,9 +390,9 @@ void Net2Disk::dump_buf(const long thread_id, const u_char* buf) {
 
 //---------------------------------------------------------------------------
 void Net2Disk::setup() {
-  pages_per_buffer = 256;
-  page_size = getpagesize();
-  buffer_size = pages_per_buffer * page_size;
+  LOCAL_PAGES_PER_BUFFER = 256;
+  LOCAL_PAGE_SIZE = getpagesize();
+  BUFFER_SIZE = LOCAL_PAGES_PER_BUFFER * LOCAL_PAGE_SIZE;
 
   char FILE_PREFIX[] = "/mnt/disk";
   char *PATHS[NUM_THREADS];
@@ -400,7 +400,7 @@ void Net2Disk::setup() {
   int i;
 
   for (i=0; i<NUM_THREADS; i++) {
-    if (posix_memalign((void**)&bufs[i], page_size, buffer_size) < 0) {
+    if (posix_memalign((void**)&bufs[i], LOCAL_PAGE_SIZE, BUFFER_SIZE) < 0) {
       perror("Memalign failed.");
       exit(1);
     }
@@ -421,7 +421,7 @@ void Net2Disk::setup() {
     }
   }
 
-  std::cout <<"page_size: " << page_size << std::endl;
-  std::cout <<"buffer_size: " << buffer_size << std::endl;
+  std::cout <<"LOCAL_PAGE_SIZE: " << LOCAL_PAGE_SIZE << std::endl;
+  std::cout <<"BUFFER_SIZE: " << BUFFER_SIZE << std::endl;
 }
 
