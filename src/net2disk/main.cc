@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
   boost::uint16_t watermark = 0;
   boost::uint16_t poll_duration = 0;
   boost::uint16_t cpu_percentage = 0;
-  boost::uint16_t rehash_rss = 0;
+  bool rehash_rss = false;
 
   while((c = getopt(argc,argv,"hi:c:dl:vs:ae:n:w:p:b:rg:" /* "f:" */)) != '?') {
     if((c == 255) || (c == -1)) break;
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
       poll_duration = atoi(optarg);
       break;
     case 'r':
-      rehash_rss = 1;
+      rehash_rss = true;
       break;
     case 'g':
       bind_core = atoi(optarg);

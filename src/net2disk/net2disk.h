@@ -47,7 +47,7 @@ struct PacketConsumerThread {
 class Net2Disk {
  public:
   // Constants.
-  const u_int32_t SNAPLEN;
+  const boost::uint32_t SNAPLEN;
   const int NUM_THREADS;
   const std::string DEVICE;
   const int BIND_CORE;
@@ -73,7 +73,7 @@ class Net2Disk {
 
   bool do_shutdown;
   bool verbose;
-  uint32_t thiszone;
+  boost::uint32_t thiszone;
 
   boost::ptr_list<boost::thread> _threads;
 
@@ -91,7 +91,7 @@ class Net2Disk {
 	   const int watermark,
 	   const int cpu_percentage,
 	   const int poll_duration,
-	   const int rehash_rss);
+	   const bool rehash_rss);
 
   ~Net2Disk();
 

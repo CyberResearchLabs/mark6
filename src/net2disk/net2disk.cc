@@ -51,11 +51,11 @@ void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
   const int NUM_CPU = sysconf( _SC_NPROCESSORS_ONLN );
   u_long core_id = thread_id % NUM_CPU;
   struct pfring_pkthdr hdr;
-  const u_int32_t SNAPLEN = net2disk->SNAPLEN;
+  const boost::uint32_t SNAPLEN = net2disk->SNAPLEN;
   const int NUM_THREADS = net2disk->NUM_THREADS;
   const int BUFFER_SIZE = net2disk->buffer_size;
   pfring* PD = net2disk->pd;
-  const  u_int8_t WAIT_FOR_PACKET = net2disk->wait_for_packet;
+  const  boost::uint8_t WAIT_FOR_PACKET = net2disk->wait_for_packet;
   unsigned long long* NUM_PKTS = net2disk->numPkts;
   unsigned long long* NUM_BYTES = net2disk->numBytes;
 
@@ -141,7 +141,7 @@ Net2Disk::Net2Disk(const int snaplen,
 		   const int watermark,
 		   const int cpu_percentage,
 		   const int poll_duration,
-		   const int rehash_rss):
+		   const bool rehash_rss):
   SNAPLEN(snaplen),
   NUM_THREADS(num_threads),
   DEVICE(device),
@@ -212,7 +212,7 @@ Net2Disk::Net2Disk(const int snaplen,
       << " and have already a socket bound to " << device << " ?)\n";
     exit(1);
   } else {
-    u_int32_t version;
+    boost:uint32_t version;
     char application_name[] = "net2disk";
     pfring_set_application_name(pd, application_name);
     pfring_version(pd, &version);
@@ -241,13 +241,15 @@ Net2Disk::Net2Disk(const int snaplen,
 
   if((rc = pfring_set_direction(pd, (packet_direction)direction)) != 0)
     std::cout
-      <<"pfring_set_direction returned [rc=" << rc << "]"
+      << "pfring_set_direction returned "
+      << "[rc=" << rc << "]"
       << "[direction=" << direction << "]\n";
 
   if(watermark > 0) {
     if((rc = pfring_set_poll_watermark(pd, watermark)) != 0)
       std::cout
-	<< "pfring_set_poll_watermark returned [rc=" << rc << "]"
+	<< "pfring_set_poll_watermark returned "
+	<< "[rc=" << rc << "]"
 	<< "[watermark=" << watermark << "]\n";
   }
 
@@ -271,6 +273,15 @@ void Net2Disk::run() {
       bind2core(BIND_CORE);
   }
 
+  // Command line interpreter.
+  while (true) {
+    std::cout << "net2disk>" << std::endl;
+    std::string cmd;
+    std::cin >> cmd;
+    if (cmd == "quit") {
+      break;
+    }
+  }
 
   alarm(0);
   sleep(1);
@@ -291,9 +302,9 @@ void Net2Disk::print_stats() {
   pfring_stat pfringStat;
   struct timeval endTime;
   double deltaMillisec;
-  static u_int8_t print_all;
-  static u_int64_t lastPkts = 0;
-  u_int64_t diff;
+  static boost::uint8_t print_all;
+  static boost::uint64_t lastPkts = 0;
+  boost::uint64_t diff;
   static struct timeval lastTime;
   char buf1[64], buf2[64];
 
