@@ -51,15 +51,12 @@ class Net2Disk {
   const int NUM_THREADS;
   const std::string DEVICE;
   const int BIND_CORE;
- private:
-  /* Globals */
+
   int LOCAL_PAGES_PER_BUFFER;
   int LOCAL_PAGE_SIZE;
-
- public:
   int BUFFER_SIZE;
-  u_char** bufs; // [NUM_FILES];
-  int *fds; // [NUM_FILES];
+  boost::uint8_t** bufs; // [NUM_THREADS];
+  int *fds; // [NUM_THREADS];
   pfring  *pd;
   bool WAIT_FOR_PACKET;
 
@@ -97,10 +94,7 @@ class Net2Disk {
 
   void run();
   void print_stats();
-  inline char* in6toa(struct in6_addr addr6);
-  void dump_buf(const long thread_id, const u_char* buf);
-  void *packet_consumer_thread(void* _id);
-  void writer_task(int fd, u_char* buf, int buf_size);
+  void dump_buf(const long thread_id, const boost::uint8_t* buf);
   void setup();
 
   // Access methods for global signal handler sigproc().

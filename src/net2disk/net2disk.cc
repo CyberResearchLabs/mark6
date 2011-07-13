@@ -46,8 +46,8 @@ PacketConsumerThread::~PacketConsumerThread() {
 void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
   long thread_id = (long)id;
   int fd = net2disk->fds[thread_id];
-  u_char* filebuf = net2disk->bufs[thread_id];
-  u_char* netbuf;
+  boost::uint8_t* filebuf = net2disk->bufs[thread_id];
+  boost::uint8_t* netbuf;
   const int NUM_CPU = sysconf( _SC_NPROCESSORS_ONLN );
   u_long core_id = thread_id % NUM_CPU;
   struct pfring_pkthdr hdr;
@@ -107,7 +107,7 @@ void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
   }
 }
 
-void PacketConsumerThread::writer_task(int fd, u_char* buf, int buf_size) {
+void PacketConsumerThread::writer_task(int fd, boost::uint8_t* buf, int buf_size) {
   // Write buffer to disk.
   int bytes_left = buf_size;
   int bytes_written = 0;
@@ -168,7 +168,7 @@ Net2Disk::Net2Disk(const int snaplen,
   // Allocate memory structures.
   int i=0;
 
-  bufs = new u_char*[NUM_THREADS];
+  bufs = new boost::uint8_t*[NUM_THREADS];
   for (i = 0; i<NUM_THREADS; i++)
     bufs[i] = 0;
 
@@ -192,14 +192,12 @@ Net2Disk::Net2Disk(const int snaplen,
   this->setup();
 
   // Do everything else.
-  u_char mac_address[6];
+  boost::uint8_t mac_address[6];
   char buf[32];
   int rc;
 
 
-  if (NUM_THREADS > 0)
-    pthread_rwlock_init(&statsLock, NULL);
-
+  // TODO: better mutex control over shared data structure access.
   if (WAIT_FOR_PACKET && (cpu_percentage > 0)) {
     pfring_config(cpu_percentage);
   }
@@ -379,7 +377,7 @@ void Net2Disk::print_stats() {
 
 
 //---------------------------------------------------------------------------
-void Net2Disk::dump_buf(const long thread_id, const u_char* buf) {
+void Net2Disk::dump_buf(const long thread_id, const boost::uint8_t* buf) {
   int i;
   std::cout << thread_id << " ";
   for(i=0; i<32; i++)

@@ -8,7 +8,7 @@ ${IFCONFIG} eth2 down
 ${IFCONFIG} eth3 down
 ${IFCONFIG} eth5 down
 
-PF_RING_ROOT=/home/dlapsley/mark6/src/extern/pf_ring/
+PF_RING_ROOT=/home/dlapsley/mark6/src/extern/PF_RING-4.7.0
 PF_RING_MODULE=${PF_RING_ROOT}/kernel/pf_ring.ko
 ${INSMOD} ${PF_RING_MODULE}
 
