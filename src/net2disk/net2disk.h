@@ -60,6 +60,7 @@ class Net2Disk {
   int *fds; // [NUM_THREADS];
   pfring  *pd;
   bool WAIT_FOR_PACKET;
+  const int CORE_OFFSET;
 
  private:
   pfring_stat pfringStats;
@@ -90,7 +91,8 @@ class Net2Disk {
 	   const int watermark,
 	   const int cpu_percentage,
 	   const int poll_duration,
-	   const bool rehash_rss);
+	   const bool rehash_rss,
+	   const int core_offset);
 
   ~Net2Disk();
 

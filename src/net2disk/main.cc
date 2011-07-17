@@ -21,10 +21,13 @@
  *
  */
 
+#define SCHED_BUMP
 
 // C includes.
 #include <signal.h>
-
+#ifdef SCHED_BUMP
+#include <sched.h>
+#endif // SCHED_BUMP
 // C++ includes.
 #include <string>
 
@@ -100,8 +103,9 @@ int main(int argc, char* argv[]) {
   boost::uint16_t cpu_percentage = 0;
   bool rehash_rss = false;
   std::string disks;
+  int core_offset = 0;
 
-  while((c = getopt(argc,argv,"hi:c:dl:vs:ae:n:w:p:b:rg:S:" /* "f:" */)) != '?') {
+  while((c = getopt(argc,argv,"hi:c:dl:vs:ae:n:w:p:b:rg:S:O:" /* "f:" */)) != '?') {
     if((c == 255) || (c == -1)) break;
 
     switch(c) {
@@ -154,6 +158,9 @@ int main(int argc, char* argv[]) {
     case 'S':
       disks = std::string(optarg);
       break;
+    case 'O':
+      core_offset = atoi(optarg);
+      break;
     }
   }
 
@@ -170,14 +177,14 @@ int main(int argc, char* argv[]) {
     cpu_percentage = 99;
 
   // hardcode: promisc=1, to_ms=500
-  promisc = 1;
+  promisc = 0;
 
   // Create Net2Disk instance with supplied parameters.
   net2disk = new Net2Disk(snaplen, num_threads, std::string(device), 
 			  disks, promisc,
 			  wait_for_packet, direction, clusterId, verbose,
 			  watermark, cpu_percentage, poll_duration,
-			  rehash_rss, bind_core);
+			  rehash_rss, bind_core, core_offset);
 
   // Setup signal handling.
   signal(SIGINT, sigproc);
@@ -188,6 +195,18 @@ int main(int argc, char* argv[]) {
     signal(SIGALRM, my_sigalarm);
     alarm(ALARM_SLEEP);
   }
+
+#ifdef SCHED_BUMP
+  struct sched_param schedparam;
+
+  /* mlockall(MCL_CURRENT|MCL_FUTURE); */
+
+  schedparam.sched_priority = 50;
+  if(sched_setscheduler(0, SCHED_FIFO, &schedparam) == -1) {
+    printf("error while setting the scheduler, errno=%i\n", errno);
+    exit(1);
+  }
+#endif // SCHED_BUMP
 
   // Start capturing.
   net2disk->run();

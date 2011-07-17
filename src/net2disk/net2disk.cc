@@ -53,7 +53,7 @@ void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
   boost::uint8_t* filebuf = net2disk->bufs[thread_id];
   boost::uint8_t* netbuf;
   const int NUM_CPU = sysconf( _SC_NPROCESSORS_ONLN );
-  u_long core_id = thread_id % NUM_CPU;
+  u_long core_id = (net2disk->CORE_OFFSET + thread_id) % NUM_CPU;
   struct pfring_pkthdr hdr;
   const boost::uint32_t SNAPLEN = net2disk->SNAPLEN;
   const int NUM_THREADS = net2disk->NUM_THREADS;
@@ -80,21 +80,22 @@ void PacketConsumerThread::operator()(const long id, Net2Disk* net2disk) {
     int bytes_left = BUFFER_SIZE;
     int bytes_read = 0;
     while (bytes_left > 0) {
-      if (pfring_recv(PD, &netbuf, 0, &hdr, WAIT_FOR_PACKET) > 0) {
+      if (pfring_recv(PD, &netbuf, 0, &hdr, WAIT_FOR_PACKET?1:0) > 0) {
 	NUM_PKTS[thread_id]++, NUM_BYTES[thread_id] += hdr.len;
 	if (net2disk->do_shutdown)
 	  break;
 
+	continue;
 	int buffer_free = BUFFER_SIZE - bytes_read;
 	if (buffer_free >= net2disk->SNAPLEN) {
 	  /* Copy entire received packet. */
-	  memcpy(filebuf + bytes_read, netbuf, SNAPLEN);
+	  // memcpy(filebuf + bytes_read, netbuf, SNAPLEN);
 	  bytes_left -= net2disk->SNAPLEN;
 	  bytes_read += net2disk->SNAPLEN;
 	} else {
 	  /* Pad out rest of buffer then write. */
-	  memset(filebuf + bytes_read, 0, buffer_free);
-	  writer_task(fd, filebuf, BUFFER_SIZE);
+	  // FIXME memset(filebuf + bytes_read, 0, buffer_free);
+	  // FIXME writer_task(fd, filebuf, BUFFER_SIZE);
 
 	  /* Reset. */
 	  bytes_left = BUFFER_SIZE;
@@ -143,7 +144,8 @@ Net2Disk::Net2Disk(const int snaplen,
 		   const int watermark,
 		   const int cpu_percentage,
 		   const int poll_duration,
-		   const bool rehash_rss):
+		   const bool rehash_rss,
+		   const int core_offset):
   SNAPLEN(snaplen),
   NUM_THREADS(num_threads),
   DEVICE(device),
@@ -164,6 +166,7 @@ Net2Disk::Net2Disk(const int snaplen,
   numPkts(0),
   numBytes(0),
   WAIT_FOR_PACKET(true),
+  CORE_OFFSET(core_offset),
   do_shutdown(false),
   verbose(false),
   _threads()
