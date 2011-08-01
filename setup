@@ -65,7 +65,7 @@ install_pfring() {
 build() {
     cd ${MARK6_ROOT}
     ./bootstrap
-    ./configure \
+    CXXFLAGS=-O4 ./configure \
 	--prefix=/opt/haystack \
 	BOOST_INCDIR=/usr/include/boost \
 	BOOST_LIBDIR=/usr/lib64/boost \

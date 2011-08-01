@@ -26,6 +26,8 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <sys/resource.h>
+#include <sys/time.h>
+#include <signal.h>
 
 // C++ includes.
 #include <iostream>
@@ -49,19 +51,9 @@
 // Namespaces.
 namespace po = boost::program_options;
 
+//----------------------------------------------------------------------
 // Constants
-// Entry point for regression tests.
-const std::string DEFAULT_CONFIG_FILE("dim6.xml");
-
-// Print usage message.
-// @param desc Options description message.
-// @return None.
-void
-usage(const po::options_description& desc) {
-  cout
-    << "dim6 [options]" << endl
-    << desc;
-}
+//----------------------------------------------------------------------
 
 // Option defaults.
 const string DEFAULT_INTERFACE("eth0");
@@ -73,10 +65,29 @@ const string DEFAULT_CAPTURE_FILE("/mnt/disk0/capture.m6");
 
 // Other constants.
 const int MAX_SNAPLEN(9100);
+const int STATS_SLEEP(1);
 
+//----------------------------------------------------------------------
+// Global variables.
+//----------------------------------------------------------------------
+long long NUM_PACKETS = 0;
+long long NUM_BYTES = 0;
 
+//----------------------------------------------------------------------
 // Utility functions.
-void write_to_disk(int fd, const u_char* buf, int buf_size) {
+//----------------------------------------------------------------------
+// Print usage message.
+// @param desc Options description message.
+// @return None.
+void
+usage(const po::options_description& desc) {
+  cout
+    << "net2disk [options]" << endl
+    << desc;
+}
+
+void
+write_to_disk(int fd, const u_char* buf, int buf_size) {
   // Write buffer to disk.
   int bytes_left = buf_size;
   int bytes_written = 0;
@@ -92,8 +103,99 @@ void write_to_disk(int fd, const u_char* buf, int buf_size) {
   }
 }
 
+void
+print_stats() {
+  static struct timeval start_time, last_time;
+  struct timeval end_time;
+  struct timeval diff, instant_diff;
+  static double average_packet_rate = 0;
+  static double average_byte_rate = 0;
+  static long long last_num_packets = 0;
+  static long long last_num_bytes = 0;
+  static long interval = 0;
+  const double ALPHA = 0.1;
+  const double BPS_TO_MBPS = 8/1e6;
+  const int PAGE_LENGTH = 10;
 
+  // Update time variables.
+  if (start_time.tv_sec == 0) {
+    gettimeofday(&start_time, NULL);
+  }
+  gettimeofday(&end_time, NULL);
+
+  // Elapsed interval.
+  timersub(&end_time, &start_time, &diff);
+  timersub(&end_time, &last_time, &instant_diff);
+  const double delta_seconds = diff.tv_sec + diff.tv_usec/1000000.0;
+  const double instant_delta_seconds = instant_diff.tv_sec
+    + instant_diff.tv_usec/1000000.0;
+  
+
+  const double instant_packet_rate = (NUM_PACKETS - last_num_packets)/instant_delta_seconds;
+  const double instant_byte_rate = BPS_TO_MBPS*(NUM_BYTES - last_num_bytes)/instant_delta_seconds;
+
+  const double lifetime_packet_rate = NUM_PACKETS/delta_seconds;
+  const double lifetime_byte_rate = BPS_TO_MBPS*NUM_BYTES/delta_seconds;
+
+  average_packet_rate = (1.0-ALPHA)*average_packet_rate + ALPHA*instant_packet_rate;
+  average_byte_rate = (1.0-ALPHA)*average_byte_rate + ALPHA*instant_byte_rate;
+
+  if (interval % PAGE_LENGTH == 0) {
+    std::cout
+      << "+------------------------------------------------------------------------------+" << endl
+      << "|"
+      << setw(10) << "time" << " "
+      << setw(10) << "pkt rate" << " "
+      << setw(10) << "pkt rate"   << " "
+      << setw(10) << "pkt rate"  << " "
+      << "|"
+      << setw(10) << "mbps" << " "
+      << setw(10) << "mbps"   << " "
+      << setw(10) << "mbps"  << " "
+      << "|\n"
+      << "|"
+      << setw(10) << "(s)" << " "
+      << setw(10) << "(inst)" << " "
+      << setw(10) << "(lifetime)"   << " "
+      << setw(10) << "(average)"  << " "
+      << "|"
+      << setw(10) << "(inst)" << " "
+      << setw(10) << "(lifetime)"   << " "
+      << setw(10) << "(average)"  << " "
+      << "|\n"
+      << "+------------------------------------------------------------------------------+"
+      << endl;
+  }
+  ++interval;
+
+  std::cout
+    << "|"
+    << setw(10) << delta_seconds << " "
+    << setw(10) << instant_packet_rate << " "
+    << setw(10) << lifetime_packet_rate << " "
+    << setw(10) << average_packet_rate << " "
+    << "|"
+    << setw(10) << instant_byte_rate << " "
+    << setw(10) << lifetime_byte_rate << " "
+    << setw(10) << average_byte_rate << " "
+    << "|\n";
+  
+  // Update state.
+  gettimeofday(&last_time, NULL);
+  last_num_packets = NUM_PACKETS;
+  last_num_bytes = NUM_BYTES;
+}
+
+void
+handle_sigalarm(int sig) {
+  print_stats();
+  alarm(STATS_SLEEP);
+  signal(SIGALRM, handle_sigalarm);
+}
+
+//----------------------------------------------------------------------
 // Program entry point.
+//----------------------------------------------------------------------
 int
 main (int argc, char* argv[])
 {
@@ -164,7 +266,7 @@ main (int argc, char* argv[])
 
   // Start processing.
   try {
-    LOG4CXX_INFO(logger, "Creating Net2disk manager.");
+    LOG4CXX_INFO(logger, "Creating PFR manager.");
 
     PFR ring(interface.c_str(), snaplen, promiscuous);
     if (ring.get_pcap()) {
@@ -214,11 +316,13 @@ main (int argc, char* argv[])
     LOG4CXX_INFO(logger, "LOCAL_PAGE_SIZE: " << LOCAL_PAGE_SIZE);
     LOG4CXX_INFO(logger, "BUFFER_SIZE:     " << BUFFER_SIZE);
 
+    // Start statistics reporting.
+    signal(SIGALRM, handle_sigalarm);
+    alarm(STATS_SLEEP);
+
     // Capture packets.
     char stats[32];
     u_char pkt[MAX_SNAPLEN];
-    long long num_packets = 0;
-    long long num_bytes = 0;
     while (true) {
       struct pfring_pkthdr hdr;
       struct simple_stats *the_stats = (struct simple_stats*)stats;
@@ -229,15 +333,15 @@ main (int argc, char* argv[])
       while (bytes_left > 0) {
 	// Get next packet.
 	if (ring.get_next_packet(&hdr, pkt, snaplen) > 0) {
-	  LOG4CXX_INFO(logger, "Got " << hdr.len << " byte packet");
+	  LOG4CXX_DEBUG(logger, "Got " << hdr.len << " byte packet");
 	} else {
 	  LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
 			<< strerror(errno));
 	}
 
 	// Update stats.
-	num_packets++;
-	num_bytes += hdr.len;
+	NUM_PACKETS++;
+	NUM_BYTES += hdr.len;
 
 	// Accumulate or flush to data to disk.
 	int buffer_free = BUFFER_SIZE - bytes_read;
