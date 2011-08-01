@@ -69,6 +69,28 @@ const int DEFAULT_SNAPLEN(9000);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
 const string DEFAULT_LOG_CONFIG("net2disk-log.cfg");
+const string DEFAULT_CAPTURE_FILE("/mnt/disk0/capture.m6");
+
+// Other constants.
+const int MAX_SNAPLEN(9100);
+
+
+// Utility functions.
+void write_to_disk(int fd, const u_char* buf, int buf_size) {
+  // Write buffer to disk.
+  int bytes_left = buf_size;
+  int bytes_written = 0;
+
+  while (bytes_left) {
+    int nb = write(fd, (void*)(buf + bytes_written), buf_size);
+    if (nb > 0) {
+      bytes_left -= nb;
+      bytes_written += nb;
+    } else {
+      LOG4CXX_ERROR(logger, "Unable to write to disk: " << strerror(errno));
+    }
+  }
+}
 
 
 // Program entry point.
@@ -82,6 +104,7 @@ main (int argc, char* argv[])
   int snaplen;
   bool promiscuous;
   int time;
+  string capture_file;
 
   // Declare supported options.
   po::options_description desc("Allowed options");
@@ -98,6 +121,8 @@ main (int argc, char* argv[])
      "capture interval")
     ("log_config", po::value<string>(&log_config)->default_value(DEFAULT_LOG_CONFIG),
      "log configuration file")
+    ("capture_file", po::value<string>(&capture_file)->default_value(DEFAULT_CAPTURE_FILE),
+     "capture file")
     ;
 
   // Parse options.
@@ -167,19 +192,70 @@ main (int argc, char* argv[])
       LOG4CXX_INFO(logger, "Added filtering rule " << rule_id << " [rc=" << rc << "]\n");
     }
 
- 
+    // Setup buffers.
+    u_char* file_buf;
+    const int LOCAL_PAGES_PER_BUFFER = 256;
+    const int LOCAL_PAGE_SIZE = getpagesize();
+    const int BUFFER_SIZE = LOCAL_PAGES_PER_BUFFER * LOCAL_PAGE_SIZE;
+
+    if (posix_memalign((void**)&file_buf, LOCAL_PAGE_SIZE, BUFFER_SIZE) < 0) {
+      LOG4CXX_ERROR(logger, "Memalign failed: " << strerror(errno));
+      exit(1);
+    }
+
+    int fd = open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
+    if (fd < 0) {
+      LOG4CXX_ERROR(logger, "Unable to open file: " << strerror(errno));
+      exit(1);
+    } else {
+      LOG4CXX_INFO(logger, "Allocated fd:  " << fd);
+    }
+
+    LOG4CXX_INFO(logger, "LOCAL_PAGE_SIZE: " << LOCAL_PAGE_SIZE);
+    LOG4CXX_INFO(logger, "BUFFER_SIZE:     " << BUFFER_SIZE);
+
+    // Capture packets.
     char stats[32];
+    u_char pkt[MAX_SNAPLEN];
+    long long num_packets = 0;
+    long long num_bytes = 0;
     while (true) {
-      u_char pkt[9000];
       struct pfring_pkthdr hdr;
       struct simple_stats *the_stats = (struct simple_stats*)stats;
 
-      if (ring.get_next_packet(&hdr, pkt, sizeof(pkt)) > 0) {
-	LOG4CXX_INFO(logger, "Got " << hdr.len << " byte packet");
-      } else {
-	LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
-		      << strerror(errno));
-      }
+      int bytes_left = BUFFER_SIZE;
+      int bytes_read = 0;
+
+      while (bytes_left > 0) {
+	// Get next packet.
+	if (ring.get_next_packet(&hdr, pkt, snaplen) > 0) {
+	  LOG4CXX_INFO(logger, "Got " << hdr.len << " byte packet");
+	} else {
+	  LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
+			<< strerror(errno));
+	}
+
+	// Update stats.
+	num_packets++;
+	num_bytes += hdr.len;
+
+	// Accumulate or flush to data to disk.
+	int buffer_free = BUFFER_SIZE - bytes_read;
+	if (buffer_free >= snaplen) {
+	  /* Copy entire received packet. */
+	  memcpy(file_buf + bytes_read, pkt, snaplen);
+	  bytes_left -= snaplen;
+	  bytes_read += snaplen;
+	} else {
+	  /* Pad out rest of buffer then write. */
+	  memset(file_buf + bytes_read, 0, buffer_free);
+	  write_to_disk(fd, file_buf, BUFFER_SIZE);
+
+	  /* Reset. */
+	  bytes_left = BUFFER_SIZE;
+	  bytes_read = 0;
+	} // if.
+      } // while.
     }
   } catch (std::exception& e) {
     cerr << e.what() << endl;
