@@ -1,0 +1,10 @@
+This directory contains the source for all of the Mark6 components.
+
+extern/
+	External source dependencies.
+net2disk/
+	PF_RING-based data plane for network to disk capture.
+dimino6/
+	DIM Erlang control plane.
+dim/
+	DIM C/C++ infrastructure classes.
