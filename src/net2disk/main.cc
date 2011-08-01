@@ -332,7 +332,7 @@ main (int argc, char* argv[])
 
       while (bytes_left > 0) {
 	// Get next packet.
-	if (ring.get_next_packet(&hdr, pkt, snaplen) > 0) {
+	if (ring.get_next_packet(&hdr, file_buf + bytes_read, snaplen) > 0) {
 	  // LOG4CXX_DEBUG(logger, "Got " << hdr.len << " byte packet");
 	} else {
 	  LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
@@ -345,12 +345,7 @@ main (int argc, char* argv[])
 
 	// Accumulate or flush to data to disk.
 	int buffer_free = BUFFER_SIZE - bytes_read;
-	if (buffer_free >= snaplen) {
-	  /* Copy entire received packet. */
-	  memcpy(file_buf + bytes_read, pkt, snaplen);
-	  bytes_left -= snaplen;
-	  bytes_read += snaplen;
-	} else {
+	if (buffer_free < snaplen) {
 	  /* Pad out rest of buffer then write. */
 	  memset(file_buf + bytes_read, 0, buffer_free);
 	  write_to_disk(fd, file_buf, BUFFER_SIZE);
