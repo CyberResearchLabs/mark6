@@ -113,7 +113,7 @@ print_stats() {
   static long long last_num_packets = 0;
   static long long last_num_bytes = 0;
   static long interval = 0;
-  const double ALPHA = 0.1;
+  const double ALPHA = 0.5;
   const double BPS_TO_MBPS = 8/1e6;
   const int PAGE_LENGTH = 10;
 
@@ -333,7 +333,7 @@ main (int argc, char* argv[])
       while (bytes_left > 0) {
 	// Get next packet.
 	if (ring.get_next_packet(&hdr, pkt, snaplen) > 0) {
-	  LOG4CXX_DEBUG(logger, "Got " << hdr.len << " byte packet");
+	  // LOG4CXX_DEBUG(logger, "Got " << hdr.len << " byte packet");
 	} else {
 	  LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
 			<< strerror(errno));
