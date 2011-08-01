@@ -1,216 +1,191 @@
 /*
+ * Created by David Lapsley on Mon Jun 6 2011.
  *
- * (C) 2005-11 - Luca Deri <deri@ntop.org>
+ * Copyright 2011 MIT Haystack Observatory 
+ *  
+ * This file is part of mark6.
  *
- *
- * This program is free software; you can redistribute it and/or modify
+ * mark6 is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * mark6 is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * VLAN support courtesy of Vincent Magnin <vincent.magnin@ci.unil.ch>
- *
+ * along with mark6.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 
-#define SCHED_BUMP
-
 // C includes.
-#include <signal.h>
-#ifdef SCHED_BUMP
-#include <sched.h>
-#endif // SCHED_BUMP
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/select.h>
+#include <unistd.h>
+#include <sys/resource.h>
+
 // C++ includes.
+#include <iostream>
+#include <iomanip>
 #include <string>
+#include <bitset>
+#include <sstream>
+#include <list>
+
+// Framework includes.
+#include <boost/foreach.hpp>
+#include <boost/program_options.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
 
 // Local includes.
-#include <pfring_util.h>
-#include <net2disk.h>
+#include <mark6.h>
+#include <logger.h>
+#include <pfr.h>
 
-const int ALARM_SLEEP = 1;
-static Net2Disk* net2disk(0);
-const int DEFAULT_SNAPLEN = 9000;
-const std::string DEFAULT_DEVICE("eth0");
-const int MAX_NUM_THREADS = 16;
+// Namespaces.
+namespace po = boost::program_options;
 
-//----------------------------------------------------------------------
-void sigproc(int sig) {
-  static int called = 0;
+// Constants
+// Entry point for regression tests.
+const std::string DEFAULT_CONFIG_FILE("dim6.xml");
 
-  fprintf(stderr, "Leaving...\n");
-  if (called)
-    return;
-  else
-    called = 1;
-
-  net2disk->shutdown();
-  net2disk->print_stats();
-  if (net2disk->NUM_THREADS == 1)
-    net2disk->pfring_close();
-
-  exit(0);
+// Print usage message.
+// @param desc Options description message.
+// @return None.
+void
+usage(const po::options_description& desc) {
+  cout
+    << "dim6 [options]" << endl
+    << desc;
 }
 
-//----------------------------------------------------------------------
-void my_sigalarm(int sig) {
-  net2disk->print_stats();
-  alarm(ALARM_SLEEP);
-  signal(SIGALRM, my_sigalarm);
-}
+// Option defaults.
+const string DEFAULT_INTERFACE("eth0");
+const int DEFAULT_SNAPLEN(9000);
+const bool DEFAULT_PROMISCUOUS(true);
+const int DEFAULT_TIME(30);
+const string DEFAULT_LOG_CONFIG("net2disk-log.cfg");
 
-//----------------------------------------------------------------------
-void usage(void) {
-  printf("pfcount\n(C) 2005-11 Deri Luca <deri@ntop.org>\n\n");
-  printf("-h              Print this help\n");
-  printf("-i <device>     Device name. Use device@channel for channels, and dna:ethX for DNA\n");
-  printf("-n <threads>    Number of polling threads (default %d)\n",
-	 net2disk->NUM_THREADS);
-  printf("-c <cluster id> cluster id\n");
-  printf("-e <direction>  0=RX+TX, 1=RX only, 2=TX only\n");
-  printf("-l <len>        Capture length\n");
-  printf("-g <core_id>    Bind this app to a code (only with -n 0)\n");
-  printf("-w <watermark>  Watermark\n");
-  printf("-p <poll wait>  Poll wait (msec)\n");
-  printf("-b <cpu %%>      CPU pergentage priority (0-99)\n");
-  printf("-a              Active packet wait\n");
-  printf("-r              Rehash RSS packets\n");
-  printf("-v              Verbose\n");
-}
 
-//----------------------------------------------------------------------
-int main(int argc, char* argv[]) {
-  char *device = NULL;
-  char c;
+// Program entry point.
+int
+main (int argc, char* argv[])
+{
+  // Variables to store options.
+  string log_config; 
+  string config;
+  string interface;
+  int snaplen;
+  bool promiscuous;
+  int time;
 
-  bool promisc;
-  bool wait_for_packet = true;
-  bool verbose = false;
-  int snaplen = DEFAULT_SNAPLEN;
-  int num_threads = 0;
-  boost:uint32_t clusterId = 0;
-  int bind_core = -1;
-  packet_direction direction = rx_and_tx_direction;
-  boost::uint16_t watermark = 0;
-  boost::uint16_t poll_duration = 0;
-  boost::uint16_t cpu_percentage = 0;
-  bool rehash_rss = false;
-  std::string disks;
-  int core_offset = 0;
+  // Declare supported options.
+  po::options_description desc("Allowed options");
+  desc.add_options()
+    ("help", "produce help message")
+    ("v", "print version message")
+    ("interface", po::value<string>(&interface)->default_value(DEFAULT_INTERFACE),
+     "interface from which to capture data")
+    ("snaplen", po::value<int>(&snaplen)->default_value(DEFAULT_SNAPLEN),
+     "capture snap length")
+    ("promiscuous", po::value<bool>(&promiscuous)->default_value(DEFAULT_PROMISCUOUS),
+     "enable promiscuous mode")
+    ("time", po::value<int>(&time)->default_value(DEFAULT_TIME),
+     "capture interval")
+    ("log_config", po::value<string>(&log_config)->default_value(DEFAULT_LOG_CONFIG),
+     "log configuration file")
+    ;
 
-  while((c = getopt(argc,argv,"hi:c:dl:vs:ae:n:w:p:b:rg:S:O:" /* "f:" */)) != '?') {
-    if((c == 255) || (c == -1)) break;
+  // Parse options.
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
 
-    switch(c) {
-    case 'h':
-      usage();
-      return(0);
-      break;
-    case 'a':
-      wait_for_packet = true;
-      break;
-    case 'e':
-      switch(atoi(optarg)) {
-      case rx_and_tx_direction:
-      case rx_only_direction:
-      case tx_only_direction:
-	direction = (packet_direction)atoi(optarg);
-	break;
-      }
-      break;
-    case 'c':
-      clusterId = atoi(optarg);
-      break;
-    case 'l':
-      snaplen = atoi(optarg);
-      break;
-    case 'i':
-      device = strdup(optarg);
-      break;
-    case 'n':
-      num_threads = atoi(optarg);
-      break;
-    case 'v':
-      verbose = true;
-      break;
-    case 'w':
-      watermark = atoi(optarg);
-      break;
-    case 'b':
-      cpu_percentage = atoi(optarg);
-      break;
-    case 'p':
-      poll_duration = atoi(optarg);
-      break;
-    case 'r':
-      rehash_rss = true;
-      break;
-    case 'g':
-      bind_core = atoi(optarg);
-      break;
-    case 'S':
-      disks = std::string(optarg);
-      break;
-    case 'O':
-      core_offset = atoi(optarg);
-      break;
+  // Configure log subsystem.
+  init_logger(log_config);
+
+  // Check various options.
+  if (vm.count("help")) {
+    usage(desc);
+    return 1;
+  }
+
+  if (vm.count("v")) {
+    cout << "net2disk version: 0.1"
+         << endl;
+    return 1;
+  }
+
+  cout
+    << "+------------------------------------------------------------------------------+\n"
+    << "|                                                                              |\n"
+    << "|                              Net2disk v0.1                                   |\n"
+    << "|                                                                              |\n"
+    << "|                                                                              |\n"
+    << "|                  Copyright 2011 MIT Haystack Observatory                     |\n"
+    << "|                            del@haystack.mit.edu                              |\n"
+    << "|                                                                              |\n"
+    << "+------------------------------------------------------------------------------+\n"
+    << endl << endl
+    << "interface:   " << interface << endl
+    << "snaplen:     " << snaplen << endl
+    << "promiscuous: " << promiscuous << endl
+    << "time:        " << time << endl
+    << "log_config:  " << log_config << endl;
+
+  // Start processing.
+  try {
+    LOG4CXX_INFO(logger, "Creating Net2disk manager.");
+
+    PFR ring(interface.c_str(), snaplen, promiscuous);
+    if (ring.get_pcap()) {
+      LOG4CXX_INFO(logger, "Successfully opened device: " << interface);
+    } else {
+      LOG4CXX_ERROR(logger, "Problems opening device: " << interface << " - "
+		    << ring.get_last_error());
+      return (-1);
     }
+
+    if (false) {
+      filtering_rule the_rule;
+      int rc;
+      u_int16_t rule_id = 99;
+
+      ring.toggle_filtering_policy(false); /* Default to drop */
+      memset(&the_rule, 0, sizeof(the_rule));
+
+      the_rule.rule_id = rule_id;
+      the_rule.rule_action = forward_packet_and_stop_rule_evaluation;
+      the_rule.core_fields.proto = 1 /* icmp */;
+      the_rule.plugin_action.plugin_id = 1; /* Dummy plugin */
+      rc = ring.add_filtering_rule(&the_rule);
+
+      LOG4CXX_INFO(logger, "Added filtering rule " << rule_id << " [rc=" << rc << "]\n");
+    }
+
+ 
+    char stats[32];
+    while (true) {
+      u_char pkt[9000];
+      struct pfring_pkthdr hdr;
+      struct simple_stats *the_stats = (struct simple_stats*)stats;
+
+      if (ring.get_next_packet(&hdr, pkt, sizeof(pkt)) > 0) {
+	LOG4CXX_INFO(logger, "Got " << hdr.len << " byte packet");
+      } else {
+	LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
+		      << strerror(errno));
+      }
+    }
+  } catch (std::exception& e) {
+    cerr << e.what() << endl;
   }
 
-  // Pre-process parameters.
-  if (verbose)
-    watermark = 1;
-  if (device == NULL)
-    exit(1);
-
-  if (num_threads > MAX_NUM_THREADS)
-    num_threads = MAX_NUM_THREADS;
-
-  if (cpu_percentage > 99)
-    cpu_percentage = 99;
-
-  // hardcode: promisc=1, to_ms=500
-  promisc = 0;
-
-  // Create Net2Disk instance with supplied parameters.
-  net2disk = new Net2Disk(snaplen, num_threads, std::string(device), 
-			  disks, promisc,
-			  wait_for_packet, direction, clusterId, verbose,
-			  watermark, cpu_percentage, poll_duration,
-			  rehash_rss, bind_core, core_offset);
-
-  // Setup signal handling.
-  signal(SIGINT, sigproc);
-  signal(SIGTERM, sigproc);
-  signal(SIGINT, sigproc);
-
-  if(!verbose) {
-    signal(SIGALRM, my_sigalarm);
-    alarm(ALARM_SLEEP);
-  }
-
-#ifdef SCHED_BUMP
-  struct sched_param schedparam;
-
-  /* mlockall(MCL_CURRENT|MCL_FUTURE); */
-
-  schedparam.sched_priority = 50;
-  if(sched_setscheduler(0, SCHED_FIFO, &schedparam) == -1) {
-    printf("error while setting the scheduler, errno=%i\n", errno);
-    exit(1);
-  }
-#endif // SCHED_BUMP
-
-  // Start capturing.
-  net2disk->run();
-
-  // All done.
-  return(0);
+  return 0;
 }
+
+

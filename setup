@@ -63,6 +63,7 @@ install_pfring() {
 }
 
 build() {
+    cd ${MARK6_ROOT}
     ./bootstrap
     ./configure \
 	--prefix=/opt/haystack \
@@ -110,11 +111,12 @@ main() {
 			;;
 		    -f | --fix )	fix_squeeze_bugs
 			;;
-		    -a | --all )	fix_squeeze_bugs
-			install_binary_deps
-			install_source_deps
-			build
-			;;
+		    -a | --all )	install_binary_deps
+					fix_squeeze_bugs
+					install_pfring
+					install_source_deps
+					build
+					;;
 		    -h | --help )	usage
 			exit
 			;;
