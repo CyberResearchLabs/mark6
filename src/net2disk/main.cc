@@ -36,6 +36,7 @@
 #include <bitset>
 #include <sstream>
 #include <list>
+#include <deque>
 
 // Framework includes.
 #include <boost/foreach.hpp>
@@ -47,6 +48,7 @@
 #include <mark6.h>
 #include <logger.h>
 #include <pfr.h>
+#include <queue.h>
 
 // Namespaces.
 namespace po = boost::program_options;
@@ -57,21 +59,35 @@ namespace po = boost::program_options;
 
 // Option defaults.
 const string DEFAULT_INTERFACE("eth0");
-const int DEFAULT_SNAPLEN(9000);
+const int DEFAULT_SNAPLEN(9258);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
 const string DEFAULT_LOG_CONFIG("net2disk-log.cfg");
 const string DEFAULT_CAPTURE_FILE("/mnt/disk0/capture.m6");
 
 // Other constants.
-const int MAX_SNAPLEN(9100);
+const int MAX_SNAPLEN(9300);
 const int STATS_SLEEP(1);
 
 //----------------------------------------------------------------------
 // Global variables.
 //----------------------------------------------------------------------
-long long NUM_PACKETS = 0;
-long long NUM_BYTES = 0;
+long long NUM_PACKETS(0);
+long long NUM_BYTES(0);
+
+const int LOCAL_PAGES_PER_BUFFER(256);
+const int NUM_RING_BUFFERS(16);
+const int RING_BUFFER_TIMEOUT(10);
+Queue<u_char*> FILE_BUFFERS(string("FILE_BUFFERS"), NUM_RING_BUFFERS,
+			    RING_BUFFER_TIMEOUT);
+Queue<u_char*> NETWORK_BUFFERS(string("NETWORK_BUFFERS"), NUM_RING_BUFFERS,
+			       RING_BUFFER_TIMEOUT);
+int LOCAL_PAGE_SIZE(0);
+int BUFFER_SIZE(0);
+int FD(-1);
+
+// Used by to control threads.
+bool RUNNING(true);
 
 //----------------------------------------------------------------------
 // Utility functions.
@@ -93,7 +109,7 @@ write_to_disk(int fd, const u_char* buf, int buf_size) {
   int bytes_written = 0;
 
   while (bytes_left) {
-    int nb = write(fd, (void*)(buf + bytes_written), buf_size);
+    int nb = write(fd, (void*)(buf + bytes_written), bytes_left);
     if (nb > 0) {
       bytes_left -= nb;
       bytes_written += nb;
@@ -193,12 +209,76 @@ handle_sigalarm(int sig) {
   signal(SIGALRM, handle_sigalarm);
 }
 
+void
+sigproc(int sig) {
+  static int called = 0;
+
+  if (called)
+    return;
+  else called = 1;
+
+  RUNNING = false;
+}
+
+void
+net2mem(PFR* ring, const int snaplen) {
+  // Capture packets.
+  char stats[32];
+  while (RUNNING) {
+    struct pfring_pkthdr hdr;
+    struct simple_stats *the_stats = (struct simple_stats*)stats;
+    
+    int bytes_left = BUFFER_SIZE;
+    int bytes_read = 0;
+
+    u_char* net_buf = NETWORK_BUFFERS.pop_front();
+    while (bytes_left > 0) {
+
+      // Get next packet.
+      if (ring->get_next_packet(&hdr, net_buf + bytes_read, snaplen) > 0) {
+	bytes_read += hdr.len;
+	bytes_left -= hdr.len;
+	
+	// Update stats.
+	NUM_PACKETS++;
+	NUM_BYTES += hdr.len;
+      } else {
+	LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
+		      << strerror(errno));
+	continue;
+      }
+      
+      // Accumulate or flush to data to disk.
+      if (bytes_left < snaplen) {
+	/* Pad out rest of buffer then write. */
+	memset(net_buf + bytes_read, 0, bytes_left);
+	FILE_BUFFERS.push_back(net_buf);
+	
+	/* Reset. */
+	bytes_left = BUFFER_SIZE;
+	bytes_read = 0;
+	break;
+      }
+    } 
+  } 
+  cout << "Exiting net2mem..." << endl;
+}
+
+void
+mem2disk() {
+  while (RUNNING) {
+    u_char* buf = FILE_BUFFERS.pop_front();
+    write_to_disk(FD, buf, BUFFER_SIZE);
+    NETWORK_BUFFERS.push_back(buf);
+  }
+  cout << "Exiting mem2disk..." << endl;
+}
+
 //----------------------------------------------------------------------
 // Program entry point.
 //----------------------------------------------------------------------
 int
-main (int argc, char* argv[])
-{
+main (int argc, char* argv[]) {
   // Variables to store options.
   string log_config; 
   string config;
@@ -295,22 +375,24 @@ main (int argc, char* argv[])
     }
 
     // Setup buffers.
-    u_char* file_buf;
-    const int LOCAL_PAGES_PER_BUFFER = 256;
-    const int LOCAL_PAGE_SIZE = getpagesize();
-    const int BUFFER_SIZE = LOCAL_PAGES_PER_BUFFER * LOCAL_PAGE_SIZE;
+    LOCAL_PAGE_SIZE = getpagesize();
+    BUFFER_SIZE = LOCAL_PAGES_PER_BUFFER * LOCAL_PAGE_SIZE;
 
-    if (posix_memalign((void**)&file_buf, LOCAL_PAGE_SIZE, BUFFER_SIZE) < 0) {
-      LOG4CXX_ERROR(logger, "Memalign failed: " << strerror(errno));
-      exit(1);
+    for (int i=0; i<NUM_RING_BUFFERS; ++i) {
+      u_char* buf;
+      if (posix_memalign((void**)&buf, LOCAL_PAGE_SIZE, BUFFER_SIZE) < 0) {
+	LOG4CXX_ERROR(logger, "Memalign failed: " << strerror(errno));
+	exit(1);
+      }
+      NETWORK_BUFFERS.push_back(buf);
     }
 
-    int fd = open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
-    if (fd < 0) {
+    FD = open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
+    if (FD < 0) {
       LOG4CXX_ERROR(logger, "Unable to open file: " << strerror(errno));
       exit(1);
     } else {
-      LOG4CXX_INFO(logger, "Allocated fd:  " << fd);
+      LOG4CXX_INFO(logger, "Allocated FD:  " << FD);
     }
 
     LOG4CXX_INFO(logger, "LOCAL_PAGE_SIZE: " << LOCAL_PAGE_SIZE);
@@ -320,47 +402,21 @@ main (int argc, char* argv[])
     signal(SIGALRM, handle_sigalarm);
     alarm(STATS_SLEEP);
 
-    // Capture packets.
-    char stats[32];
-    u_char pkt[MAX_SNAPLEN];
-    while (true) {
-      struct pfring_pkthdr hdr;
-      struct simple_stats *the_stats = (struct simple_stats*)stats;
+    // Setup shutdown handler.
+    signal(SIGINT, sigproc);
 
-      int bytes_left = BUFFER_SIZE;
-      int bytes_read = 0;
+    // Startup processing threads.
+    boost::thread mem2disk_thread(mem2disk);
+    boost::thread net2mem_thread(net2mem, &ring, snaplen);
 
-      while (bytes_left > 0) {
-	// Get next packet.
-	if (ring.get_next_packet(&hdr, file_buf + bytes_read, snaplen) > 0) {
-	  // LOG4CXX_DEBUG(logger, "Got " << hdr.len << " byte packet");
-	} else {
-	  LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
-			<< strerror(errno));
-	}
+    // net2mem(&ring, snaplen);
 
-	// Update stats.
-	NUM_PACKETS++;
-	NUM_BYTES += hdr.len;
-
-	// Accumulate or flush to data to disk.
-	int buffer_free = BUFFER_SIZE - bytes_read;
-	if (buffer_free < snaplen) {
-	  /* Pad out rest of buffer then write. */
-	  memset(file_buf + bytes_read, 0, buffer_free);
-	  write_to_disk(fd, file_buf, BUFFER_SIZE);
-
-	  /* Reset. */
-	  bytes_left = BUFFER_SIZE;
-	  bytes_read = 0;
-	} // if.
-      } // while.
-    }
+    net2mem_thread.join();
+    mem2disk_thread.join();
   } catch (std::exception& e) {
     cerr << e.what() << endl;
   }
 
   return 0;
 }
-
 
