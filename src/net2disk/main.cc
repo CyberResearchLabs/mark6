@@ -49,6 +49,8 @@
 #include <logger.h>
 #include <pfr.h>
 #include <queue.h>
+#include <buffer_manager.h>
+#include <boost/ptr_container/ptr_list.hpp>
 
 // Namespaces.
 namespace po = boost::program_options;
@@ -58,12 +60,13 @@ namespace po = boost::program_options;
 //----------------------------------------------------------------------
 
 // Option defaults.
-const string DEFAULT_INTERFACE("eth0");
+const string DEFAULT_INTERFACES("eth0");
 const int DEFAULT_SNAPLEN(9258);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
 const string DEFAULT_LOG_CONFIG("net2disk-log.cfg");
-const string DEFAULT_CAPTURE_FILE("/mnt/disk0/capture.m6");
+const string DEFAULT_SCAN_PREFIXES("/mnt/disk");
+const string DEFAULT_SCAN_NAMES("scan");
 
 // Other constants.
 const int MAX_SNAPLEN(9300);
@@ -78,13 +81,11 @@ long long NUM_BYTES(0);
 const int LOCAL_PAGES_PER_BUFFER(256);
 const int NUM_RING_BUFFERS(16);
 const int RING_BUFFER_TIMEOUT(10);
-Queue<u_char*> FILE_BUFFERS(string("FILE_BUFFERS"), NUM_RING_BUFFERS,
-			    RING_BUFFER_TIMEOUT);
-Queue<u_char*> NETWORK_BUFFERS(string("NETWORK_BUFFERS"), NUM_RING_BUFFERS,
-			       RING_BUFFER_TIMEOUT);
+
 int LOCAL_PAGE_SIZE(0);
 int BUFFER_SIZE(0);
 int FD(-1);
+
 
 // Used by to control threads.
 bool RUNNING(true);
@@ -221,7 +222,17 @@ sigproc(int sig) {
 }
 
 void
-net2mem(PFR* ring, const int snaplen) {
+net2mem(const string interface, const int snaplen, const bool promiscuous) {
+#if 0
+  PFR ring(interface.c_str(), snaplen, promiscuous);
+  if (ring.get_pcap()) {
+    LOG4CXX_INFO(logger, "Successfully opened device: " << interface);
+  } else {
+    LOG4CXX_ERROR(logger, "Problems opening device: " << interface << " - "
+		  << ring.get_last_error());
+    return;
+  }
+  
   // Capture packets.
   char stats[32];
   while (RUNNING) {
@@ -231,11 +242,11 @@ net2mem(PFR* ring, const int snaplen) {
     int bytes_left = BUFFER_SIZE;
     int bytes_read = 0;
 
-    u_char* net_buf = NETWORK_BUFFERS.pop_front();
+    u_char* net_buf = NETWORK_BUFFER_MANAGER->pop();
     while (bytes_left > 0) {
 
       // Get next packet.
-      if (ring->get_next_packet(&hdr, net_buf + bytes_read, snaplen) > 0) {
+      if (ring.get_next_packet(&hdr, net_buf + bytes_read, snaplen) > 0) {
 	bytes_read += hdr.len;
 	bytes_left -= hdr.len;
 	
@@ -262,16 +273,27 @@ net2mem(PFR* ring, const int snaplen) {
     } 
   } 
   cout << "Exiting net2mem..." << endl;
+#endif
 }
 
 void
-mem2disk() {
+mem2disk(const string capture_file) {
+#if 0
+  int fd = open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
+  if (fd < 0) {
+    LOG4CXX_ERROR(logger, "Unable to open file: " << strerror(errno));
+    exit(1);
+  } else {
+    LOG4CXX_INFO(logger, "Allocated fd:  " << fd);
+  }
+
   while (RUNNING) {
     u_char* buf = FILE_BUFFERS.pop_front();
-    write_to_disk(FD, buf, BUFFER_SIZE);
+    write_to_disk(fd, buf, BUFFER_SIZE);
     NETWORK_BUFFERS.push_back(buf);
   }
   cout << "Exiting mem2disk..." << endl;
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -279,22 +301,23 @@ mem2disk() {
 //----------------------------------------------------------------------
 int
 main (int argc, char* argv[]) {
+
+#if 0
   // Variables to store options.
   string log_config; 
   string config;
-  string interface;
   int snaplen;
   bool promiscuous;
   int time;
-  string capture_file;
+  vector<string> interfaces;
+  vector<string> scan_prefixes;
+  vector<string> scan_names;
 
   // Declare supported options.
   po::options_description desc("Allowed options");
   desc.add_options()
     ("help", "produce help message")
     ("v", "print version message")
-    ("interface", po::value<string>(&interface)->default_value(DEFAULT_INTERFACE),
-     "interface from which to capture data")
     ("snaplen", po::value<int>(&snaplen)->default_value(DEFAULT_SNAPLEN),
      "capture snap length")
     ("promiscuous", po::value<bool>(&promiscuous)->default_value(DEFAULT_PROMISCUOUS),
@@ -303,8 +326,12 @@ main (int argc, char* argv[]) {
      "capture interval")
     ("log_config", po::value<string>(&log_config)->default_value(DEFAULT_LOG_CONFIG),
      "log configuration file")
-    ("capture_file", po::value<string>(&capture_file)->default_value(DEFAULT_CAPTURE_FILE),
-     "capture file")
+    ("interfaces", po::value< vector<string> >(&interfaces)->multitoken(),
+     "list of interfaces from which to capture data")
+    ("scan_prefixes", po::value< vector<string> >(&scan_prefixes)->multitoken(),
+     "list of scan prefixes")
+    ("scan_names", po::value< vector<string> >(&scan_names)->multitoken(),
+     "list of scan prefixes")
     ;
 
   // Parse options.
@@ -327,6 +354,21 @@ main (int argc, char* argv[]) {
     return 1;
   }
 
+  const int NUM_INTERFACES = interfaces.size();
+  if (scan_prefixes.size() != NUM_INTERFACES) {
+    LOG4CXX_ERROR(logger, "Arg length mismatch, scan_prefixes");
+    usage(desc);
+    return 1;
+  }
+
+  if (scan_names.size() != NUM_INTERFACES) {
+    LOG4CXX_ERROR(logger, "Arg length mismatch: scan_names");
+    usage(desc);
+    return 1;
+  }
+
+
+
   cout
     << "+------------------------------------------------------------------------------+\n"
     << "|                                                                              |\n"
@@ -337,63 +379,45 @@ main (int argc, char* argv[]) {
     << "|                            del@haystack.mit.edu                              |\n"
     << "|                                                                              |\n"
     << "+------------------------------------------------------------------------------+\n"
-    << endl << endl
-    << "interface:   " << interface << endl
-    << "snaplen:     " << snaplen << endl
-    << "promiscuous: " << promiscuous << endl
-    << "time:        " << time << endl
-    << "log_config:  " << log_config << endl;
+    << endl << endl;
+
+  cout << setw(20) << left << "interfaces:";
+  BOOST_FOREACH(string s, interfaces)
+    cout << s << " ";
+  cout << endl;
+
+  cout << setw(20) << left << "scan_prefixes:";
+  BOOST_FOREACH(string s, scan_prefixes)
+    cout << s << " ";
+  cout << endl;
+
+  cout << setw(20) << left << "scan_names:";
+  BOOST_FOREACH(string s, scan_names)
+    cout << s << " ";
+  cout << endl;
+    
+  cout
+    << setw(20) << left << "snaplen:" << snaplen << endl
+    << setw(20) << left << "promiscuous:" << promiscuous << endl
+    << setw(20) << left << "time:" << time << endl
+    << setw(20) << left << "log_config:" << log_config << endl;
 
   // Start processing.
   try {
     LOG4CXX_INFO(logger, "Creating PFR manager.");
 
-    PFR ring(interface.c_str(), snaplen, promiscuous);
-    if (ring.get_pcap()) {
-      LOG4CXX_INFO(logger, "Successfully opened device: " << interface);
-    } else {
-      LOG4CXX_ERROR(logger, "Problems opening device: " << interface << " - "
-		    << ring.get_last_error());
-      return (-1);
-    }
-
-    if (false) {
-      filtering_rule the_rule;
-      int rc;
-      u_int16_t rule_id = 99;
-
-      ring.toggle_filtering_policy(false); /* Default to drop */
-      memset(&the_rule, 0, sizeof(the_rule));
-
-      the_rule.rule_id = rule_id;
-      the_rule.rule_action = forward_packet_and_stop_rule_evaluation;
-      the_rule.core_fields.proto = 1 /* icmp */;
-      the_rule.plugin_action.plugin_id = 1; /* Dummy plugin */
-      rc = ring.add_filtering_rule(&the_rule);
-
-      LOG4CXX_INFO(logger, "Added filtering rule " << rule_id << " [rc=" << rc << "]\n");
-    }
-
     // Setup buffers.
     LOCAL_PAGE_SIZE = getpagesize();
     BUFFER_SIZE = LOCAL_PAGES_PER_BUFFER * LOCAL_PAGE_SIZE;
 
-    for (int i=0; i<NUM_RING_BUFFERS; ++i) {
-      u_char* buf;
-      if (posix_memalign((void**)&buf, LOCAL_PAGE_SIZE, BUFFER_SIZE) < 0) {
-	LOG4CXX_ERROR(logger, "Memalign failed: " << strerror(errno));
-	exit(1);
-      }
-      NETWORK_BUFFERS.push_back(buf);
-    }
-
-    FD = open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
-    if (FD < 0) {
-      LOG4CXX_ERROR(logger, "Unable to open file: " << strerror(errno));
-      exit(1);
-    } else {
-      LOG4CXX_INFO(logger, "Allocated FD:  " << FD);
-    }
+    BufferManager NETWORK_BUFFER_MANAGER(string("network_buffer_manager"),
+					 NUM_RING_BUFFERS,
+					 RING_BUFFER_TIMEOUT);
+    NETWORK_BUFFER_MANAGER.reserve();
+    
+    BufferManager DISK_BUFFER_MANAGER(string("disk_buffer_manager"),
+				      NUM_RING_BUFFERS,
+				      RING_BUFFER_TIMEOUT);
 
     LOG4CXX_INFO(logger, "LOCAL_PAGE_SIZE: " << LOCAL_PAGE_SIZE);
     LOG4CXX_INFO(logger, "BUFFER_SIZE:     " << BUFFER_SIZE);
@@ -406,16 +430,36 @@ main (int argc, char* argv[]) {
     signal(SIGINT, sigproc);
 
     // Startup processing threads.
-    boost::thread mem2disk_thread(mem2disk);
-    boost::thread net2mem_thread(net2mem, &ring, snaplen);
+    boost::ptr_list<boost::thread> mem2disk_threads;
+    for (int i=0; i<NUM_INTERFACES; i++) {
+      ostringstream ss;
+      ss << scan_prefixes[i] << "/" << scan_names[i] << ".m6";
+      const string capture_file(ss.str());
+      mem2disk_threads.push_front(new boost::thread(mem2disk, capture_file,
+						    &NETWORK_BUFFEFR_MANAGER,
+						    &DISK_BUFFER_MANAGER));
+    }
 
-    // net2mem(&ring, snaplen);
+    boost::ptr_list<boost::thread> net2mem_threads;
+    for (int i=0; i<NUM_INTERFACES; i++) {
+      net2mem_threads.push_front(new boost::thread(net2disk, interfaces[i], snaplen, promiscuous,
+						    &NETWORK_BUFFER_MANAGER,
+						   &DISK_BUFFER_MANAGER));
+    }
 
-    net2mem_thread.join();
+
+    BOOST_FOREACH(boost::thread& t, net2mem_threads)
+      t.join();
+
+    LOG4CXX_INFO(logger, "Joined net2mem threads...");
+
     mem2disk_thread.join();
+
+    LOG4CXX_INFO(logger, "Jioned mem2disk threads...");
   } catch (std::exception& e) {
     cerr << e.what() << endl;
   }
+#endif // 0
 
   return 0;
 }
