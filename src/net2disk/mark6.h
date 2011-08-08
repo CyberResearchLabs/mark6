@@ -92,7 +92,8 @@ struct ControlMessage {
   MessageType _type;
 };
 
-typedef std::vector<boost::uint8_t> Buffer;
-typedef boost::circular_buffer<Buffer*> CircularBuffer;
+// FIXME
+// typedef std::vector<boost::uint8_t> Buffer;
+// typedef boost::circular_buffer<Buffer*> CircularBuffer;
 
 #endif /*MARK6_H_*/

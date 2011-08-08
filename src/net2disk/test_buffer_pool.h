@@ -20,15 +20,15 @@
  * 
  */
 
-#ifndef _TEST_POOL_H_
-#define _TEST_POOL_H_
+#ifndef _TEST_BUFFER_POOL_H_
+#define _TEST_BUFFER_POOL_H_
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-class TestPool : public CPPUNIT_NS :: TestFixture
+class TestBufferPool : public CPPUNIT_NS :: TestFixture
 {
-    CPPUNIT_TEST_SUITE(TestPool);
+    CPPUNIT_TEST_SUITE(TestBufferPool);
     CPPUNIT_TEST(basic);
     CPPUNIT_TEST_SUITE_END();
 
@@ -41,4 +41,4 @@ class TestPool : public CPPUNIT_NS :: TestFixture
 };
 
 
-#endif /*TEST_POOL_H_*/
+#endif /*TEST_BUFFER_POOL_H_*/

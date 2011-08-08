@@ -40,20 +40,20 @@
 //Local includes.
 #include <mark6.h>
 #include <buffer_pool.h>
-#include <test_pool.h>
+#include <test_buffer_pool.h>
 
 using namespace boost;
 
-CPPUNIT_TEST_SUITE_REGISTRATION (TestPool);
+CPPUNIT_TEST_SUITE_REGISTRATION (TestBufferPool);
 
 void
-TestPool::setUp (void)
+TestBufferPool::setUp (void)
 {
   // set up test environment (initializing objects)
 }
 
 void
-TestPool::tearDown (void)
+TestBufferPool::tearDown (void)
 {
 }
 
@@ -73,8 +73,8 @@ const int BUFFER_POOL_SIZE(16);
 const int BUFFER_SIZE(1048576);
 
 void
-TestPool::basic(void) {
-  std::cout << "TestPool::basic()" << std::endl;
+TestBufferPool::basic(void) {
+  std::cout << "TestBufferPool::basic()" << std::endl;
   const boost::uint32_t BUF_POOL_SIZE(16);
   std::string ID("buffer_manager");
   const int TIMEOUT(1);
