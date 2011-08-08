@@ -23,6 +23,9 @@
 // C includes
 #include <errno.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 // C++ includes.
 #include <sstream>
@@ -40,21 +43,15 @@
 using namespace boost::filesystem;
 
 
-FileWriter::FileWriter(const std::string mid,
-		       const boost::uint32_t write_block_size,
+FileWriter::FileWriter(const boost::uint32_t write_block_size,
 		       const boost::uint32_t write_blocks,
 		       const boost::uint32_t poll_timeout,
 		       const double command_interval):
-
   // Initialize data members (in order).
-  _MID (mid),
   _WRITE_BLOCK_SIZE (write_block_size),
   _WRITE_BLOCKS (write_blocks),
   _POLL_TIMEOUT (poll_timeout),
   _COMMAND_INTERVAL (command_interval),
-  _MAX_QUEUE_SIZE (100),
-  _MESSAGE_SIZE (sizeof(ControlMessage)),
-  _mq (create_only, mid.c_str(), _MAX_QUEUE_SIZE, _MESSAGE_SIZE),
   _pfd(),
   _cbuf (_WRITE_BLOCKS),
   _running (false),
@@ -69,7 +66,6 @@ FileWriter::FileWriter(const std::string mid,
 
 FileWriter::~FileWriter() {
   close();
-  message_queue::remove(_MID.c_str());
 }
 
 void FileWriter::start()
@@ -95,8 +91,6 @@ void FileWriter::run()
       case WRITE_TO_DISK:
 	{
 	  if (command_timer.elapsed() > _COMMAND_INTERVAL) {
-	    check_control();
-	    command_timer.restart();
 	    continue;
 	  }
 
@@ -120,7 +114,6 @@ void FileWriter::run()
       case IDLE:
 	{
 	  if (command_timer.elapsed() > _COMMAND_INTERVAL) {
-	    check_control();
 	    command_timer.restart();
 	    usleep(_COMMAND_INTERVAL*1000000);
 	    continue;
@@ -139,8 +132,8 @@ void FileWriter::run()
     }
 
     LOG4CXX_DEBUG(logger, "elapsed run time: " << run_timer.elapsed());
-  } catch(interprocess_exception &ex) {
-    LOG4CXX_ERROR(logger, "mq error: " << ex.what());
+  } catch(std::exception &ex) {
+    LOG4CXX_ERROR(logger, "error: " << ex.what());
   }
 }
 
@@ -191,36 +184,16 @@ bool FileWriter::write(boost::uint8_t* b)
   return true;
 }
 
-bool FileWriter::check_control() {
-  ControlMessage m;
-  unsigned int priority;
-  std::size_t recvd_size;
-
-  // Read in next control message.
-  bool rcvd_msg = _mq.try_receive(&m, sizeof(m), recvd_size, priority);
-  if (!rcvd_msg)
-    return false;
-
-  // Update state machine based on received message.
-  switch (m._type) {
-
-  case MSG_STOP:
-    LOG4CXX_DEBUG(logger, "Received stop");
-    _state = STOP;
-    break;
-
-  case MSG_WRITE_TO_DISK:
-    LOG4CXX_DEBUG(logger, "Received WRITE_TO_DISK");
-    _state = WRITE_TO_DISK;
-    break;
-
-  default:
-    LOG4CXX_DEBUG(logger, "Received unknown message.");
-    break;
-  }
- 
-  return true;
+void FileWriter::cmd_stop() {
+  LOG4CXX_INFO(logger, "Received STOP");
+  _state = STOP;
 }
+
+void FileWriter::cmd_write_to_disk() {
+  LOG4CXX_INFO(logger, "Received WRITE_TO_DISK");
+  _state = WRITE_TO_DISK;
+}
+
 
 void FileWriter::write_block(const int fd)
 {

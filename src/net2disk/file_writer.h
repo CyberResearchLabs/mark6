@@ -33,15 +33,12 @@
 #include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
 #include <boost/thread/thread.hpp>
-#include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
 // Local includes
 #include <mark6.h>
-
-using namespace boost::interprocess;
 
 /**
  * Manages high speed writing of data to file.
@@ -52,9 +49,6 @@ class FileWriter {
    * Configuration options.
    */
   /**@{**/
-  /** Unique message id for ITC messaging. */
-  std::string _MID;
-
   /** Size of individual blocks written to disk (e.g. 4096). */
   boost::uint32_t _WRITE_BLOCK_SIZE;
  
@@ -67,22 +61,6 @@ class FileWriter {
   /** Command message queue check interval in seconds. */
   double _COMMAND_INTERVAL;
   /**@}**/
-
-
-  /** @name MessageQueue.
-   *  Boost-based thread-safe messaging system.
-   */
-  /**@{**/
-  /** Maximum number of messages in the queue. */
-  const boost::uint32_t _MAX_QUEUE_SIZE;
-
-  /** Size of individual messages. */
-  const boost::uint32_t _MESSAGE_SIZE;
-
-  /** Thread-safe message queue object. */
-  message_queue _mq;
-  /**@}**/
-
 
   /** @name FileStructures.
    *  File data structures.
@@ -103,7 +81,7 @@ class FileWriter {
   bool _running;
 
   /** State variable used in main processing loop. */
-  enum { IDLE, WRITE_TO_DISK, STOP } _state;
+  volatile enum { IDLE, WRITE_TO_DISK, STOP } _state;
 
   /** Thread object. */
   boost::thread _thread;
@@ -114,15 +92,13 @@ class FileWriter {
 
  public:
   /** Constructor. */
-  FileWriter(const std::string mid,
-	     const boost::uint32_t write_block_size,
+  FileWriter(const boost::uint32_t write_block_size,
 	     const boost::uint32_t write_blocks,
 	     const boost::uint32_t poll_timeout,
 	     const double command_interval);
   
   /** Constructor. */
   ~FileWriter();
-
 
   /** @name ThreadOperations */
   /**@{*/
@@ -144,17 +120,20 @@ class FileWriter {
   /**@}*/
 
 
-  /** @name Write/Read API */
+  /** @name Public API */
   /**@{*/
   /** Add buffer to circular buffer. Note that caller owns the dealloc. */
   bool write(boost::uint8_t* buf);
 
+  /** Send stop command. */
+  void cmd_stop();
+
+  /** Send write to disk command. */
+  void cmd_write_to_disk();
+
  private:
   /** Main processing loop. */
   void run();
-
-  /** Check for control messages. Adjust state as necessary. */
-  bool check_control();
 
   /** Write a single block to disk. */
   void write_block(const int fd);

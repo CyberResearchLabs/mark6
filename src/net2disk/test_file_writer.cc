@@ -34,7 +34,6 @@
 
 // Boost includes.
 #include <boost/foreach.hpp>
-#include <boost/interprocess/ipc/message_queue.hpp>
 
 //Local includes.
 #include <mark6.h>
@@ -43,7 +42,6 @@
 #include <test_file_writer.h>
 
 using namespace boost;
-using namespace boost::interprocess;
 
 CPPUNIT_TEST_SUITE_REGISTRATION (TestFileWriter);
 
@@ -62,16 +60,13 @@ void
 TestFileWriter::basic(void)
 {
   std::cout << "TestFileWriter::basic()" << std::endl;
-  const std::string mid("fw1");
   const std::string file_name("/tmp/test1.m6");
   const boost::uint32_t write_block_size(4096);
   const boost::uint32_t write_blocks(100);
   const boost::uint32_t poll_timeout = 1000; // ms
   const double command_interval = 1; //s
 
-  message_queue::remove(mid.c_str());
-
-  FileWriter fw(mid, write_block_size, write_blocks, poll_timeout,
+  FileWriter fw(write_block_size, write_blocks, poll_timeout,
 		command_interval);
 
   fw.start();
@@ -79,8 +74,6 @@ TestFileWriter::basic(void)
 
   LOG4CXX_DEBUG(logger, "Started file writer.");
     
-  message_queue mq(open_only, mid.c_str());
-
   const int page_size(getpagesize());
   const int buffer_size(16 * page_size);
   boost::uint8_t* buf;
@@ -97,14 +90,11 @@ TestFileWriter::basic(void)
     fw.write(buf);
   }
 
-  ControlMessage m;
-  m._type = MSG_WRITE_TO_DISK;
-  mq.send(&m, sizeof(m), 0);
+  fw.cmd_write_to_disk();
 
   sleep(10);
-  m._type = MSG_STOP;
-  mq.send(&m, sizeof(m), 0);
 
+  fw.cmd_stop();
   fw.join();
 
   fw.close();

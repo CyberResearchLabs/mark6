@@ -44,12 +44,14 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 
 // Local includes.
 #include <mark6.h>
 #include <logger.h>
 #include <pfr.h>
 #include <buffer_pool.h>
+#include <file_writer.h>
 
 // Namespaces.
 namespace po = boost::program_options;
@@ -83,6 +85,7 @@ const int RING_BUFFER_TIMEOUT(10);
 
 int LOCAL_PAGE_SIZE(0);
 int BUFFER_SIZE(0);
+boost::ptr_vector<FileWriter> FILE_WRITERS;
 
 
 // Used by to control threads.
@@ -101,23 +104,6 @@ usage(const po::options_description& desc) {
   cout
     << "net2disk [options]" << endl
     << desc;
-}
-
-void
-write_to_disk(int fd, const boost::uint8_t* buf, int buf_size) {
-  // Write buffer to disk.
-  int bytes_left = buf_size;
-  int bytes_written = 0;
-
-  while (bytes_left) {
-    int nb = write(fd, (void*)(buf + bytes_written), bytes_left);
-    if (nb > 0) {
-      bytes_left -= nb;
-      bytes_written += nb;
-    } else {
-      LOG4CXX_ERROR(logger, "Unable to write to disk: " << strerror(errno));
-    }
-  }
 }
 
 void
@@ -277,24 +263,6 @@ net2mem(const int id, const string interface, const int snaplen,
 #endif
 }
 
-void
-mem2disk(const int id, const string capture_file) {
-  int fd = open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
-  if (fd < 0) {
-    LOG4CXX_ERROR(logger, "Unable to open file: " << strerror(errno));
-    exit(1);
-  } else {
-    LOG4CXX_INFO(logger, "Allocated fd:  " << fd);
-  }
-
-  while (RUNNING) {
-    //boost::uint8_t* buf = FILE_BUFFERS.pop_front();
-    //write_to_disk(fd, buf, BUFFER_SIZE);
-    // NETWORK_BUFFERS.push_back(buf);
-  }
-  cout << "Exiting mem2disk..." << endl;
-}
-
 //----------------------------------------------------------------------
 // Program entry point.
 //----------------------------------------------------------------------
@@ -404,7 +372,8 @@ main (int argc, char* argv[]) {
     // Setup buffer pool.
     BufferPool& bp = BufferPool::instance();
     bp.reserve_pool(NUM_RING_BUFFERS, LOCAL_PAGES_PER_BUFFER);
-    
+    const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
+
     // Start statistics reporting.
     signal(SIGALRM, handle_sigalarm);
     alarm(STATS_SLEEP);
@@ -413,12 +382,20 @@ main (int argc, char* argv[]) {
     signal(SIGINT, sigproc);
 
     // Startup processing threads.
-    boost::ptr_list<boost::thread> mem2disk_threads;
     for (int i=0; i<NUM_INTERFACES; i++) {
       ostringstream ss;
       ss << scan_prefixes[i] << "/" << scan_names[i] << ".m6";
       const string capture_file(ss.str());
-      mem2disk_threads.push_front(new boost::thread(mem2disk, i, capture_file));
+      const int WRITE_BLOCKS(32);
+      const int POLL_TIMEOUT(1);
+      const int COMMAND_INTERVAL(5);
+      FileWriter* fw = new FileWriter(BUFFER_SIZE,
+				      WRITE_BLOCKS,
+				      POLL_TIMEOUT,
+				      COMMAND_INTERVAL);
+      fw->start();
+      fw->open(capture_file);
+      FILE_WRITERS.push_back(fw);
     }
 
     boost::ptr_list<boost::thread> net2mem_threads;
@@ -430,12 +407,12 @@ main (int argc, char* argv[]) {
     // Join threads.
     BOOST_FOREACH(boost::thread& t, net2mem_threads)
       t.join();
-
     LOG4CXX_INFO(logger, "Joined net2mem threads...");
 
-    BOOST_FOREACH(boost::thread& t, mem2disk_threads)
-      t.join();
 
+    BOOST_FOREACH(FileWriter& fw, FILE_WRITERS)
+      fw.join();
+    
     LOG4CXX_INFO(logger, "Joined mem2disk threads...");
   } catch (std::exception& e) {
     cerr << e.what() << endl;
