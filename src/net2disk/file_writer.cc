@@ -76,7 +76,7 @@ void FileWriter::start()
 
 void FileWriter::run()
 {
-  LOG4CXX_INFO(logger, "Running...");
+  LOG4CXX_INFO(logger, "FileWriter Running...");
 
   Timer run_timer;
   Timer command_timer;
@@ -91,9 +91,10 @@ void FileWriter::run()
       case WRITE_TO_DISK:
 	{
 	  if (command_timer.elapsed() > _COMMAND_INTERVAL) {
+	    command_timer.restart();
 	    continue;
 	  }
-
+#if 0
 	  // Poll file descriptor.
 	  int rv = poll(&_pfd, 1, _POLL_TIMEOUT);
 	  if (rv < 0) {
@@ -106,8 +107,11 @@ void FileWriter::run()
 	
 	  // Scan file descriptor to see if it is ready for writing.
 	  if (_pfd.revents & POLLOUT) {
+#endif
 	    write_block(_pfd.fd);
+#if 0
 	  }
+#endif
 	}
 	break;
 

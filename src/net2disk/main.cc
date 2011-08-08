@@ -80,7 +80,7 @@ long long NUM_PACKETS(0);
 long long NUM_BYTES(0);
 
 const int LOCAL_PAGES_PER_BUFFER(256);
-const int NUM_RING_BUFFERS(64);
+const int NUM_RING_BUFFERS(128);
 const int RING_BUFFER_TIMEOUT(10);
 
 int LOCAL_PAGE_SIZE(0);
@@ -209,7 +209,7 @@ sigproc(int sig) {
 
 void
 net2mem(const int id, const string interface, const int snaplen,
-	const bool promiscuous, FileWriter* fw) {
+	const bool promiscuous, const int buffer_size, FileWriter* fw) {
   LOG4CXX_INFO(logger, "Starting net2mem thread " << id);
   LOG4CXX_INFO(logger, "  interface: " << interface);
   LOG4CXX_INFO(logger, "  snaplen:   " << snaplen);
@@ -231,13 +231,14 @@ net2mem(const int id, const string interface, const int snaplen,
     struct pfring_pkthdr hdr;
     struct simple_stats *the_stats = (struct simple_stats*)stats;
     
-    int bytes_left = BUFFER_SIZE;
+    int bytes_left = buffer_size;
     int bytes_read = 0;
 
-    boost::uint8_t* net_buf = bp.malloc();
+    boost::uint8_t* buf = bp.malloc();
+
     while (bytes_left > 0) {
       // Get next packet.
-      if (ring.get_next_packet(&hdr, net_buf + bytes_read, snaplen) > 0) {
+      if (ring.get_next_packet(&hdr, buf + bytes_read, snaplen) > 0) {
 	bytes_read += hdr.len;
 	bytes_left -= hdr.len;
 	
@@ -253,8 +254,8 @@ net2mem(const int id, const string interface, const int snaplen,
       // Accumulate or flush to data to disk.
       if (bytes_left < snaplen) {
 	/* Pad out rest of buffer then write. */
-	memset(net_buf + bytes_read, 0, bytes_left);
-	fw->write(net_buf);
+	memset(buf + bytes_read, 0, bytes_left);
+	fw->write(buf);
 	
 	/* Reset. */
 	bytes_left = BUFFER_SIZE;
@@ -373,15 +374,16 @@ main (int argc, char* argv[]) {
     // Startup mem2disk threads.
     for (int i=0; i<NUM_INTERFACES; i++) {
       const string capture_file(capture_files[i]);
-      const int WRITE_BLOCKS(32);
+      const int WRITE_BLOCKS(64);
       const int POLL_TIMEOUT(1);
-      const int COMMAND_INTERVAL(5);
+      const int COMMAND_INTERVAL(1);
       FileWriter* fw = new FileWriter(BUFFER_SIZE,
 				      WRITE_BLOCKS,
 				      POLL_TIMEOUT,
 				      COMMAND_INTERVAL);
-      fw->start();
       fw->open(capture_file);
+      fw->start();
+      fw->cmd_write_to_disk();
       FILE_WRITERS.push_back(fw);
     }
 
@@ -389,7 +391,8 @@ main (int argc, char* argv[]) {
     boost::ptr_list<boost::thread> net2mem_threads;
     for (int i=0; i<NUM_INTERFACES; i++) {
       net2mem_threads.push_front(new boost::thread(net2mem, i, interfaces[i], snaplen,
-						   promiscuous, FILE_WRITERS[i]));
+						   promiscuous, BUFFER_SIZE,
+						   FILE_WRITERS[i]));
     }
     
     // Join threads.
