@@ -88,6 +88,7 @@ TestPool::basic(void) {
   cout << "sizeof(boost::uint8_t*): " << sizeof(boost::uint8_t*) << endl;
   cout << "sizeof(void*): " << sizeof(void*) << endl;
   inst.reserve_pool(BUFFER_POOL_SIZE, PAGES_PER_BUFFER);
+  cout << "Reserved pool." << endl;
 
   int MAX_ALLOCS(1000);
   double pool_rate, system_rate;
