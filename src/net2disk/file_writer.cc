@@ -144,6 +144,8 @@ void FileWriter::join()
 
 int FileWriter::open(const std::string file_name)
 {
+  LOG4CXX_INFO(logger, "Opening FileWriter file: " << file_name);
+
   // Open files for each path.
   int ret=0;
   _pfd.fd = ::open(file_name.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
@@ -219,4 +221,5 @@ void FileWriter::write_block(const int fd)
       LOG4CXX_ERROR(logger, "Write error: " << strerror(errno));
     }
   }
+  BufferPool::instance().free(buf);
 }

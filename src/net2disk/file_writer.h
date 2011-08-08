@@ -39,6 +39,7 @@
 
 // Local includes
 #include <mark6.h>
+#include <buffer_pool.h>
 
 /**
  * Manages high speed writing of data to file.

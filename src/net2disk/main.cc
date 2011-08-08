@@ -85,7 +85,7 @@ const int RING_BUFFER_TIMEOUT(10);
 
 int LOCAL_PAGE_SIZE(0);
 int BUFFER_SIZE(0);
-boost::ptr_vector<FileWriter> FILE_WRITERS;
+std::vector<FileWriter*> FILE_WRITERS;
 
 
 // Used by to control threads.
@@ -209,8 +209,11 @@ sigproc(int sig) {
 
 void
 net2mem(const int id, const string interface, const int snaplen,
-	const bool promiscuous) {
-#if 0
+	const bool promiscuous, FileWriter* fw) {
+  LOG4CXX_INFO(logger, "Starting net2mem thread " << id);
+  LOG4CXX_INFO(logger, "  interface: " << interface);
+  LOG4CXX_INFO(logger, "  snaplen:   " << snaplen);
+
   PFR ring(interface.c_str(), snaplen, promiscuous);
   if (ring.get_pcap()) {
     LOG4CXX_INFO(logger, "Successfully opened device: " << interface);
@@ -219,6 +222,8 @@ net2mem(const int id, const string interface, const int snaplen,
 		  << ring.get_last_error());
     return;
   }
+
+  BufferPool& bp(BufferPool::instance());
   
   // Capture packets.
   char stats[32];
@@ -229,9 +234,8 @@ net2mem(const int id, const string interface, const int snaplen,
     int bytes_left = BUFFER_SIZE;
     int bytes_read = 0;
 
-    boost::uint8_t* net_buf = NETWORK_BUFFER_MANAGER->pop();
+    boost::uint8_t* net_buf = bp.malloc();
     while (bytes_left > 0) {
-
       // Get next packet.
       if (ring.get_next_packet(&hdr, net_buf + bytes_read, snaplen) > 0) {
 	bytes_read += hdr.len;
@@ -250,7 +254,7 @@ net2mem(const int id, const string interface, const int snaplen,
       if (bytes_left < snaplen) {
 	/* Pad out rest of buffer then write. */
 	memset(net_buf + bytes_read, 0, bytes_left);
-	FILE_BUFFERS.push_back(net_buf);
+	fw->write(net_buf);
 	
 	/* Reset. */
 	bytes_left = BUFFER_SIZE;
@@ -260,7 +264,6 @@ net2mem(const int id, const string interface, const int snaplen,
     } 
   } 
   cout << "Exiting net2mem..." << endl;
-#endif
 }
 
 //----------------------------------------------------------------------
@@ -275,8 +278,7 @@ main (int argc, char* argv[]) {
   bool promiscuous;
   int time;
   vector<string> interfaces;
-  vector<string> scan_prefixes;
-  vector<string> scan_names;
+  vector<string> capture_files;
 
   // Declare supported options.
   po::options_description desc("Allowed options");
@@ -293,10 +295,8 @@ main (int argc, char* argv[]) {
      "log configuration file")
     ("interfaces", po::value< vector<string> >(&interfaces)->multitoken(),
      "list of interfaces from which to capture data")
-    ("scan_prefixes", po::value< vector<string> >(&scan_prefixes)->multitoken(),
-     "list of scan prefixes")
-    ("scan_names", po::value< vector<string> >(&scan_names)->multitoken(),
-     "list of scan prefixes")
+    ("capture_files", po::value< vector<string> >(&capture_files)->multitoken(),
+     "list of capture files")
     ;
 
   // Parse options.
@@ -320,14 +320,8 @@ main (int argc, char* argv[]) {
   }
 
   const int NUM_INTERFACES = interfaces.size();
-  if (scan_prefixes.size() != NUM_INTERFACES) {
-    LOG4CXX_ERROR(logger, "Arg length mismatch, scan_prefixes");
-    usage(desc);
-    return 1;
-  }
-
-  if (scan_names.size() != NUM_INTERFACES) {
-    LOG4CXX_ERROR(logger, "Arg length mismatch: scan_names");
+  if (capture_files.size() != NUM_INTERFACES) {
+    LOG4CXX_ERROR(logger, "Arg length mismatch, capture_files");
     usage(desc);
     return 1;
   }
@@ -349,16 +343,11 @@ main (int argc, char* argv[]) {
     cout << s << " ";
   cout << endl;
 
-  cout << setw(20) << left << "scan_prefixes:";
-  BOOST_FOREACH(string s, scan_prefixes)
+  cout << setw(20) << left << "capture_files:";
+  BOOST_FOREACH(string s, capture_files)
     cout << s << " ";
   cout << endl;
 
-  cout << setw(20) << left << "scan_names:";
-  BOOST_FOREACH(string s, scan_names)
-    cout << s << " ";
-  cout << endl;
-    
   cout
     << setw(20) << left << "snaplen:" << snaplen << endl
     << setw(20) << left << "promiscuous:" << promiscuous << endl
@@ -381,11 +370,9 @@ main (int argc, char* argv[]) {
     // Setup shutdown handler.
     signal(SIGINT, sigproc);
 
-    // Startup processing threads.
+    // Startup mem2disk threads.
     for (int i=0; i<NUM_INTERFACES; i++) {
-      ostringstream ss;
-      ss << scan_prefixes[i] << "/" << scan_names[i] << ".m6";
-      const string capture_file(ss.str());
+      const string capture_file(capture_files[i]);
       const int WRITE_BLOCKS(32);
       const int POLL_TIMEOUT(1);
       const int COMMAND_INTERVAL(5);
@@ -398,20 +385,22 @@ main (int argc, char* argv[]) {
       FILE_WRITERS.push_back(fw);
     }
 
+    // Startup net2mem_threads.
     boost::ptr_list<boost::thread> net2mem_threads;
     for (int i=0; i<NUM_INTERFACES; i++) {
       net2mem_threads.push_front(new boost::thread(net2mem, i, interfaces[i], snaplen,
-						   promiscuous));
+						   promiscuous, FILE_WRITERS[i]));
     }
-
+    
     // Join threads.
     BOOST_FOREACH(boost::thread& t, net2mem_threads)
       t.join();
     LOG4CXX_INFO(logger, "Joined net2mem threads...");
 
-
-    BOOST_FOREACH(FileWriter& fw, FILE_WRITERS)
-      fw.join();
+    BOOST_FOREACH(FileWriter *fw, FILE_WRITERS) {
+      fw->cmd_stop();
+      fw->join();
+    }
     
     LOG4CXX_INFO(logger, "Joined mem2disk threads...");
   } catch (std::exception& e) {
