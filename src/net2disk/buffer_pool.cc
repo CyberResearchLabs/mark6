@@ -86,14 +86,11 @@ void BufferPool::release_pool() {
   while (is_empty() == false) {
     boost::uint8_t* b = pop();
 
-#if 0
     // TODO: figure out why this fails..
-    if (b)
-      free(b);
-    else
-      std::cout << "AARGH" << std::endl;
-#endif
-    std::cout << i++ << std::endl;
+    // if (b)
+    // free(b);
+    //else
+    // std::cout << "AARGH" << std::endl;
   }
 }
 
