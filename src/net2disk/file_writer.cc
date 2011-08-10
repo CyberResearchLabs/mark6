@@ -203,12 +203,11 @@ void FileWriter::cmd_write_to_disk() {
 
 void FileWriter::write_block(const int fd)
 {
-  boost::mutex::scoped_lock lock(_cbuf_mutex);
-
   boost::uint8_t* buf;
   if (_cbuf.empty()) {
     return;
   } else {
+    boost::mutex::scoped_lock lock(_cbuf_mutex);
     buf = _cbuf[0];
     _cbuf.pop_front();
   }

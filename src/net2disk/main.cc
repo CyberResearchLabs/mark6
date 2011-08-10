@@ -81,7 +81,7 @@ long long NUM_PACKETS(0);
 long long NUM_BYTES(0);
 
 const int LOCAL_PAGES_PER_BUFFER(256);
-const int NUM_RING_BUFFERS(32);
+const int NUM_RING_BUFFERS(128);
 const int RING_BUFFER_TIMEOUT(10);
 
 int LOCAL_PAGE_SIZE(0);
@@ -246,9 +246,10 @@ net2mem(const int id, const string interface, const int snaplen,
     boost::uint8_t* file_buf = bp.malloc();
 #endif
 
-#ifndef NETONLY
     int payload_length;
     boost::uint8_t* payload_ptr;
+
+#ifndef NETONLY
     while (bytes_left > 0) {
       // Get next packet.
 #endif
@@ -306,6 +307,7 @@ net2mem(const int id, const string interface, const int snaplen,
 	}
 	printf("\n");
 #endif // DUMP	
+
 	// Update stats.
 	NUM_PACKETS++;
 	NUM_BYTES += hdr.caplen;
@@ -319,7 +321,7 @@ net2mem(const int id, const string interface, const int snaplen,
       // Accumulate or flush to data to disk.
       if (bytes_left < PAYLOAD_LENGTH) {
 	// Pad out rest of buffer then write.
-	memset(file_buf + bytes_read, 0, bytes_left);
+	memset(&file_buf[bytes_read], 0, bytes_left);
 	fw->write(file_buf);
 	break;
       } else {
@@ -442,16 +444,13 @@ main (int argc, char* argv[]) {
     CPU_ZERO(&mask);
     CPU_SET(1, &mask);
     ret = sched_setaffinity(pid, cpu_setsize, &mask);
-    if (ret < 0)
-      LOG4CXX_ERROR(logger, "Unble to set process affinity.");
-
-    // ret = sched_getaffinity(pid, cpu_setsize, &mask);
     // if (ret < 0)
-    // LOG4CXX_ERROR(logger, "Unable to get process affinity.");
-    
+    // LOG4CXX_ERROR(logger, "Unble to set process affinity.");
 
+    ret = sched_getaffinity(pid, cpu_setsize, &mask);
+    if (ret < 0)
+      LOG4CXX_ERROR(logger, "Unable to get process affinity.");
     
-
     // Setup buffer pool.
     BufferPool& bp = BufferPool::instance();
     bp.reserve_pool(NUM_RING_BUFFERS, LOCAL_PAGES_PER_BUFFER);
@@ -467,7 +466,7 @@ main (int argc, char* argv[]) {
     // Startup mem2disk threads.
     for (int i=0; i<NUM_INTERFACES; i++) {
       const string capture_file(capture_files[i]);
-      const int WRITE_BLOCKS(8);
+      const int WRITE_BLOCKS(32);
       const int POLL_TIMEOUT(1);
       const int COMMAND_INTERVAL(1);
       FileWriter* fw = new FileWriter(BUFFER_SIZE,
