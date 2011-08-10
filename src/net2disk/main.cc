@@ -69,6 +69,8 @@ const int DEFAULT_TIME(30);
 const string DEFAULT_LOG_CONFIG("net2disk-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8192);
 const int DEFAULT_SMP_AFFINITY(0);
+const int DEFAULT_RING_BUFFERS(128);
+const int DEFAULT_WRITE_BLOCKS(32);
 
 // Other constants.
 const int MAX_SNAPLEN(9014);
@@ -82,7 +84,6 @@ long long NUM_PACKETS(0);
 long long NUM_BYTES(0);
 
 const int LOCAL_PAGES_PER_BUFFER(256);
-const int NUM_RING_BUFFERS(128);
 const int RING_BUFFER_TIMEOUT(10);
 
 int LOCAL_PAGE_SIZE(0);
@@ -319,7 +320,7 @@ net2mem(const int id, const string interface, const int snaplen,
       }
 
 #ifndef NETONLY
-      // Accumulate or flush to data to disk.
+      // Accumulate or flush data to disk.
       if (bytes_left < PAYLOAD_LENGTH) {
 	// Pad out rest of buffer then write.
 	memset(&file_buf[bytes_read], 0, bytes_left);
@@ -354,6 +355,8 @@ main (int argc, char* argv[]) {
   vector<string> interfaces;
   vector<string> capture_files;
   int smp_affinity;
+  int ring_buffers;
+  int write_blocks;
 
   // Declare supported options.
   po::options_description desc("Allowed options");
@@ -374,6 +377,10 @@ main (int argc, char* argv[]) {
      "list of capture files")
     ("smp_affinity", po::value<int>(&smp_affinity)->default_value(DEFAULT_SMP_AFFINITY),
      "smp processor affinity")
+    ("ring_buffers", po::value<int>(&ring_buffers)->default_value(DEFAULT_RING_BUFFERS),
+     "total number of ring buffers")
+    ("write_blocks", po::value<int>(&write_blocks)->default_value(DEFAULT_WRITE_BLOCKS),
+     "per thread number of write blocks")
     ;
 
   // Parse options.
@@ -430,7 +437,9 @@ main (int argc, char* argv[]) {
     << setw(20) << left << "promiscuous:" << promiscuous << endl
     << setw(20) << left << "time:" << time << endl
     << setw(20) << left << "log_config:" << log_config << endl
-    << setw(20) << left << "smp_affinity:" << smp_affinity << endl;
+    << setw(20) << left << "smp_affinity:" << smp_affinity << endl
+    << setw(20) << left << "ring_buffers:" << ring_buffers << endl
+    << setw(20) << left << "write_blocks:" << write_blocks << endl;
 
   // Start processing.
   try {
@@ -458,7 +467,7 @@ main (int argc, char* argv[]) {
     
     // Setup buffer pool.
     BufferPool& bp = BufferPool::instance();
-    bp.reserve_pool(NUM_RING_BUFFERS, LOCAL_PAGES_PER_BUFFER);
+    bp.reserve_pool(ring_buffers, LOCAL_PAGES_PER_BUFFER);
     const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
 
     // Start statistics reporting.
@@ -471,11 +480,10 @@ main (int argc, char* argv[]) {
     // Startup mem2disk threads.
     for (int i=0; i<NUM_INTERFACES; i++) {
       const string capture_file(capture_files[i]);
-      const int WRITE_BLOCKS(32);
       const int POLL_TIMEOUT(1);
       const int COMMAND_INTERVAL(1);
       FileWriter* fw = new FileWriter(BUFFER_SIZE,
-				      WRITE_BLOCKS,
+				      write_blocks,
 				      POLL_TIMEOUT,
 				      COMMAND_INTERVAL);
       fw->open(capture_file);
