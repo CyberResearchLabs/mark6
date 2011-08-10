@@ -68,6 +68,7 @@ const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
 const string DEFAULT_LOG_CONFIG("net2disk-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8192);
+const int DEFAULT_SMP_AFFINITY(0);
 
 // Other constants.
 const int MAX_SNAPLEN(9014);
@@ -352,6 +353,7 @@ main (int argc, char* argv[]) {
   int time;
   vector<string> interfaces;
   vector<string> capture_files;
+  int smp_affinity;
 
   // Declare supported options.
   po::options_description desc("Allowed options");
@@ -370,6 +372,8 @@ main (int argc, char* argv[]) {
      "list of interfaces from which to capture data")
     ("capture_files", po::value< vector<string> >(&capture_files)->multitoken(),
      "list of capture files")
+    ("smp_affinity", po::value<int>(&smp_affinity)->default_value(DEFAULT_SMP_AFFINITY),
+     "smp processor affinity")
     ;
 
   // Parse options.
@@ -425,7 +429,8 @@ main (int argc, char* argv[]) {
     << setw(20) << left << "snaplen:" << snaplen << endl
     << setw(20) << left << "promiscuous:" << promiscuous << endl
     << setw(20) << left << "time:" << time << endl
-    << setw(20) << left << "log_config:" << log_config << endl;
+    << setw(20) << left << "log_config:" << log_config << endl
+    << setw(20) << left << "smp_affinity:" << smp_affinity << endl;
 
   // Start processing.
   try {
@@ -442,10 +447,10 @@ main (int argc, char* argv[]) {
       LOG4CXX_ERROR(logger, "Unable to get process affinity.");
 
     CPU_ZERO(&mask);
-    CPU_SET(1, &mask);
+    CPU_SET(smp_affinity, &mask);
     ret = sched_setaffinity(pid, cpu_setsize, &mask);
-    // if (ret < 0)
-    // LOG4CXX_ERROR(logger, "Unble to set process affinity.");
+    if (ret < 0)
+      LOG4CXX_ERROR(logger, "Unble to set process affinity.");
 
     ret = sched_getaffinity(pid, cpu_setsize, &mask);
     if (ret < 0)
