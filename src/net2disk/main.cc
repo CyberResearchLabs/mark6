@@ -28,6 +28,7 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <sched.h>
 
 // C++ includes.
 #include <iostream>
@@ -62,16 +63,16 @@ namespace po = boost::program_options;
 
 // Option defaults.
 const string DEFAULT_INTERFACES("eth0");
-const int DEFAULT_SNAPLEN(9258);
+const int DEFAULT_SNAPLEN(8234);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
 const string DEFAULT_LOG_CONFIG("net2disk-log.cfg");
-const string DEFAULT_SCAN_PREFIXES("/mnt/disk");
-const string DEFAULT_SCAN_NAMES("scan");
+const int DEFAULT_PAYLOAD_LENGTH(8192);
 
 // Other constants.
-const int MAX_SNAPLEN(9300);
+const int MAX_SNAPLEN(9014);
 const int STATS_SLEEP(1);
+const int PAYLOAD_LENGTH(DEFAULT_PAYLOAD_LENGTH);
 
 //----------------------------------------------------------------------
 // Global variables.
@@ -80,7 +81,7 @@ long long NUM_PACKETS(0);
 long long NUM_BYTES(0);
 
 const int LOCAL_PAGES_PER_BUFFER(256);
-const int NUM_RING_BUFFERS(128);
+const int NUM_RING_BUFFERS(32);
 const int RING_BUFFER_TIMEOUT(10);
 
 int LOCAL_PAGE_SIZE(0);
@@ -227,6 +228,13 @@ net2mem(const int id, const string interface, const int snaplen,
   
   // Capture packets.
   char stats[32];
+  // #define NETONLY
+  boost::uint8_t net_buf[MAX_SNAPLEN];
+
+#ifdef NETONLY
+  boost::uint8_t* file_buf = bp.malloc();
+#endif
+
   while (RUNNING) {
     struct pfring_pkthdr hdr;
     struct simple_stats *the_stats = (struct simple_stats*)stats;
@@ -234,35 +242,97 @@ net2mem(const int id, const string interface, const int snaplen,
     int bytes_left = buffer_size;
     int bytes_read = 0;
 
-    boost::uint8_t* buf = bp.malloc();
+#ifndef NETONLY
+    boost::uint8_t* file_buf = bp.malloc();
+#endif
 
+#ifndef NETONLY
+    int payload_length;
+    boost::uint8_t* payload_ptr;
     while (bytes_left > 0) {
       // Get next packet.
-      if (ring.get_next_packet(&hdr, buf + bytes_read, snaplen) > 0) {
-	bytes_read += hdr.len;
-	bytes_left -= hdr.len;
-	
+#endif
+      if (ring.get_next_packet(&hdr, net_buf, snaplen) > 0) {
+	// Successful read.
+
+	// Extract offsets etc. from pfring structures.
+	struct pfring_extended_pkthdr& pep(hdr.extended_hdr);
+	struct pkt_parsing_info& ppi(pep.parsed_pkt);
+	struct pkt_offset po(ppi.offset);
+	const boost::uint16_t eth_offset(po.eth_offset);
+	const boost::uint16_t l3_offset(po.l3_offset);
+	const boost::uint16_t l4_offset(po.l4_offset);
+	const boost::uint16_t payload_offset(po.payload_offset);
+
+	// Get payload information.
+	payload_ptr = &net_buf[payload_offset];
+	payload_length = hdr.caplen - payload_offset;
+
+	// Check for validity of capture.
+	if (hdr.caplen != snaplen) {
+	  LOG4CXX_ERROR(logger, "Short capture(caplen/snaplen): " << hdr.caplen << "/" << snaplen);
+	  continue;
+	}
+
+	if (hdr.caplen != hdr.len) {
+	  LOG4CXX_ERROR(logger, "Short capture(caplen/snaplen): " << hdr.caplen << "/" << hdr.len);
+	  continue;
+	}
+
+	if (payload_length != PAYLOAD_LENGTH) {
+	  LOG4CXX_ERROR(logger, "Short capture (caplen/PAYLOAD_LENGTH): " << hdr.caplen << "/" << PAYLOAD_LENGTH);
+	  continue;
+	}
+
+	// #define DUMP
+#ifdef DUMP
+	cout << "Packet dump.\n";
+	cout << "caplen:         " << hdr.caplen << endl;
+	cout << "len:            " << hdr.len << endl;
+	cout << "parsed_hdr_len: " << pep.parsed_header_len << endl;
+	cout << "eth_offset:     " << eth_offset << endl;
+	cout << "l3_offset:      " << l3_offset << endl;
+	cout << "l4_offset:      " << l4_offset << endl;
+	cout << "payload_offset: " << payload_offset << endl;
+	cout << "payload_length: " << payload_length << endl;
+
+	const int dumplen(128);
+	for (int i=0; i<dumplen; i++) {
+	  printf("%02x ", (unsigned char)net_buf[i]);
+	  if ((i+1)%8 == 0)
+	    printf(" ");
+	  if ((i+1)%16 == 0)
+	    printf("\n");
+	}
+	printf("\n");
+#endif // DUMP	
 	// Update stats.
 	NUM_PACKETS++;
-	NUM_BYTES += hdr.len;
+	NUM_BYTES += hdr.caplen;
       } else {
 	LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
 		      << strerror(errno));
 	continue;
       }
-      
+
+#ifndef NETONLY
       // Accumulate or flush to data to disk.
-      if (bytes_left < snaplen) {
-	/* Pad out rest of buffer then write. */
-	memset(buf + bytes_read, 0, bytes_left);
-	fw->write(buf);
-	
-	/* Reset. */
-	bytes_left = BUFFER_SIZE;
-	bytes_read = 0;
+      if (bytes_left < PAYLOAD_LENGTH) {
+	// Pad out rest of buffer then write.
+	memset(file_buf + bytes_read, 0, bytes_left);
+	fw->write(file_buf);
 	break;
+      } else {
+	// Copy captured payload to file buffer.
+	memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
       }
+
+      // Update state variables.
+      bytes_read += hdr.caplen;
+      bytes_left -= hdr.caplen;
+
     } 
+#endif
   } 
   cout << "Exiting net2mem..." << endl;
 }
@@ -359,6 +429,29 @@ main (int argc, char* argv[]) {
   try {
     LOG4CXX_INFO(logger, "Creating PFR manager.");
 
+    // Set processor affinity.
+    pid_t pid;
+    const unsigned int cpu_setsize (sizeof(cpu_set_t));
+    cpu_set_t mask;
+
+    pid = 0;
+    int ret = sched_getaffinity(pid, cpu_setsize, &mask);
+    if (ret < 0)
+      LOG4CXX_ERROR(logger, "Unable to get process affinity.");
+
+    CPU_ZERO(&mask);
+    CPU_SET(1, &mask);
+    ret = sched_setaffinity(pid, cpu_setsize, &mask);
+    if (ret < 0)
+      LOG4CXX_ERROR(logger, "Unble to set process affinity.");
+
+    // ret = sched_getaffinity(pid, cpu_setsize, &mask);
+    // if (ret < 0)
+    // LOG4CXX_ERROR(logger, "Unable to get process affinity.");
+    
+
+    
+
     // Setup buffer pool.
     BufferPool& bp = BufferPool::instance();
     bp.reserve_pool(NUM_RING_BUFFERS, LOCAL_PAGES_PER_BUFFER);
@@ -374,7 +467,7 @@ main (int argc, char* argv[]) {
     // Startup mem2disk threads.
     for (int i=0; i<NUM_INTERFACES; i++) {
       const string capture_file(capture_files[i]);
-      const int WRITE_BLOCKS(64);
+      const int WRITE_BLOCKS(8);
       const int POLL_TIMEOUT(1);
       const int COMMAND_INTERVAL(1);
       FileWriter* fw = new FileWriter(BUFFER_SIZE,

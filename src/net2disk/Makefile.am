@@ -58,7 +58,7 @@ INCLUDES	= 	-I@top_srcdir@/src/net2disk \
 			-I@PFRING_ROOT@/userland/libpcap-1.1.1-ring \
 			-I@BOOST_INCDIR@
 
-AM_CXXFLAGS	= 	-O4
+AM_CXXFLAGS	= 	-g
 
 TESTS_ENVIRONMENT=	LD_LIBRARY_PATH=/usr/local/lib:/usr/lib64/boost
 TESTS		=	net2disktest
