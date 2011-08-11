@@ -24,11 +24,15 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/select.h>
-#include <unistd.h>
 #include <sys/resource.h>
 #include <sys/time.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 #include <signal.h>
 #include <sched.h>
+#include <unistd.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 // C++ includes.
 #include <iostream>
@@ -46,6 +50,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/algorithm/string.hpp> 
 
 // Local includes.
 #include <mark6.h>
@@ -57,6 +62,13 @@
 
 // Namespaces.
 namespace po = boost::program_options;
+
+//----------------------------------------------------------------------
+// Declarations
+//----------------------------------------------------------------------
+void banner();
+void main_cli(const vector<pid_t>& child_pids, const vector<int>& child_fds);
+void child_cli(const int parent_fd);
 
 //----------------------------------------------------------------------
 // Constants
@@ -150,7 +162,7 @@ print_stats() {
 
   if (interval % PAGE_LENGTH == 0) {
     std::cout
-      << "+------------------------------------------------------------------------------+" << endl
+      << HLINE
       << "|"
       << setw(10) << "time" << " "
       << setw(10) << "pkt rate" << " "
@@ -171,7 +183,7 @@ print_stats() {
       << setw(10) << "(lifetime)"   << " "
       << setw(10) << "(average)"  << " "
       << "|\n"
-      << "+------------------------------------------------------------------------------+"
+      << HLINE
       << endl;
   }
   ++interval;
@@ -207,9 +219,17 @@ sigproc(int sig) {
 
   if (called)
     return;
-  else called = 1;
+  else
+    called = 1;
 
   RUNNING = false;
+
+  // Join threads.
+  BOOST_FOREACH(NetReader* nr, NET_READERS)
+    nr->cmd_stop();
+  
+  BOOST_FOREACH(FileWriter *fw, FILE_WRITERS)
+    fw->cmd_stop();
 }
 
 //----------------------------------------------------------------------
@@ -225,7 +245,7 @@ main (int argc, char* argv[]) {
   int time;
   vector<string> interfaces;
   vector<string> capture_files;
-  int smp_affinity;
+  vector<int> smp_affinities;
   int ring_buffers;
   int write_blocks;
 
@@ -246,8 +266,8 @@ main (int argc, char* argv[]) {
      "list of interfaces from which to capture data")
     ("capture_files", po::value< vector<string> >(&capture_files)->multitoken(),
      "list of capture files")
-    ("smp_affinity", po::value<int>(&smp_affinity)->default_value(DEFAULT_SMP_AFFINITY),
-     "smp processor affinity")
+    ("smp_affinities", po::value< vector<int> >(&smp_affinities)->multitoken(),
+     "smp processor affinities")
     ("ring_buffers", po::value<int>(&ring_buffers)->default_value(DEFAULT_RING_BUFFERS),
      "total number of ring buffers")
     ("write_blocks", po::value<int>(&write_blocks)->default_value(DEFAULT_WRITE_BLOCKS),
@@ -281,17 +301,7 @@ main (int argc, char* argv[]) {
     return 1;
   }
 
-  cout
-    << "+------------------------------------------------------------------------------+\n"
-    << "|                                                                              |\n"
-    << "|                              Net2disk v0.1                                   |\n"
-    << "|                                                                              |\n"
-    << "|                                                                              |\n"
-    << "|                  Copyright 2011 MIT Haystack Observatory                     |\n"
-    << "|                            del@haystack.mit.edu                              |\n"
-    << "|                                                                              |\n"
-    << "+------------------------------------------------------------------------------+\n"
-    << endl << endl;
+  banner();
 
   cout << setw(20) << left << "interfaces:";
   BOOST_FOREACH(string s, interfaces)
@@ -303,108 +313,229 @@ main (int argc, char* argv[]) {
     cout << s << " ";
   cout << endl;
 
+  cout << setw(20) << left << "smp_affinities:";
+  BOOST_FOREACH(int s, smp_affinities)
+    cout << s << " ";
+  cout << endl;
+
   cout
     << setw(20) << left << "snaplen:" << snaplen << endl
     << setw(20) << left << "promiscuous:" << promiscuous << endl
     << setw(20) << left << "time:" << time << endl
     << setw(20) << left << "log_config:" << log_config << endl
-    << setw(20) << left << "smp_affinity:" << smp_affinity << endl
     << setw(20) << left << "ring_buffers:" << ring_buffers << endl
     << setw(20) << left << "write_blocks:" << write_blocks << endl;
 
-
-
-
-
-
-
-
-
-
   // Start processing.
+  vector<pid_t> child_pids;
+  vector<int> child_fds;
   try {
     LOG4CXX_INFO(logger, "Creating PFR manager.");
-
-    // Set processor affinity.
-    pid_t pid;
-    const unsigned int cpu_setsize (sizeof(cpu_set_t));
-    cpu_set_t mask;
-
-    pid = 0;
-    int ret = sched_getaffinity(pid, cpu_setsize, &mask);
-    if (ret < 0)
-      LOG4CXX_ERROR(logger, "Unable to get process affinity.");
-
-    CPU_ZERO(&mask);
-    CPU_SET(smp_affinity, &mask);
-    ret = sched_setaffinity(pid, cpu_setsize, &mask);
-    if (ret < 0)
-      LOG4CXX_ERROR(logger, "Unble to set process affinity.");
-
-    ret = sched_getaffinity(pid, cpu_setsize, &mask);
-    if (ret < 0)
-      LOG4CXX_ERROR(logger, "Unable to get process affinity.");
-    
-    // Setup buffer pool.
-    BufferPool* bp = BufferPool::instance();
-    bp->reserve_pool(ring_buffers, LOCAL_PAGES_PER_BUFFER);
-    const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
-
-    // Start statistics reporting.
-    signal(SIGALRM, handle_sigalarm);
-    alarm(STATS_SLEEP);
-
-    // Setup shutdown handler.
-    signal(SIGINT, sigproc);
 
     const int COMMAND_INTERVAL(1);
     const int POLL_TIMEOUT(1);
 
-    // Startup mem2disk threads.
+    pid_t pid;
     for (int i=0; i<NUM_INTERFACES; i++) {
-      FileWriter* fw = new FileWriter(BUFFER_SIZE,
-				      write_blocks,
-				      POLL_TIMEOUT,
+      int fd[2];
+      if (pipe(fd) < 0)
+	LOG4CXX_ERROR(logger, "Pipe error");
+
+      if ( (pid = fork()) < 0) {
+	LOG4CXX_ERROR(logger, "Unable to fork. Exiting.");
+      } else if (pid == 0) {
+	// Child. Do stuff then exit.
+
+	// Clean up pipe for receiving commands from parent. fd[0] will be read fd.
+	close(fd[1]);
+
+	// Setup shutdown handler.
+	signal(SIGINT, sigproc);
+
+	// Set SMP affinity.
+	const unsigned int cpu_setsize (sizeof(cpu_set_t));
+	cpu_set_t mask;
+	const pid_t mypid(0);
+	CPU_ZERO(&mask);
+	CPU_SET(smp_affinities[i], &mask);
+	if (sched_setaffinity(mypid, cpu_setsize, &mask) < 0)
+	  LOG4CXX_ERROR(logger, "Unble to set process affinity.");
+
+	// Setup buffer pool.
+	BufferPool* bp = BufferPool::instance();
+	bp->reserve_pool(ring_buffers, LOCAL_PAGES_PER_BUFFER);
+	const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
+
+	// Startup FileWriter threads.
+	FileWriter* fw = new FileWriter(BUFFER_SIZE,
+					write_blocks,
+					capture_files[i],
+					POLL_TIMEOUT,
+					COMMAND_INTERVAL);
+	FILE_WRITERS.push_back(fw);
+
+	// Startup NetReader threads.
+	NetReader* nr = new NetReader(i,
+				      interfaces[i],
+				      snaplen,
+				      PAYLOAD_LENGTH,
+				      BUFFER_SIZE,
+				      promiscuous,
+				      FILE_WRITERS[i],
 				      COMMAND_INTERVAL);
-      fw->open(capture_files[i]);
-      fw->start();
-      fw->cmd_write_to_disk();
-      FILE_WRITERS.push_back(fw);
+	NET_READERS.push_back(nr);
+
+	// Wait for threads to finish.
+	child_cli(fd[0]);
+	break;
+      } else {
+	// Parent.
+
+	// Clean up pipe for communicating with child. fd[1] will be write fd.
+	close(fd[0]);
+	child_fds.push_back(fd[0]);
+      }
     }
 
-    // Startup net2mem_threads.
-    for (int i=0; i<NUM_INTERFACES; i++) {
-      NetReader* nr = new NetReader(i,
-				    interfaces[i],
-				    snaplen,
-				    PAYLOAD_LENGTH,
-				    BUFFER_SIZE,
-				    promiscuous,
-				    FILE_WRITERS[i],
-				    COMMAND_INTERVAL);
-      nr->start();
-      nr->cmd_read_from_network();
-      NET_READERS.push_back(nr);
-    }
-    
-    // Join threads.
-    BOOST_FOREACH(NetReader* nr, NET_READERS) {
-      nr->cmd_stop();
-      nr->join();
-    }
-    LOG4CXX_INFO(logger, "Joined net2mem threads...");
-
-    BOOST_FOREACH(FileWriter *fw, FILE_WRITERS) {
-      fw->cmd_stop();
-      fw->join();
-    }
-    LOG4CXX_INFO(logger, "Joined mem2disk threads...");
-
+    // TODO: think about multi-thread data structures.. Useful or not.
+    // TODO: separate log files.
     // TODO clean up.
   } catch (std::exception& e) {
     cerr << e.what() << endl;
   }
 
+  main_cli(child_pids, child_fds);
+
   return 0;
 }
 
+void main_cli(const vector<pid_t>& child_pids, const vector<int>& child_fds) {
+  // Command line interpreter.
+  while (true) {
+    string line_read;
+    cout << "mark6>";
+    cin >> line_read;
+    trim(line_read);
+    if (line_read.size() == 0)
+      continue;
+
+    vector<string> results;
+    string cmd;
+    split(results, line_read, is_any_of(" \t"));
+    if (results.size() > 0) {
+      cmd = results[0];
+
+      if (cmd == "quit") {
+	exit(0);
+      } else if (cmd == "help") {
+	cout
+	  << endl
+	  << "This is the online help system." << endl
+	  << "The following commands are available:" << endl
+	  << setw(20) << " " << "start" << endl
+	  << setw(20) << " " << "stop" << endl
+	  << "Type 'help <command>' to see a description of that command." 
+	  << endl
+	  << endl;
+      } else if (cmd == "start") {
+	cout << "Received start()";
+	// Start statistics reporting.
+	signal(SIGALRM, handle_sigalarm);
+	alarm(STATS_SLEEP);
+
+	BOOST_FOREACH(int fd, child_fds)
+	  write(fd, "start\n", 6);
+
+      } else if (cmd == "stop") {
+	cout << "Received stop()";
+	BOOST_FOREACH(int fd, child_fds)
+	  write(fd, "stop\n", 5);
+
+	BOOST_FOREACH(pid_t p, child_pids) {
+	  waitpid(p, NULL, 0);
+	  cout << "PID: " << (int)p << " terminated..." << endl;
+	}
+      } else {
+	cout
+	  << endl
+	  << "Unknown command. Please try again or type 'help'"
+	  << endl
+	  << endl;
+      }
+    }
+  }
+}
+
+void child_cli(int parent_fd) {
+  FILE* parent_file = fdopen(parent_fd, "r");
+  if (parent_file == NULL) {
+    LOG4CXX_ERROR(logger, "Unable to create file stream.");
+    exit(1);
+  }
+    
+  int bytes_read;
+  size_t nbytes(256);
+  char* line_read;
+  while (true) {
+    line_read = (char*)malloc(nbytes+1);
+    bytes_read = getline(&line_read, &nbytes, parent_file);
+    if (bytes_read < 0) {
+      LOG4CXX_ERROR(logger, "Invalid read.");
+      free(line_read);
+    } else {
+      string s(line_read);
+      free (line_read);
+      vector<string> results;
+      string cmd;
+      split(results, s, is_any_of(" \t"));
+      if (results.size() == 0)
+	continue;
+      
+      cmd = results[0];
+      if (cmd == "start") {
+	cout << "Starting\n";
+	// BOOST_FOREACH(FileWriter* fw, FILE_WRITERS) {
+	// fw->open(capture_files[i]);
+	// fw->start();
+	// fw->cmd_write_to_disk();
+	// }
+	// BOOST_FOREACH(NetReader* nr, NET_READERS) {
+	// nr->start();
+	// nr->cmd_read_from_network();
+	// }
+      } else if (cmd == "stop") {
+	cout << "Stopping\n";
+	// BOOST_FOREACH(FileWriter* fw, FILE_WRITERS)
+	// fw->cmd_stop();
+	// BOOST_FOREACH(NetReader* nr, NET_READERS)
+	// fw->cmd_stop();
+      }
+    }
+  }
+
+  // Join threads.
+  // BOOST_FOREACH(NetReader* nr, NET_READERS)
+  //nr->join();
+  //LOG4CXX_INFO(logger, "Joined NetReader threads...");
+	
+  //BOOST_FOREACH(FileWriter *fw, FILE_WRITERS)
+  // fw->join();
+  // LOG4CXX_INFO(logger, "Joined FileWriter threads...");
+}
+
+
+void banner() {
+  cout
+    << HLINE
+    << endl
+    << "|                                                                              |\n"
+    << "|                              Net2disk v0.1                                   |\n"
+    << "|                                                                              |\n"
+    << "|                                                                              |\n"
+    << "|                  Copyright 2011 MIT Haystack Observatory                     |\n"
+    << "|                            del@haystack.mit.edu                              |\n"
+    << "|                                                                              |\n"
+    << HLINE
+    << endl
+    << endl;
+}

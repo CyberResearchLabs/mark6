@@ -96,4 +96,6 @@ struct ControlMessage {
 // typedef std::vector<boost::uint8_t> Buffer;
 // typedef boost::circular_buffer<Buffer*> CircularBuffer;
 
+#define HLINE "+------------------------------------------------------------------------------+"
+
 #endif /*MARK6_H_*/

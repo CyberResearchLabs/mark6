@@ -45,6 +45,7 @@ using namespace boost::filesystem;
 
 FileWriter::FileWriter(const boost::uint32_t write_block_size,
 		       const boost::uint32_t write_blocks,
+		       const string& capture_file,
 		       const boost::uint32_t poll_timeout,
 		       const double command_interval):
   // Initialize data members (in order).
@@ -57,7 +58,8 @@ FileWriter::FileWriter(const boost::uint32_t write_block_size,
   _running (false),
   _state (IDLE),
   _thread(),
-  _cbuf_mutex()
+  _cbuf_mutex(),
+  _capture_file(capture_file)
 {
   // Reserve space in file descriptor vector.
   struct pollfd pfd;
@@ -146,20 +148,22 @@ void FileWriter::join()
   _thread.join();
 }
 
-int FileWriter::open(const std::string file_name)
+int FileWriter::open()
 {
-  LOG4CXX_INFO(logger, "Opening FileWriter file: " << file_name);
+  LOG4CXX_INFO(logger, "Opening FileWriter file: " << _capture_file);
 
   // Open files for each path.
   int ret=0;
-  _pfd.fd = ::open(file_name.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
+  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT
+		   | O_DIRECT, S_IRWXU);
   if (_pfd.fd<0) {
-    LOG4CXX_ERROR(logger, "Unable to open file: " << file_name << " - " 
-		  << strerror(errno));
+    LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
+		  << " - " << strerror(errno));
     _pfd.fd = -1;
     ret = -1;
   } else {
-    LOG4CXX_DEBUG(logger, "File: " << file_name << " fd: " << _pfd.fd);
+    LOG4CXX_DEBUG(logger, "File: " << _capture_file << " fd: "
+		  << _pfd.fd);
     _pfd.events = POLLOUT;
   }
 

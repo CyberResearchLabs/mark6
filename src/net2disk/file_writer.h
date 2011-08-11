@@ -90,10 +90,14 @@ class FileWriter: public Threaded {
   boost::mutex _cbuf_mutex;
   /**@}**/
 
+  /** File name */
+  const string _capture_file;
+
  public:
   /** Constructor. */
   FileWriter(const boost::uint32_t write_block_size,
 	     const boost::uint32_t write_blocks,
+	     const string& capture_file,
 	     const boost::uint32_t poll_timeout,
 	     const double command_interval);
   
@@ -113,7 +117,7 @@ class FileWriter: public Threaded {
   /** @name FileOperations */
   /**@{*/
   /** Open file descriptors. */
-  int open(const std::string);
+  int open();
 
   /** Close all file descriptors. */
   int close();

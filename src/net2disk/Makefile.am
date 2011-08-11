@@ -4,6 +4,7 @@ check_PROGRAMS	=	net2disktest
 net2disk_SOURCES= 	main.cc
 net2disk_LDADD	= 	-L. \
 			-lnet2disk \
+			-lreadline \
 			-L@BOOST_LIBDIR@ \
 			-lboost_program_options-mt \
 			-lboost_system-mt \
