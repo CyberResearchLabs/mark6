@@ -34,7 +34,7 @@ class BufferPool {
 
  public:
   // This is how clients can access the single instance
-  static BufferPool& instance(); 
+  static BufferPool* instance(); 
   void reserve_pool(const int buffer_pool_size, const int pages_per_buffer);
   void release_pool();
   boost::uint8_t* malloc();

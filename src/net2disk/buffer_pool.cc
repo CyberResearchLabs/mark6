@@ -26,11 +26,11 @@ BufferPool::~BufferPool() {
   delete [] _buffers;
 }
 
-BufferPool& BufferPool::instance() {
+BufferPool* BufferPool::instance() {
   if (_inst == 0) {
     _inst = new BufferPool();
   }
-  return *_inst; 
+  return _inst; 
 }
 
 bool BufferPool::push(boost::uint8_t* b) {

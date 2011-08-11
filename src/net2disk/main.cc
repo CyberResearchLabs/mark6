@@ -226,7 +226,7 @@ net2mem(const int id, const string interface, const int snaplen,
     return;
   }
 
-  BufferPool& bp(BufferPool::instance());
+  BufferPool* bp(BufferPool::instance());
   
   // Capture packets.
   char stats[32];
@@ -234,7 +234,7 @@ net2mem(const int id, const string interface, const int snaplen,
   boost::uint8_t net_buf[MAX_SNAPLEN];
 
 #ifdef NETONLY
-  boost::uint8_t* file_buf = bp.malloc();
+  boost::uint8_t* file_buf = bp->malloc();
 #endif
 
   while (RUNNING) {
@@ -245,7 +245,7 @@ net2mem(const int id, const string interface, const int snaplen,
     int bytes_read = 0;
 
 #ifndef NETONLY
-    boost::uint8_t* file_buf = bp.malloc();
+    boost::uint8_t* file_buf = bp->malloc();
 #endif
 
     int payload_length;
@@ -441,6 +441,15 @@ main (int argc, char* argv[]) {
     << setw(20) << left << "ring_buffers:" << ring_buffers << endl
     << setw(20) << left << "write_blocks:" << write_blocks << endl;
 
+
+
+
+
+
+
+
+
+
   // Start processing.
   try {
     LOG4CXX_INFO(logger, "Creating PFR manager.");
@@ -466,8 +475,8 @@ main (int argc, char* argv[]) {
       LOG4CXX_ERROR(logger, "Unable to get process affinity.");
     
     // Setup buffer pool.
-    BufferPool& bp = BufferPool::instance();
-    bp.reserve_pool(ring_buffers, LOCAL_PAGES_PER_BUFFER);
+    BufferPool* bp = BufferPool::instance();
+    bp->reserve_pool(ring_buffers, LOCAL_PAGES_PER_BUFFER);
     const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
 
     // Start statistics reporting.

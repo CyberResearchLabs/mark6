@@ -224,5 +224,5 @@ void FileWriter::write_block(const int fd)
       LOG4CXX_ERROR(logger, "Write error: " << strerror(errno));
     }
   }
-  BufferPool::instance().free(buf);
+  BufferPool::instance()->free(buf);
 }

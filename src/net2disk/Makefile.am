@@ -16,6 +16,8 @@ net2disk_LDADD	= 	-L. \
 net2disktest_SOURCES=	test_main.cc \
 			buffer_pool.h \
 			buffer_pool.cc \
+			net_reader.h \
+			net_reader.cc \
 			file_writer.h \
 			file_writer.cc \
 			test_buffer_pool.h \
@@ -41,14 +43,16 @@ net2disktest_LDADD= 	-L. \
 noinst_LIBRARIES=	libnet2disk.a
 
 libnet2disk_a_SOURCES	= \
-			pfr.cc \
 			pfr.h \
-			buffer_pool.cc \
+			pfr.cc \
 			buffer_pool.h \
-			file_writer.cc \
+			buffer_pool.cc \
+			net_reader.h \
+			net_reader.cc \
 			file_writer.h \
-			logger.cc \
-			logger.h
+			file_writer.cc \
+			logger.h \
+			logger.cc
 
 INCLUDES	= 	-I@top_srcdir@/src/net2disk \
 			-I/usr/include \
