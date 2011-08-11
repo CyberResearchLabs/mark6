@@ -31,10 +31,10 @@
 #include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
 #include <boost/thread/thread.hpp>
-#include <boost/thread/thread.hpp>
 
 // Local includes
 #include <mark6.h>
+#include <threaded.h>
 
 // TODO: remove globals.
 extern long long NUM_PACKETS;
@@ -47,7 +47,7 @@ class BufferPool;
 /**
  * Manages high speed writing of data to file.
  */
-class NetReader {
+class NetReader: public Threaded {
  private:
   const int _id;
   const string _interface;
@@ -83,15 +83,15 @@ class NetReader {
   /** Constructor. */
   ~NetReader();
 
-  void start();
-  void join();
+  virtual void start();
+  virtual void join();
 
-  void cmd_stop();
+  virtual void cmd_stop();
   void cmd_read_from_network();
 
- private:
+ protected:
   /** Main processing loop. */
-  void run();
+  virtual void run();
 };
 
 #endif // _NETREADER_H_

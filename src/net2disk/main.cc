@@ -53,6 +53,7 @@
 #include <pfr.h>
 #include <buffer_pool.h>
 #include <file_writer.h>
+#include <net_reader.h>
 
 // Namespaces.
 namespace po = boost::program_options;
@@ -89,6 +90,7 @@ const int RING_BUFFER_TIMEOUT(10);
 int LOCAL_PAGE_SIZE(0);
 int BUFFER_SIZE(0);
 std::vector<FileWriter*> FILE_WRITERS;
+std::vector<NetReader*> NET_READERS;
 
 
 // Used by to control threads.
@@ -208,137 +210,6 @@ sigproc(int sig) {
   else called = 1;
 
   RUNNING = false;
-}
-
-void
-net2mem(const int id, const string interface, const int snaplen,
-	const bool promiscuous, const int buffer_size, FileWriter* fw) {
-  LOG4CXX_INFO(logger, "Starting net2mem thread " << id);
-  LOG4CXX_INFO(logger, "  interface: " << interface);
-  LOG4CXX_INFO(logger, "  snaplen:   " << snaplen);
-
-  PFR ring(interface.c_str(), snaplen, promiscuous);
-  if (ring.get_pcap()) {
-    LOG4CXX_INFO(logger, "Successfully opened device: " << interface);
-  } else {
-    LOG4CXX_ERROR(logger, "Problems opening device: " << interface << " - "
-		  << ring.get_last_error());
-    return;
-  }
-
-  BufferPool* bp(BufferPool::instance());
-  
-  // Capture packets.
-  char stats[32];
-  // #define NETONLY
-  boost::uint8_t net_buf[MAX_SNAPLEN];
-
-#ifdef NETONLY
-  boost::uint8_t* file_buf = bp->malloc();
-#endif
-
-  while (RUNNING) {
-    struct pfring_pkthdr hdr;
-    struct simple_stats *the_stats = (struct simple_stats*)stats;
-    
-    int bytes_left = buffer_size;
-    int bytes_read = 0;
-
-#ifndef NETONLY
-    boost::uint8_t* file_buf = bp->malloc();
-#endif
-
-    int payload_length;
-    boost::uint8_t* payload_ptr;
-
-#ifndef NETONLY
-    while (bytes_left > 0) {
-      // Get next packet.
-#endif
-      if (ring.get_next_packet(&hdr, net_buf, snaplen) > 0) {
-	// Successful read.
-
-	// Extract offsets etc. from pfring structures.
-	struct pfring_extended_pkthdr& pep(hdr.extended_hdr);
-	struct pkt_parsing_info& ppi(pep.parsed_pkt);
-	struct pkt_offset po(ppi.offset);
-	const boost::uint16_t eth_offset(po.eth_offset);
-	const boost::uint16_t l3_offset(po.l3_offset);
-	const boost::uint16_t l4_offset(po.l4_offset);
-	const boost::uint16_t payload_offset(po.payload_offset);
-
-	// Get payload information.
-	payload_ptr = &net_buf[payload_offset];
-	payload_length = hdr.caplen - payload_offset;
-
-	// Check for validity of capture.
-	if (hdr.caplen != snaplen) {
-	  LOG4CXX_ERROR(logger, "Short capture(caplen/snaplen): " << hdr.caplen << "/" << snaplen);
-	  continue;
-	}
-
-	if (hdr.caplen != hdr.len) {
-	  LOG4CXX_ERROR(logger, "Short capture(caplen/snaplen): " << hdr.caplen << "/" << hdr.len);
-	  continue;
-	}
-
-	if (payload_length != PAYLOAD_LENGTH) {
-	  LOG4CXX_ERROR(logger, "Short capture (caplen/PAYLOAD_LENGTH): " << hdr.caplen << "/" << PAYLOAD_LENGTH);
-	  continue;
-	}
-
-	// #define DUMP
-#ifdef DUMP
-	cout << "Packet dump.\n";
-	cout << "caplen:         " << hdr.caplen << endl;
-	cout << "len:            " << hdr.len << endl;
-	cout << "parsed_hdr_len: " << pep.parsed_header_len << endl;
-	cout << "eth_offset:     " << eth_offset << endl;
-	cout << "l3_offset:      " << l3_offset << endl;
-	cout << "l4_offset:      " << l4_offset << endl;
-	cout << "payload_offset: " << payload_offset << endl;
-	cout << "payload_length: " << payload_length << endl;
-
-	const int dumplen(128);
-	for (int i=0; i<dumplen; i++) {
-	  printf("%02x ", (unsigned char)net_buf[i]);
-	  if ((i+1)%8 == 0)
-	    printf(" ");
-	  if ((i+1)%16 == 0)
-	    printf("\n");
-	}
-	printf("\n");
-#endif // DUMP	
-
-	// Update stats.
-	NUM_PACKETS++;
-	NUM_BYTES += hdr.caplen;
-      } else {
-	LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
-		      << strerror(errno));
-	continue;
-      }
-
-#ifndef NETONLY
-      // Accumulate or flush data to disk.
-      if (bytes_left < PAYLOAD_LENGTH) {
-	// Pad out rest of buffer then write.
-	memset(&file_buf[bytes_read], 0, bytes_left);
-	fw->write(file_buf);
-	break;
-      } else {
-	// Copy captured payload to file buffer.
-	memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
-      }
-
-      // Update state variables.
-      bytes_read += hdr.caplen;
-      bytes_left -= hdr.caplen;
-
-    } 
-#endif
-  } 
-  cout << "Exiting net2mem..." << endl;
 }
 
 //----------------------------------------------------------------------
@@ -486,40 +357,50 @@ main (int argc, char* argv[]) {
     // Setup shutdown handler.
     signal(SIGINT, sigproc);
 
+    const int COMMAND_INTERVAL(1);
+    const int POLL_TIMEOUT(1);
+
     // Startup mem2disk threads.
     for (int i=0; i<NUM_INTERFACES; i++) {
-      const string capture_file(capture_files[i]);
-      const int POLL_TIMEOUT(1);
-      const int COMMAND_INTERVAL(1);
       FileWriter* fw = new FileWriter(BUFFER_SIZE,
 				      write_blocks,
 				      POLL_TIMEOUT,
 				      COMMAND_INTERVAL);
-      fw->open(capture_file);
+      fw->open(capture_files[i]);
       fw->start();
       fw->cmd_write_to_disk();
       FILE_WRITERS.push_back(fw);
     }
 
     // Startup net2mem_threads.
-    boost::ptr_list<boost::thread> net2mem_threads;
     for (int i=0; i<NUM_INTERFACES; i++) {
-      net2mem_threads.push_front(new boost::thread(net2mem, i, interfaces[i], snaplen,
-						   promiscuous, BUFFER_SIZE,
-						   FILE_WRITERS[i]));
+      NetReader* nr = new NetReader(i,
+				    interfaces[i],
+				    snaplen,
+				    PAYLOAD_LENGTH,
+				    BUFFER_SIZE,
+				    promiscuous,
+				    FILE_WRITERS[i],
+				    COMMAND_INTERVAL);
+      nr->start();
+      nr->cmd_read_from_network();
+      NET_READERS.push_back(nr);
     }
     
     // Join threads.
-    BOOST_FOREACH(boost::thread& t, net2mem_threads)
-      t.join();
+    BOOST_FOREACH(NetReader* nr, NET_READERS) {
+      nr->cmd_stop();
+      nr->join();
+    }
     LOG4CXX_INFO(logger, "Joined net2mem threads...");
 
     BOOST_FOREACH(FileWriter *fw, FILE_WRITERS) {
       fw->cmd_stop();
       fw->join();
     }
-    
     LOG4CXX_INFO(logger, "Joined mem2disk threads...");
+
+    // TODO clean up.
   } catch (std::exception& e) {
     cerr << e.what() << endl;
   }

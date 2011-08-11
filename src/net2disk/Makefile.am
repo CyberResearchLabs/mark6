@@ -23,7 +23,8 @@ net2disktest_SOURCES=	test_main.cc \
 			test_buffer_pool.h \
 			test_buffer_pool.cc \
 			test_file_writer.h \
-			test_file_writer.cc
+			test_file_writer.cc \
+			threaded.h
 
 net2disktest_LDADD= 	-L. \
 			-lnet2disk \
@@ -35,10 +36,6 @@ net2disktest_LDADD= 	-L. \
 			-lpthread \
 			@PFRING_ROOT@/userland/libpcap-1.1.1-ring/libpcap.a \
 			@PFRING_ROOT@/userland/lib/libpfring.a
-
-
-
-
 
 noinst_LIBRARIES=	libnet2disk.a
 
@@ -52,7 +49,8 @@ libnet2disk_a_SOURCES	= \
 			file_writer.h \
 			file_writer.cc \
 			logger.h \
-			logger.cc
+			logger.cc \
+			threaded.h
 
 INCLUDES	= 	-I@top_srcdir@/src/net2disk \
 			-I/usr/include \

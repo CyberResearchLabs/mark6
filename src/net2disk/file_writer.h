@@ -30,21 +30,20 @@
 #include <vector>
 
 // Framework includes.
-#include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
 #include <boost/thread/thread.hpp>
 #include <boost/circular_buffer.hpp>
-#include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
 // Local includes
 #include <mark6.h>
+#include <threaded.h>
 #include <buffer_pool.h>
 
 /**
  * Manages high speed writing of data to file.
  */
-class FileWriter {
+class FileWriter: public Threaded {
  private:
   /** @name Configuration.
    * Configuration options.
@@ -104,10 +103,10 @@ class FileWriter {
   /** @name ThreadOperations */
   /**@{*/
   /** Start main processing loop in a separate thread. */
-  void start();
+  virtual void start();
   
   /** Wait for thread to exit. */
-  void join();
+  virtual void join();
   /**@}*/
 
 
@@ -127,14 +126,14 @@ class FileWriter {
   bool write(boost::uint8_t* buf);
 
   /** Send stop command. */
-  void cmd_stop();
+  virtual void cmd_stop();
 
   /** Send write to disk command. */
   void cmd_write_to_disk();
 
- private:
+ protected:
   /** Main processing loop. */
-  void run();
+  virtual void run();
 
   /** Write a single block to disk. */
   void write_block(const int fd);
