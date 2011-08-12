@@ -254,7 +254,7 @@ main (int argc, char* argv[]) {
   std::vector<pid_t> child_pids;
   std::vector<int> child_fds;
   try {
-    LOG4CXX_INFO(logger, "Creating PFR manager.");
+    LOG4CXX_DEBUG(logger, "Starting.");
 
     const int COMMAND_INTERVAL(1);
     const int STATS_INTERVAL(1);
@@ -273,7 +273,7 @@ main (int argc, char* argv[]) {
 	exit(1);
       } else if (pid == 0) {
 	// Child. Do stuff then exit.
-	LOG4CXX_INFO(logger, "Forked child: " << i);
+	LOG4CXX_DEBUG(logger, "Forked child: " << i);
 
 	// Clean pipe for receiving commands from parent. fd[0] will be
 	// read fd.
@@ -330,7 +330,7 @@ main (int argc, char* argv[]) {
 	break;
       } else {
 	// Parent.
-	LOG4CXX_INFO(logger, "Parent still here after fork.");
+	LOG4CXX_DEBUG(logger, "Parent still here after fork.");
 
 	// Clean up pipe for communicating with child. fd[1] will be write fd.
 	close(fd[0]);
@@ -349,16 +349,22 @@ main (int argc, char* argv[]) {
 void main_cli(const std::vector<pid_t>& child_pids,
 	      const std::vector<int>& child_fds) {
   // Command line interpreter.
-  while (true) {
-    std::string line_read;
-    std::cout << "mark6>";
-    if (!std::cin.good())
-      break;
+  const int nbytes(256);
+  char line[nbytes];
 
-    std::cin >> line_read;
+  while (true) {
+    std::cout << "mark6>";
+    if (!std::cin.good()) {
+      LOG4CXX_ERROR(logger, "CLI input stream closed. Exiting...");
+      break;
+    }
+
+    std::cin.getline(line, nbytes);
+    std::string line_read(line);
     trim(line_read);
-    if (line_read.size() == 0)
+    if (line_read.size() == 0) {
       continue;
+    }
 
     std::vector<std::string> results;
     std::string cmd;
@@ -366,9 +372,9 @@ void main_cli(const std::vector<pid_t>& child_pids,
     if (results.size() > 0) {
       cmd = results[0];
 
-      if (cmd == "quit") {
+      if (cmd.compare("quit") == 0) {
 	exit(0);
-      } else if (cmd == "help") {
+      } else if (cmd.compare("help") == 0) {
 	std::cout
 	  << std::endl
 	  << "This is the online help system." << std::endl
@@ -378,11 +384,11 @@ void main_cli(const std::vector<pid_t>& child_pids,
 	  << "Type 'help <command>' to see a description of that command." 
 	  << std::endl
 	  << std::endl;
-      } else if (cmd == "start") {
+      } else if (cmd.compare("start") == 0) {
 	std::cout << "Received start()";
 	BOOST_FOREACH(int fd, child_fds)
 	  write(fd, "start\n", 6);
-      } else if (cmd == "stop") {
+      } else if (cmd.compare("stop") == 0) {
 	std::cout << "Received stop()";
 	BOOST_FOREACH(int fd, child_fds)
 	  write(fd, "stop\n", 5);
@@ -403,7 +409,7 @@ void main_cli(const std::vector<pid_t>& child_pids,
 }
 
 void child_cli(int parent_fd) {
-  LOG4CXX_INFO(logger, "Started child_cli");
+  LOG4CXX_DEBUG(logger, "Started child_cli");
 
   FILE* parent_file = fdopen(parent_fd, "r");
   if (parent_file == NULL) {
