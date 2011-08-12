@@ -248,7 +248,8 @@ main (int argc, char* argv[]) {
     << std::setw(20) << std::left << "time:" << time << std::endl
     << std::setw(20) << std::left << "log_config:" << log_config << std::endl
     << std::setw(20) << std::left << "ring_buffers:" << ring_buffers << std::endl
-    << std::setw(20) << std::left << "write_blocks:" << write_blocks << std::endl;
+    << std::setw(20) << std::left << "write_blocks:" << write_blocks << std::endl
+    << std::setw(20) << std::left << "num_interfaces:" << NUM_INTERFACES << std::endl;
 
   // Start processing.
   std::vector<pid_t> child_pids;
@@ -386,8 +387,10 @@ void main_cli(const std::vector<pid_t>& child_pids,
 	  << std::endl;
       } else if (cmd.compare("start") == 0) {
 	std::cout << "Received start()";
-	BOOST_FOREACH(int fd, child_fds)
+	BOOST_FOREACH(int fd, child_fds) {
+	  LOG4CXX_DEBUG(logger, "Starting fd: " << fd);
 	  write(fd, "start\n", 6);
+	}
       } else if (cmd.compare("stop") == 0) {
 	std::cout << "Received stop()";
 	BOOST_FOREACH(int fd, child_fds)
