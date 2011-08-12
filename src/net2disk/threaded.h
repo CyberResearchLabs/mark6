@@ -50,9 +50,18 @@ class Threaded
     _thread()
       {}
   virtual ~Threaded() {}
+
+  // Start/stop thread.
   virtual void start() = 0;
   virtual void join() = 0;
+  
+  // Send stop command.
   virtual void cmd_stop() = 0;
+
+ protected:
+  virtual void handle_stop() = 0;
+  virtual void handle_idle() = 0;
+
  protected:
   virtual void run() = 0;
 };

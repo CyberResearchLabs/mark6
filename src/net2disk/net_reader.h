@@ -64,7 +64,6 @@ class NetReader: public Threaded {
   boost::thread _thread;
 
  public:
-  /** Constructor. */
   NetReader(const int id,
 	    const string interface,
 	    const int snaplen,
@@ -73,19 +72,24 @@ class NetReader: public Threaded {
 	    const bool promiscuous,
 	    FileWriter* const fw,
 	    const double command_interval);
-  
-  /** Constructor. */
   virtual ~NetReader();
 
   virtual void start();
   virtual void join();
 
+ protected:
+  virtual void run();
+ 
+ public:
+  // Commands.
   virtual void cmd_stop();
-  void cmd_read_from_network();
+  virtual void cmd_read_from_network();
 
  protected:
-  /** Main processing loop. */
-  virtual void run();
+  // Handlers.
+  virtual void handle_stop();
+  virtual void handle_idle();
+  virtual void handle_read_from_network();
 };
 
 #endif // _NETREADER_H_

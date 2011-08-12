@@ -57,8 +57,7 @@ FileWriter::FileWriter(const int id,
   _cbuf (_WRITE_BLOCKS),
   _state (IDLE),
   _cbuf_mutex(),
-  _capture_file(capture_file)
-{
+  _capture_file(capture_file) {
   // Reserve space in file descriptor vector.
   struct pollfd pfd;
   pfd.fd = -1;
@@ -68,14 +67,16 @@ FileWriter::~FileWriter() {
   close();
 }
 
-void FileWriter::start()
-{
+void FileWriter::start() {
   _running = true;
   _thread = boost::thread(&FileWriter::run, this);
 }
 
-void FileWriter::run()
-{
+void FileWriter::join() {
+  _thread.join();
+}
+
+void FileWriter::run() {
   LOG4CXX_INFO(logger, "FileWriter Running...");
 
   Timer run_timer;
@@ -87,46 +88,24 @@ void FileWriter::run()
 
       // State machine.
       switch (_state) {
-
       case WRITE_TO_DISK:
-	{
-	  if (command_timer.elapsed() > _command_interval) {
-	    command_timer.restart();
-	    continue;
-	  }
-#if 0
-	  // Poll file descriptor.
-	  int rv = poll(&_pfd, 1, _POLL_TIMEOUT);
-	  if (rv < 0) {
-	    LOG4CXX_ERROR(logger, "poll returns error: " << strerror(errno));
-	    continue;
-	  } else if (rv == 0) {
-	    LOG4CXX_DEBUG(logger, "poll returns 0");
-	    continue;
-	  }
-	
-	  // Scan file descriptor to see if it is ready for writing.
-	  if (_pfd.revents & POLLOUT) {
-#endif
-	    write_block(_pfd.fd);
-#if 0
-	  }
-#endif
+	if (command_timer.elapsed() > _command_interval) {
+	  command_timer.restart();
+	  continue;
 	}
+	handle_write_to_disk();
 	break;
 
       case IDLE:
-	{
-	  if (command_timer.elapsed() > _command_interval) {
-	    command_timer.restart();
-	    usleep(_command_interval*1000000);
-	    continue;
-	  }
+	if (command_timer.elapsed() > _command_interval) {
+	  command_timer.restart();
+	  continue;
 	}
+	handle_idle();
 	break;
 
       case STOP:
-	_running = false;
+	handle_stop();
 	break;
 
       default:
@@ -134,20 +113,53 @@ void FileWriter::run()
 	break;
       }
     }
-
     LOG4CXX_DEBUG(logger, "elapsed run time: " << run_timer.elapsed());
   } catch(std::exception &ex) {
     LOG4CXX_ERROR(logger, "error: " << ex.what());
   }
 }
 
-void FileWriter::join()
-{
-  _thread.join();
+void FileWriter::cmd_stop() {
+  LOG4CXX_INFO(logger, "Received STOP");
+  _state = STOP;
 }
 
-int FileWriter::open()
-{
+void FileWriter::cmd_write_to_disk() {
+  LOG4CXX_INFO(logger, "Received WRITE_TO_DISK");
+  _state = WRITE_TO_DISK;
+}
+
+void FileWriter::handle_stop() {
+  _running = false;
+}
+
+void FileWriter::handle_idle() {
+  usleep(_command_interval*1000000);
+}
+
+void FileWriter::handle_write_to_disk() {
+  // #define FILE_WRITER_POLL
+#ifdef FILE_WRITER_POLL
+  // Poll file descriptor.
+  int rv = poll(&_pfd, 1, _POLL_TIMEOUT);
+  if (rv < 0) {
+    LOG4CXX_ERROR(logger, "poll returns error: " << strerror(errno));
+    continue;
+  } else if (rv == 0) {
+    LOG4CXX_DEBUG(logger, "poll returns 0");
+    continue;
+  }
+	
+  // Scan file descriptor to see if it is ready for writing.
+  if (_pfd.revents & POLLOUT) {
+    write_block(_pfd.fd);
+  }
+#else
+  write_block(_pfd.fd);
+#endif
+}
+
+int FileWriter::open() {
   LOG4CXX_INFO(logger, "Opening FileWriter file: " << _capture_file);
 
   // Open files for each path.
@@ -171,8 +183,7 @@ int FileWriter::open()
   return ret;
 }
 
-int FileWriter::close()
-{
+int FileWriter::close() {
   if ( (_pfd.fd>0) && (::close(_pfd.fd)<0) ) {
     LOG4CXX_ERROR(logger, "Unable to close fd: " << _pfd.fd
 		  << " - " << strerror(errno));
@@ -181,30 +192,16 @@ int FileWriter::close()
   return 0;
 }
 
-bool FileWriter::write(boost::uint8_t* b)
-{
+bool FileWriter::write(boost::uint8_t* b) {
   boost::mutex::scoped_lock lock(_cbuf_mutex);
   if (_cbuf.full())
     return false;
 
   _cbuf.push_back(b);
-
   return true;
 }
 
-void FileWriter::cmd_stop() {
-  LOG4CXX_INFO(logger, "Received STOP");
-  _state = STOP;
-}
-
-void FileWriter::cmd_write_to_disk() {
-  LOG4CXX_INFO(logger, "Received WRITE_TO_DISK");
-  _state = WRITE_TO_DISK;
-}
-
-
-void FileWriter::write_block(const int fd)
-{
+void FileWriter::write_block(const int fd) {
   boost::uint8_t* buf;
   if (_cbuf.empty()) {
     return;

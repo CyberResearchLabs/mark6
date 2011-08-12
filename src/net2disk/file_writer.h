@@ -63,19 +63,32 @@ class FileWriter: public Threaded {
 	     const string& capture_file,
 	     const int poll_timeout,
 	     const double command_interval);
-  
   virtual ~FileWriter();
 
   virtual void start();
   virtual void join();
-  int open();
-  int close();
-  bool write(boost::uint8_t* buf);
+
+ protected:
+  virtual void run();
+
+ public:
+  // Comamnds.
   virtual void cmd_stop();
   void cmd_write_to_disk();
 
  protected:
-  virtual void run();
+  // Handlers
+  virtual void handle_stop();
+  virtual void handle_idle();
+  virtual void handle_write_to_disk();
+
+ public:
+  // Class specific public API.
+  int open();
+  int close();
+  bool write(boost::uint8_t* buf);
+
+ protected:
   void write_block(const int fd);
 };
 
