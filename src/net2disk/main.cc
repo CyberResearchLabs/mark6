@@ -21,7 +21,6 @@
  */
 
 // C includes.
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/select.h>
 #include <sys/resource.h>
@@ -31,25 +30,18 @@
 #include <signal.h>
 #include <sched.h>
 #include <unistd.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+// #include <readline/readline.h>
+// #include <readline/history.h>
 
 // C++ includes.
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <bitset>
-#include <sstream>
-#include <list>
-#include <deque>
 
 // Framework includes.
 #include <boost/foreach.hpp>
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-// #include <boost/thread/thread.hpp>
-// #include <boost/ptr_container/ptr_list.hpp>
-// #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/algorithm/string.hpp> 
 
 // Local includes.
@@ -95,9 +87,6 @@ const int PAYLOAD_LENGTH(DEFAULT_PAYLOAD_LENGTH);
 //----------------------------------------------------------------------
 // Global variables.
 //----------------------------------------------------------------------
-long long NUM_PACKETS(0);
-long long NUM_BYTES(0);
-
 const int LOCAL_PAGES_PER_BUFFER(256);
 const int RING_BUFFER_TIMEOUT(10);
 
@@ -108,11 +97,6 @@ FileWriter* FILE_WRITER(0);
 NetReader* NET_READER(0);
 StatsWriter* FILE_WRITER_STATS(0);
 StatsWriter* NET_READER_STATS(0);
-
-// Used by to control threads.
-bool RUNNING(true);
-
-const int NUM_THREADS(4);
 
 //----------------------------------------------------------------------
 // Utility functions.
@@ -135,8 +119,6 @@ sigproc(int sig) {
     return;
   else
     called = 1;
-
-  RUNNING = false;
 
   // Join threads.
   NET_READER->cmd_stop();
@@ -172,31 +154,47 @@ main (int argc, char* argv[]) {
   int ring_buffers;
   int write_blocks;
 
-  // Declare supported options.
+  // Declare supported options, defaults, and variable bindings.
   po::options_description desc("Allowed options");
   desc.add_options()
     ("help", "produce help message")
+
     ("v", "print version message")
-    ("snaplen", po::value<int>(&snaplen)->default_value(DEFAULT_SNAPLEN),
+
+    ("snaplen",
+     po::value<int>(&snaplen)->default_value(DEFAULT_SNAPLEN),
      "capture snap length")
-    ("promiscuous", po::value<bool>(&promiscuous)->default_value(DEFAULT_PROMISCUOUS),
+
+    ("promiscuous",
+     po::value<bool>(&promiscuous)->default_value(DEFAULT_PROMISCUOUS),
      "enable promiscuous mode")
-    ("time", po::value<int>(&time)->default_value(DEFAULT_TIME),
+
+    ("time",
+     po::value<int>(&time)->default_value(DEFAULT_TIME),
      "capture interval")
+
     ("log_config",
      po::value<std::string>(&log_config)->default_value(DEFAULT_LOG_CONFIG),
      "log configuration file")
+
     ("interfaces",
      po::value< std::vector<std::string> >(&interfaces)->multitoken(),
      "list of interfaces from which to capture data")
+
     ("capture_files",
      po::value< std::vector<std::string> >(&capture_files)->multitoken(),
      "list of capture files")
-    ("smp_affinities", po::value< std::vector<int> >(&smp_affinities)->multitoken(),
+
+    ("smp_affinities",
+     po::value< std::vector<int> >(&smp_affinities)->multitoken(),
      "smp processor affinities")
-    ("ring_buffers", po::value<int>(&ring_buffers)->default_value(DEFAULT_RING_BUFFERS),
+
+    ("ring_buffers",
+     po::value<int>(&ring_buffers)->default_value(DEFAULT_RING_BUFFERS),
      "total number of ring buffers")
-    ("write_blocks", po::value<int>(&write_blocks)->default_value(DEFAULT_WRITE_BLOCKS),
+
+    ("write_blocks",
+     po::value<int>(&write_blocks)->default_value(DEFAULT_WRITE_BLOCKS),
      "per thread number of write blocks")
     ;
 
@@ -265,15 +263,18 @@ main (int argc, char* argv[]) {
     pid_t pid;
     for (int i=0; i<NUM_INTERFACES; i++) {
       int fd[2];
-      if (pipe(fd) < 0)
+      if (pipe(fd) < 0) {
 	LOG4CXX_ERROR(logger, "Pipe error");
+	exit(1);
+      }
 
       if ( (pid = fork()) < 0) {
 	LOG4CXX_ERROR(logger, "Unable to fork. Exiting.");
+	exit(1);
       } else if (pid == 0) {
 	// Child. Do stuff then exit.
 
-	// Clean up pipe for receiving commands from parent. fd[0] will be
+	// Clean pipe for receiving commands from parent. fd[0] will be
 	// read fd.
 	close(fd[1]);
 
@@ -300,13 +301,12 @@ main (int argc, char* argv[]) {
 					    + std::string(".stats"),
 					    STATS_INTERVAL,
 					    COMMAND_INTERVAL);
-	StatsWriter * const FWS(FILE_WRITER_STATS);
 	FILE_WRITER = new FileWriter(i,
 				     BUFFER_SIZE,
 				     write_blocks,
 				     capture_files[i],
 				     POLL_TIMEOUT,
-				     FILE_WRITER_STATS,
+				     (StatsWriter* const)FILE_WRITER_STATS,
 				     COMMAND_INTERVAL);
 	FileWriter * const FW(FILE_WRITER);
 
@@ -316,15 +316,14 @@ main (int argc, char* argv[]) {
 					   + std::string(".stats"),
 					   STATS_INTERVAL,
 					   COMMAND_INTERVAL);
-	StatsWriter * const NRS(NET_READER_STATS);
 	NET_READER = new NetReader(i,
 				   interfaces[i],
 				   snaplen,
 				   PAYLOAD_LENGTH,
 				   BUFFER_SIZE,
 				   promiscuous,
-				   FW,
-				   NRS,
+				   (FileWriter* const)FILE_WRITER,
+				   (StatsWriter* const)NET_READER_STATS,
 				   COMMAND_INTERVAL);
 
 	// Wait for threads to finish.
