@@ -32,21 +32,20 @@
 #include <boost/foreach.hpp>
 #include <boost/circular_buffer.hpp>
 
-using namespace std;
 using namespace boost;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 
 // Convert CDR data/time to epoch.
-extern time_t date_time_to_epoch(const string& start_date,
-				 const string& start_time);
+extern time_t date_time_to_epoch(const std::string& start_date,
+				 const std::string& start_time);
 
 // Convenience class for keeping IP and port information together.
 struct IPEndpoint {
   std::string _ip_address;
   int _port;
 
-  friend ostream& operator<<(ostream& out, const IPEndpoint& ep) {
+  friend std::ostream& operator<<(std::ostream& out, const IPEndpoint& ep) {
     out
       << "IPEndpoint {\n"
       << "_ip_address:" << ep._ip_address << std::endl

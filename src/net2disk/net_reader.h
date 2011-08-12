@@ -36,11 +36,8 @@
 #include <mark6.h>
 #include <threaded.h>
 
-// TODO: remove globals.
-extern long long NUM_PACKETS;
-extern long long NUM_BYTES;
-
 class FileWriter;
+class StatsWriter;
 struct PFR;
 class BufferPool;
 
@@ -49,12 +46,13 @@ class BufferPool;
  */
 class NetReader: public Threaded {
  private:
-  const string _interface;
+  const std::string _interface;
   const int _snaplen;
   const int _payload_length;
   const int _buffer_size;
   const bool _promiscuous;
   FileWriter* const _fw;
+  StatsWriter* const _sw;
   PFR* _ring;
   BufferPool* _bp;
   boost::uint8_t* _net_buf;
@@ -63,12 +61,13 @@ class NetReader: public Threaded {
 
  public:
   NetReader(const int id,
-	    const string interface,
+	    const std::string interface,
 	    const int snaplen,
 	    const int payload_length,
 	    const int buffer_size,
 	    const bool promiscuous,
 	    FileWriter* const fw,
+	    StatsWriter* const sw,
 	    const double command_interval);
   virtual ~NetReader();
 

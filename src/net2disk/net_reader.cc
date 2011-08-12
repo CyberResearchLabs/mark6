@@ -38,14 +38,16 @@
 #include <buffer_pool.h>
 #include <file_writer.h>
 #include <net_reader.h>
+#include <stats_writer.h>
 
 NetReader::NetReader(const int id,
-		     const string interface,
+		     const std::string interface,
 		     const int snaplen,
 		     const int payload_length,
 		     const int buffer_size,
 		     const bool promiscuous,
 		     FileWriter* const fw,
+		     StatsWriter* const sw,
 		     const double command_interval):
   Threaded(id, command_interval),
   _interface(interface),
@@ -54,6 +56,7 @@ NetReader::NetReader(const int id,
   _buffer_size(buffer_size),
   _promiscuous(promiscuous),
   _fw(fw),
+  _sw(sw),
   _ring(0),
   _bp(0),
   _net_buf(0),
@@ -148,6 +151,8 @@ void NetReader::handle_read_from_network() {
   int bytes_left = _buffer_size;
   int bytes_read = 0;
   boost::uint8_t* file_buf = _bp->malloc();
+  boost::uint64_t num_packets = 0;
+  boost::uint64_t num_bytes = 0;
 
   // Fill the new file_buf;
   while (bytes_left > 0) {
@@ -203,9 +208,8 @@ void NetReader::handle_read_from_network() {
 #endif // DUMP	
 
       // Update stats.
-      // TODO
-      // NUM_PACKETS++;
-      // NUM_BYTES += hdr.caplen;
+      num_packets++;
+      num_bytes += hdr.caplen;
     } else {
       LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
 		    << strerror(errno));
@@ -217,6 +221,9 @@ void NetReader::handle_read_from_network() {
       // Pad out rest of buffer then write.
       memset(&file_buf[bytes_read], 0, bytes_left);
       _fw->write(file_buf);
+
+      // Update stats.
+      _sw->update(num_packets, num_bytes);
       break;
     } else {
       // Copy captured payload to file buffer.

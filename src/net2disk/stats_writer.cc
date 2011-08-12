@@ -42,13 +42,13 @@ const double DEFAULT_ALPHA = 0.5;
 const int DEFAULT_PAGE_LENGTH = 10;
 
 StatsWriter::StatsWriter(const int id,
-			 const string& stats_file,
+			 const std::string& stats_file,
 			 const int stats_interval,
 			 const double command_interval):
   Threaded(id, command_interval),
   _stats_file(stats_file),
   _stats_interval(stats_interval),
-  _fstream(stats_file.c_str(), fstream::out | fstream::trunc),
+  _stats_stream(stats_file.c_str(), std::fstream::out | std::fstream::trunc),
   _state(IDLE),
   _mutex(),
   _average_packet_rate(0),
@@ -63,7 +63,7 @@ StatsWriter::StatsWriter(const int id,
 }
 
 StatsWriter::~StatsWriter() {
-  _fstream.close();
+  _stats_stream.close();
 }
 
 void StatsWriter::start() {
@@ -175,43 +175,43 @@ void StatsWriter::handle_write_to_disk() {
     + _ALPHA*instant_byte_rate;
 
   if (_interval % _PAGE_LENGTH == 0) {
-    _fstream
+    _stats_stream
       << HLINE
       << "+"
-      << setw(10) << "time" << " "
-      << setw(10) << "pkt rate" << " "
-      << setw(10) << "pkt rate"   << " "
-      << setw(10) << "pkt rate"  << " "
+      << std::setw(10) << "time" << " "
+      << std::setw(10) << "pkt rate" << " "
+      << std::setw(10) << "pkt rate"   << " "
+      << std::setw(10) << "pkt rate"  << " "
       << "|"
-      << setw(10) << "mbps" << " "
-      << setw(10) << "mbps"   << " "
-      << setw(10) << "mbps"  << " "
+      << std::setw(10) << "mbps" << " "
+      << std::setw(10) << "mbps"   << " "
+      << std::setw(10) << "mbps"  << " "
       << "|\n"
       << "|"
-      << setw(10) << "(s)" << " "
-      << setw(10) << "(inst)" << " "
-      << setw(10) << "(lifetime)"   << " "
-      << setw(10) << "(average)"  << " "
+      << std::setw(10) << "(s)" << " "
+      << std::setw(10) << "(inst)" << " "
+      << std::setw(10) << "(lifetime)"   << " "
+      << std::setw(10) << "(average)"  << " "
       << "|"
-      << setw(10) << "(inst)" << " "
-      << setw(10) << "(lifetime)"   << " "
-      << setw(10) << "(average)"  << " "
+      << std::setw(10) << "(inst)" << " "
+      << std::setw(10) << "(lifetime)"   << " "
+      << std::setw(10) << "(average)"  << " "
       << "|\n"
       << HLINE
-      << endl;
+      << std::endl;
   }
   ++_interval;
 
-  _fstream
+  _stats_stream
     << "|"
-    << setw(10) << delta_seconds << " "
-    << setw(10) << instant_packet_rate << " "
-    << setw(10) << lifetime_packet_rate << " "
-    << setw(10) << _average_packet_rate << " "
+    << std::setw(10) << delta_seconds << " "
+    << std::setw(10) << instant_packet_rate << " "
+    << std::setw(10) << lifetime_packet_rate << " "
+    << std::setw(10) << _average_packet_rate << " "
     << "|"
-    << setw(10) << instant_byte_rate << " "
-    << setw(10) << lifetime_byte_rate << " "
-    << setw(10) << _average_byte_rate << " "
+    << std::setw(10) << instant_byte_rate << " "
+    << std::setw(10) << lifetime_byte_rate << " "
+    << std::setw(10) << _average_byte_rate << " "
     << "|\n";
   
   // Update state.

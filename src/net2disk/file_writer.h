@@ -40,6 +40,8 @@
 #include <threaded.h>
 #include <buffer_pool.h>
 
+class StatsWriter;
+
 /**
  * Manages high speed writing of data to file.
  */
@@ -53,14 +55,16 @@ class FileWriter: public Threaded {
   circular_buffer<boost::uint8_t*> _cbuf;
   volatile enum { IDLE, WRITE_TO_DISK, STOP } _state;
   boost::mutex _cbuf_mutex;
-  const string _capture_file;
+  const std::string _capture_file;
+  StatsWriter* const _sw;
   
  public:
   FileWriter(const int id,
 	     const int write_block_size,
 	     const int write_blocks,
-	     const string& capture_file,
+	     const std::string& capture_file,
 	     const int poll_timeout,
+	     StatsWriter * const sw,
 	     const double command_interval);
   virtual ~FileWriter();
 

@@ -39,6 +39,7 @@
 #include <mark6.h>
 #include <logger.h>
 #include <file_writer.h>
+#include <stats_writer.h>
 
 using namespace boost::filesystem;
 
@@ -46,15 +47,17 @@ using namespace boost::filesystem;
 FileWriter::FileWriter(const int id,
 		       const int write_block_size,
 		       const int  write_blocks,
-		       const string& capture_file,
+		       const std::string& capture_file,
 		       const int poll_timeout,
+		       StatsWriter* const sw,
 		       const double command_interval):
   Threaded(id, command_interval),
-  _WRITE_BLOCK_SIZE (write_block_size),
-  _WRITE_BLOCKS (write_blocks),
-  _POLL_TIMEOUT (poll_timeout),
+  _WRITE_BLOCK_SIZE(write_block_size),
+  _WRITE_BLOCKS(write_blocks),
+  _POLL_TIMEOUT(poll_timeout),
+  _sw(sw),
   _pfd(),
-  _cbuf (_WRITE_BLOCKS),
+  _cbuf(_WRITE_BLOCKS),
   _state (IDLE),
   _cbuf_mutex(),
   _capture_file(capture_file) {
@@ -224,4 +227,5 @@ void FileWriter::write_block(const int fd) {
     }
   }
   BufferPool::instance()->free(buf);
+  _sw->update(1, _WRITE_BLOCK_SIZE);
 }

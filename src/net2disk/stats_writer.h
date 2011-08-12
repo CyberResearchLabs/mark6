@@ -26,6 +26,9 @@
 // C includes.
 
 // C++ includes
+#undef max // Undef to fix broken macro collision with fstream
+#undef min // Undef to fix broken macro collision with fstream
+#include <iostream>
 #include <fstream>
 
 // Framework includes.
@@ -36,18 +39,16 @@
 #include <mark6.h>
 #include <threaded.h>
 
-/**
- * Manages high speed writing of data to file.
- */
+
 class StatsWriter: public Threaded {
  protected:
-  const string _stats_file;
+  const std::string _stats_file;
   const int _stats_interval;
 
   boost::uint64_t _num_packets;
   boost::uint64_t _num_bytes;
 
-  std::ofstream _fstream;
+  std::ofstream _stats_stream;
   volatile enum { IDLE, WRITE_TO_DISK, STOP } _state;
   boost::mutex _mutex;
 
@@ -63,7 +64,7 @@ class StatsWriter: public Threaded {
 
  public:
   StatsWriter(const int id,
-	      const string& stats_file,
+	      const std::string& stats_file,
 	      const int stats_interval,
 	      const double command_interval);
   virtual ~StatsWriter();
