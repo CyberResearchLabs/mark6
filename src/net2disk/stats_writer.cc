@@ -218,6 +218,8 @@ void StatsWriter::handle_write_to_disk() {
   gettimeofday(&_last_time, NULL);
   _last_num_packets = num_packets;
   _last_num_bytes = num_bytes;
+
+  sleep(_stats_interval);
 }
 
 void StatsWriter::update(const boost::uint64_t& packets,
