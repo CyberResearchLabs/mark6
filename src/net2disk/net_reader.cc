@@ -56,7 +56,8 @@ NetReader::NetReader(const int id,
   _fw(fw),
   _ring(0),
   _bp(0),
-  _net_buf(0) {
+  _net_buf(0),
+  _state(IDLE) {
   _ring = new PFR(interface.c_str(), snaplen, _promiscuous);
   _bp = BufferPool::instance();
   _net_buf = new boost::uint8_t[snaplen];

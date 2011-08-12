@@ -55,7 +55,6 @@ class FileWriter: public Threaded {
   boost::mutex _cbuf_mutex;
   const string _capture_file;
   
-
  public:
   FileWriter(const int id,
 	     const int write_block_size,

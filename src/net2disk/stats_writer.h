@@ -20,75 +20,76 @@
  * 
  */
 
-#ifndef _NETREADER_H_
-#define _NETREADER_H_
+#ifndef _STATSWRITER_H_
+#define _STATSWRITER_H_
 
 // C includes.
 
 // C++ includes
+#include <fstream>
 
 // Framework includes.
-#include <boost/crc.hpp>      // for boost::crc_basic, boost::crc_optimal
 #include <cstddef>    // for std::size_t
-#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 // Local includes
 #include <mark6.h>
 #include <threaded.h>
 
-// TODO: remove globals.
-extern long long NUM_PACKETS;
-extern long long NUM_BYTES;
-
-class FileWriter;
-struct PFR;
-class BufferPool;
-
 /**
  * Manages high speed writing of data to file.
  */
-class NetReader: public Threaded {
- private:
-  const string _interface;
-  const int _snaplen;
-  const int _payload_length;
-  const int _buffer_size;
-  const bool _promiscuous;
-  FileWriter* const _fw;
-  PFR* _ring;
-  BufferPool* _bp;
-  boost::uint8_t* _net_buf;
-  
-  volatile enum { IDLE, READ_FROM_NETWORK, STOP } _state;
+class StatsWriter: public Threaded {
+ protected:
+  const string _stats_file;
+  const int _stats_interval;
+
+  boost::uint64_t _num_packets;
+  boost::uint64_t _num_bytes;
+
+  std::ofstream _fstream;
+  volatile enum { IDLE, WRITE_TO_DISK, STOP } _state;
+  boost::mutex _mutex;
+
+  struct timeval _start_time, _last_time;
+  double _average_packet_rate;
+  double _average_byte_rate;
+  boost::uint64_t _last_num_packets;
+  boost::uint64_t _last_num_bytes;
+  long _interval;
+  const double _ALPHA;
+  const double _BPS_TO_MBPS;
+  const int _PAGE_LENGTH;
 
  public:
-  NetReader(const int id,
-	    const string interface,
-	    const int snaplen,
-	    const int payload_length,
-	    const int buffer_size,
-	    const bool promiscuous,
-	    FileWriter* const fw,
-	    const double command_interval);
-  virtual ~NetReader();
+  StatsWriter(const int id,
+	      const string& stats_file,
+	      const int stats_interval,
+	      const double command_interval);
+  virtual ~StatsWriter();
 
   virtual void start();
   virtual void join();
 
  protected:
   virtual void run();
- 
+
  public:
-  // Commands.
+  // Comamnds.
   virtual void cmd_stop();
-  virtual void cmd_read_from_network();
+  void cmd_write_to_disk();
 
  protected:
-  // Handlers.
+  // Handlers
   virtual void handle_stop();
   virtual void handle_idle();
-  virtual void handle_read_from_network();
+  virtual void handle_write_to_disk();
+
+ public:
+  // Class specific public API.
+  void update(const boost::uint64_t& packets,
+	      const boost::uint64_t& bytes);
 };
 
-#endif // _NETREADER_H_
+#endif // _STATSWRITER_H_
 
