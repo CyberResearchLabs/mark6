@@ -46,9 +46,9 @@ StatsWriter::StatsWriter(const int id,
 			 const int stats_interval,
 			 const double command_interval):
   Threaded(id, command_interval),
-  _stats_file(stats_file),
   _stats_interval(stats_interval),
-  _stats_stream(stats_file.c_str(), std::fstream::out | std::fstream::trunc),
+  _stats_stream(),
+  _csv_stream(),
   _state(IDLE),
   _mutex(),
   _average_packet_rate(0),
@@ -60,10 +60,18 @@ StatsWriter::StatsWriter(const int id,
   _BPS_TO_MBPS(8/1e6),
   _PAGE_LENGTH(10)
 {
+  const std::string stats_stream_name = stats_file + std::string(".sts");
+  _stats_stream.open(stats_stream_name.c_str(),
+		     std::fstream::out | std::fstream::trunc);
+
+  const std::string csv_stream_name = stats_file + std::string(".csv");
+  _csv_stream.open(csv_stream_name.c_str(),
+		   std::fstream::out | std::fstream::trunc);
 }
 
 StatsWriter::~StatsWriter() {
   _stats_stream.close();
+  _csv_stream.close();
 }
 
 void StatsWriter::start() {
@@ -177,7 +185,8 @@ void StatsWriter::handle_write_to_disk() {
   if (_interval % _PAGE_LENGTH == 0) {
     _stats_stream
       << HLINE
-      << "+"
+      << std::endl
+      << "|"
       << std::setw(10) << "time" << " "
       << std::setw(10) << "pkt rate" << " "
       << std::setw(10) << "pkt rate"   << " "
@@ -213,6 +222,16 @@ void StatsWriter::handle_write_to_disk() {
     << std::setw(10) << lifetime_byte_rate << " "
     << std::setw(10) << _average_byte_rate << " "
     << "|\n";
+  
+  _csv_stream
+    <<  delta_seconds << ","
+    <<  instant_packet_rate << ","
+    <<  lifetime_packet_rate << ","
+    <<  _average_packet_rate << ","
+    <<  instant_byte_rate << ","
+    <<  lifetime_byte_rate << ","
+    <<  _average_byte_rate
+    << std::endl;
   
   // Update state.
   gettimeofday(&_last_time, NULL);

@@ -42,13 +42,13 @@
 
 class StatsWriter: public Threaded {
  protected:
-  const std::string _stats_file;
   const int _stats_interval;
 
   boost::uint64_t _num_packets;
   boost::uint64_t _num_bytes;
 
   std::ofstream _stats_stream;
+  std::ofstream _csv_stream;
   volatile enum { IDLE, WRITE_TO_DISK, STOP } _state;
   boost::mutex _mutex;
 

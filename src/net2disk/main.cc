@@ -273,6 +273,7 @@ main (int argc, char* argv[]) {
 	exit(1);
       } else if (pid == 0) {
 	// Child. Do stuff then exit.
+	LOG4CXX_INFO(logger, "Forked child: " << i);
 
 	// Clean pipe for receiving commands from parent. fd[0] will be
 	// read fd.
@@ -297,8 +298,7 @@ main (int argc, char* argv[]) {
 
 	// Create FileWriter threads.
 	FILE_WRITER_STATS = new StatsWriter(i,
-					    std::string("fw_") + interfaces[i]
-					    + std::string(".stats"),
+					    std::string("fw_") + interfaces[i],
 					    STATS_INTERVAL,
 					    COMMAND_INTERVAL);
 	FILE_WRITER = new FileWriter(i,
@@ -312,8 +312,7 @@ main (int argc, char* argv[]) {
 
 	// Create NetReader threads.
 	NET_READER_STATS = new StatsWriter(i+1, // TODO: fix index.
-					   std::string("nr_") + interfaces[i]
-					   + std::string(".stats"),
+					   std::string("nr_") + interfaces[i],
 					   STATS_INTERVAL,
 					   COMMAND_INTERVAL);
 	NET_READER = new NetReader(i,
@@ -331,16 +330,13 @@ main (int argc, char* argv[]) {
 	break;
       } else {
 	// Parent.
+	LOG4CXX_INFO(logger, "Parent still here after fork.");
 
 	// Clean up pipe for communicating with child. fd[1] will be write fd.
 	close(fd[0]);
-	child_fds.push_back(fd[0]);
+	child_fds.push_back(fd[1]);
       }
     }
-
-    // TODO: think about multi-thread data structures.. Useful or not.
-    // TODO: separate log files.
-    // TODO clean up.
   } catch (std::exception& e) {
     std::cerr << e.what() << std::endl;
   }
@@ -356,6 +352,9 @@ void main_cli(const std::vector<pid_t>& child_pids,
   while (true) {
     std::string line_read;
     std::cout << "mark6>";
+    if (!std::cin.good())
+      break;
+
     std::cin >> line_read;
     trim(line_read);
     if (line_read.size() == 0)
@@ -404,6 +403,8 @@ void main_cli(const std::vector<pid_t>& child_pids,
 }
 
 void child_cli(int parent_fd) {
+  LOG4CXX_INFO(logger, "Started child_cli");
+
   FILE* parent_file = fdopen(parent_fd, "r");
   if (parent_file == NULL) {
     LOG4CXX_ERROR(logger, "Unable to create file stream.");
@@ -419,9 +420,11 @@ void child_cli(int parent_fd) {
     if (bytes_read < 0) {
       LOG4CXX_ERROR(logger, "Invalid read.");
       free(line_read);
+      break;
     } else {
       std::string s(line_read);
       free (line_read);
+      LOG4CXX_DEBUG(logger, "child_cli() received " << s);
       std::vector<std::string> results;
       std::string cmd;
       split(results, s, is_any_of(" \t"));
@@ -429,7 +432,10 @@ void child_cli(int parent_fd) {
 	continue;
       
       cmd = results[0];
-      if (cmd == "start") {
+      trim(cmd);
+      if (cmd.compare("start") == 0) {
+	LOG4CXX_DEBUG(logger, "child_cli() received start cmd");
+
 	std::cout << "Starting file writer stats...\n";
 	FILE_WRITER_STATS->start();
 	FILE_WRITER_STATS->cmd_write_to_disk();
@@ -450,7 +456,7 @@ void child_cli(int parent_fd) {
 	NET_READER->start();
 	NET_READER->cmd_read_from_network();
 	std::cout << "Started.\n";
-      } else if (cmd == "stop") {
+      } else if (cmd.compare("stop") == 0) {
 	NET_READER_STATS->cmd_stop();
 	NET_READER_STATS->join();
 	std::cout << "Stopped net reader stats.\n";

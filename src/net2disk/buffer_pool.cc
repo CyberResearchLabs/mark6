@@ -89,9 +89,7 @@ void BufferPool::reserve_pool(const int buffer_pool_size,
   const int page_size = getpagesize();
   const int buffer_size = page_size * pages_per_buffer;
 
-  std::cout << "page_size: " << page_size << std::endl;
   for (int i=0; i<buffer_pool_size; i++) {
-    std::cout << i << std::endl;
     void* buf;
     if (posix_memalign(&buf, page_size, buffer_size) != 0) {
       std::cerr << "Memalign failed\n";
