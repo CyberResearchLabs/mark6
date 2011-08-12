@@ -43,21 +43,19 @@
 using namespace boost::filesystem;
 
 
-FileWriter::FileWriter(const boost::uint32_t write_block_size,
-		       const boost::uint32_t write_blocks,
+FileWriter::FileWriter(const int id,
+		       const int write_block_size,
+		       const int  write_blocks,
 		       const string& capture_file,
-		       const boost::uint32_t poll_timeout,
+		       const int poll_timeout,
 		       const double command_interval):
-  // Initialize data members (in order).
+  Threaded(id, command_interval),
   _WRITE_BLOCK_SIZE (write_block_size),
   _WRITE_BLOCKS (write_blocks),
   _POLL_TIMEOUT (poll_timeout),
-  _COMMAND_INTERVAL (command_interval),
   _pfd(),
   _cbuf (_WRITE_BLOCKS),
-  _running (false),
   _state (IDLE),
-  _thread(),
   _cbuf_mutex(),
   _capture_file(capture_file)
 {
@@ -92,7 +90,7 @@ void FileWriter::run()
 
       case WRITE_TO_DISK:
 	{
-	  if (command_timer.elapsed() > _COMMAND_INTERVAL) {
+	  if (command_timer.elapsed() > _command_interval) {
 	    command_timer.restart();
 	    continue;
 	  }
@@ -119,9 +117,9 @@ void FileWriter::run()
 
       case IDLE:
 	{
-	  if (command_timer.elapsed() > _COMMAND_INTERVAL) {
+	  if (command_timer.elapsed() > _command_interval) {
 	    command_timer.restart();
-	    usleep(_COMMAND_INTERVAL*1000000);
+	    usleep(_command_interval*1000000);
 	    continue;
 	  }
 	}

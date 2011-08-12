@@ -47,14 +47,16 @@ NetReader::NetReader(const int id,
 		     const bool promiscuous,
 		     FileWriter* const fw,
 		     const double command_interval):
-  _id(id),
+  Threaded(id, command_interval),
   _interface(interface),
   _snaplen(snaplen),
   _payload_length(payload_length),
   _buffer_size(buffer_size),
   _promiscuous(promiscuous),
   _fw(fw),
-  _command_interval(command_interval)
+  _ring(0),
+  _bp(0),
+  _net_buf(0)
 {
   _ring = new PFR(interface.c_str(), snaplen, _promiscuous);
   _bp = BufferPool::instance();

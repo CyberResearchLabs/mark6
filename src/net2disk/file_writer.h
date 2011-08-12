@@ -44,102 +44,38 @@
  * Manages high speed writing of data to file.
  */
 class FileWriter: public Threaded {
- private:
-  /** @name Configuration.
-   * Configuration options.
-   */
-  /**@{**/
-  /** Size of individual blocks written to disk (e.g. 4096). */
-  boost::uint32_t _WRITE_BLOCK_SIZE;
- 
-  /** Total number of write blocks to buffer in circular buffer. */
-  boost::uint32_t _WRITE_BLOCKS;
+ protected:
+  const int _WRITE_BLOCK_SIZE;
+  const int _WRITE_BLOCKS;
+  const int _POLL_TIMEOUT;
 
-  /** Poll() timeout in seconds. */
-  boost::uint32_t _POLL_TIMEOUT;
-
-  /** Command message queue check interval in seconds. */
-  double _COMMAND_INTERVAL;
-  /**@}**/
-
-  /** @name FileStructures.
-   *  File data structures.
-   */
-  /**@{**/
-  /** File descriptor. Passed into poll() call. */
   struct pollfd _pfd;
-
-  /** Circular buffer for storing data to be written to disk. */
   circular_buffer<boost::uint8_t*> _cbuf;
-  /**@}**/
-
-  /** @name Threading.
-   *  Threading data.
-   */
-  /**@{**/
-  /** Flag checked in main processing loop to see whether or not to exit. */
-  bool _running;
-
-  /** State variable used in main processing loop. */
   volatile enum { IDLE, WRITE_TO_DISK, STOP } _state;
-
-  /** Thread object. */
-  boost::thread _thread;
-
-  /** Mutex that enables thread-safe access to _cbuf. */
   boost::mutex _cbuf_mutex;
-  /**@}**/
-
-  /** File name */
   const string _capture_file;
+  
 
  public:
-  /** Constructor. */
-  FileWriter(const boost::uint32_t write_block_size,
-	     const boost::uint32_t write_blocks,
+  FileWriter(const int id,
+	     const int write_block_size,
+	     const int write_blocks,
 	     const string& capture_file,
-	     const boost::uint32_t poll_timeout,
+	     const int poll_timeout,
 	     const double command_interval);
   
-  /** Constructor. */
-  ~FileWriter();
+  virtual ~FileWriter();
 
-  /** @name ThreadOperations */
-  /**@{*/
-  /** Start main processing loop in a separate thread. */
   virtual void start();
-  
-  /** Wait for thread to exit. */
   virtual void join();
-  /**@}*/
-
-
-  /** @name FileOperations */
-  /**@{*/
-  /** Open file descriptors. */
   int open();
-
-  /** Close all file descriptors. */
   int close();
-  /**@}*/
-
-
-  /** @name Public API */
-  /**@{*/
-  /** Add buffer to circular buffer. Note that caller owns the dealloc. */
   bool write(boost::uint8_t* buf);
-
-  /** Send stop command. */
   virtual void cmd_stop();
-
-  /** Send write to disk command. */
   void cmd_write_to_disk();
 
  protected:
-  /** Main processing loop. */
   virtual void run();
-
-  /** Write a single block to disk. */
   void write_block(const int fd);
 };
 

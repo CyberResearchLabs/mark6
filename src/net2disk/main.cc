@@ -367,7 +367,8 @@ main (int argc, char* argv[]) {
 	const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
 
 	// Startup FileWriter threads.
-	FileWriter* fw = new FileWriter(BUFFER_SIZE,
+	FileWriter* fw = new FileWriter(i,
+					BUFFER_SIZE,
 					write_blocks,
 					capture_files[i],
 					POLL_TIMEOUT,

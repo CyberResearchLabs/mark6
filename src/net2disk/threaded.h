@@ -35,7 +35,21 @@
 
 class Threaded
 {
+ protected:
+  const int _id;
+  const int _command_interval;
+  bool _running;
+  boost::thread _thread;
+
  public:
+ Threaded(const int id,
+	  const int command_interval):
+  _id(id),
+    _command_interval(command_interval),
+    _running(false),
+    _thread()
+      {}
+  virtual ~Threaded() {}
   virtual void start() = 0;
   virtual void join() = 0;
   virtual void cmd_stop() = 0;

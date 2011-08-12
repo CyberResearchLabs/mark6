@@ -49,24 +49,18 @@ class BufferPool;
  */
 class NetReader: public Threaded {
  private:
-  const int _id;
   const string _interface;
   const int _snaplen;
   const int _payload_length;
   const int _buffer_size;
   const bool _promiscuous;
   FileWriter* const _fw;
-  const int _command_interval;
   PFR* _ring;
   BufferPool* _bp;
   boost::uint8_t* _net_buf;
-
-  bool _running;
-
-  /** State variable used in main processing loop. */
+  
   volatile enum { IDLE, READ_FROM_NETWORK, STOP } _state;
 
-  /** Thread object. */
   boost::thread _thread;
 
  public:
@@ -81,7 +75,7 @@ class NetReader: public Threaded {
 	    const double command_interval);
   
   /** Constructor. */
-  ~NetReader();
+  virtual ~NetReader();
 
   virtual void start();
   virtual void join();
