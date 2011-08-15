@@ -10,6 +10,8 @@ ETH2_IRQ=63
 ETH3_IRQ=65
 ETH4_IRQ=66
 ETH5_IRQ=64
+MEGASAS1_IRQ=24
+MEGASAS1_IRQ=34
 
 RING_BUFFERS=256
 
@@ -26,6 +28,12 @@ echo cat /proc/irq/${ETH4_IRQ}/smp_affinity
 echo 10 > /proc/irq/${ETH5_IRQ}/smp_affinity
 echo cat /proc/irq/${ETH5_IRQ}/smp_affinity
 
+echo 2 > /proc/irq/${MEGASAS1_IRQ}/smp_affinity
+echo cat /proc/irq/${MEGASAS1_IRQ}/smp_affinity
+
+echo 4 > /proc/irq/${MEGASAS2_IRQ}/smp_affinity
+echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
+
 # Run! 
 # Note that SMP affinities are ordinals (not mask). CPU numbering from 0.
 ${EXEC} \
@@ -35,4 +43,5 @@ ${EXEC} \
     --ring_buffers ${RING_BUFFERS} \
     --write_blocks ${RING_BUFFERS}
 
+    # --capture_files /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 \
     # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \

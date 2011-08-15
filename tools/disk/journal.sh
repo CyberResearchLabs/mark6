@@ -7,22 +7,24 @@
 DEVS=$(cat <<EOF
 /dev/sd11
 /dev/sdb1
-/dev/sdc1
-/dev/sdd1
 EOF
 )
+
+# /dev/sdc1
+# /dev/sdd1
 
 # /dev/sdaa
 
 DEV_MAP[1]="/dev/sda1:/mnt/disk0"
 DEV_MAP[2]="/dev/sdb1:/mnt/disk1"
-DEV_MAP[3]="/dev/sdc1:/mnt/disk2"
-DEV_MAP[4]="/dev/sdd1:/mnt/disk3"
+# DEV_MAP[3]="/dev/sdc1:/mnt/disk2"
+# DEV_MAP[4]="/dev/sdd1:/mnt/disk3"
 
 TUNE2FS=/sbin/tune2fs
 E2FSCK=/sbin/e2fsck
 DUMPE2FS=/sbin/dumpe2fs
 MOUNT=/bin/mount
+MEGACLI=/usr/sbin/megacli
 
 
 config_devs() {
@@ -57,5 +59,18 @@ mount_devs() {
 	done
 }
 
+mk_raid() {
+	${MEGACLI}  -CfgClr -a1
+	# ${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 1024 -a1
+	# ${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 1024 -a1
+	${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -a1
+	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -a1
+}
+
+mk_fs() {
+	
+}
+
 # config_devs
-mount_devs
+# mount_devs
+mk_raid
