@@ -7,24 +7,27 @@
 DEVS=$(cat <<EOF
 /dev/sd11
 /dev/sdb1
+/dev/sdc1
 EOF
 )
-
-# /dev/sdc1
 # /dev/sdd1
-
 # /dev/sdaa
 
+
+# Devices
 DEV_MAP[1]="/dev/sda1:/mnt/disk0"
 DEV_MAP[2]="/dev/sdb1:/mnt/disk1"
-# DEV_MAP[3]="/dev/sdc1:/mnt/disk2"
+DEV_MAP[3]="/dev/sdc1:/mnt/disk2"
 # DEV_MAP[4]="/dev/sdd1:/mnt/disk3"
 
+# Executables
 TUNE2FS=/sbin/tune2fs
 E2FSCK=/sbin/e2fsck
 DUMPE2FS=/sbin/dumpe2fs
 MOUNT=/bin/mount
 MEGACLI=/usr/sbin/megacli
+PARTED=/sbin/parted
+MKFS=/sbin/mkfs.ext4
 
 
 config_devs() {
@@ -68,9 +71,17 @@ mk_raid() {
 }
 
 mk_fs() {
-	
+	echo ${PARTED} -s /dev/sdd mklabel gpt
+	${PARTED} -s /dev/sdd mklabel gpt
+
+	echo ${PARTED} -s -- /dev/sdd mkpart primary ext4 1 -1
+	${PARTED} -s -- /dev/sdd mkpart primary ext4 1 -1
+
+	echo ${MKFS} /dev/sdd1
+	${MKFS} /dev/sdd1
 }
 
-# config_devs
-# mount_devs
-mk_raid
+# mk_raid
+#config_devs
+#mount_devs
+mk_fs

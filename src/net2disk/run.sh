@@ -4,6 +4,28 @@ export LD_LIBRARY_PATH=/home/dlapsley/mark6/src/extern/PF_RING-4.7.0/userland/li
 
 # Globals
 EXEC=./net2disk
+ETHTOOL=/sbin/ethtool
+
+# Configure ethernet drivers
+${ETHTOOL} -K eth2 gro on
+${ETHTOOL} -K eth3 gro on
+${ETHTOOL} -K eth4 gro on
+${ETHTOOL} -K eth5 gro on
+
+# Offload parameters for eth2:
+# rx-checksumming: on
+# tx-checksumming: on
+# scatter-gather: on
+# tcp-segmentation-offload: on
+# udp-fragmentation-offload: off
+# generic-segmentation-offload: on
+# generic-receive-offload: off
+# large-receive-offload: on
+# ntuple-filters: off
+# receive-hashing: off
+
+# /etc/modules
+pf_ring transparent_mode=0 min_num_slots=4096 enable_ip_defrag=1
 
 # IRQ "MAP"
 ETH2_IRQ=63
