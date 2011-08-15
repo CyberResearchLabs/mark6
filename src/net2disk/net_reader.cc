@@ -176,11 +176,13 @@ void NetReader::handle_read_from_network() {
       if (hdr.caplen != _snaplen
 	  || hdr.caplen != hdr.len
 	  || payload_length != _payload_length) {
+#ifdef LOG_SHORT
 	LOG4CXX_ERROR(logger, "Short capture(caplen/snaplen"
 		      "len/payload_length/PAYLOAD_LENGTH"
 		      << hdr.caplen << "/" << _snaplen << "/"
 		      << hdr.len << "/" << payload_length << "/"
 		      << _payload_length);
+#endif // LOG_SHORT
 	continue;
       }
 	      
