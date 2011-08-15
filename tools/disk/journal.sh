@@ -5,7 +5,7 @@
 
 
 DEVS=$(cat <<EOF
-/dev/sd11
+/dev/sda1
 /dev/sdb1
 /dev/sdc1
 /dev/sdd1
@@ -83,5 +83,5 @@ mk_fs() {
 
 # mk_raid
 # mk_fs
-config_devs
+# config_devs
 mount_devs
