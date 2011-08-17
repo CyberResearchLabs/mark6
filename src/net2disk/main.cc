@@ -30,8 +30,6 @@
 #include <signal.h>
 #include <sched.h>
 #include <unistd.h>
-// #include <readline/readline.h>
-// #include <readline/history.h>
 
 // C++ includes.
 #include <iostream>
@@ -214,7 +212,7 @@ main (int argc, char* argv[]) {
 
   if (vm.count("v")) {
     std::cout << "net2disk version: 0.1"
-         << std::endl;
+	      << std::endl;
     return 1;
   }
 

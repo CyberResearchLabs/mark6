@@ -34,6 +34,7 @@ BufferPool* BufferPool::instance() {
 }
 
 bool BufferPool::push(boost::uint8_t* b) {
+  //! TODO: remove push and put in free().
   boost::system_time timeout = boost::get_system_time() 
     + boost::posix_time::milliseconds(_TIMEOUT*1000);
   
@@ -49,6 +50,7 @@ bool BufferPool::push(boost::uint8_t* b) {
 }
 
 boost::uint8_t* BufferPool::pop() {
+  //! TODO: remove pop and put in malloc().
   boost::system_time timeout = boost::get_system_time() 
     + boost::posix_time::milliseconds(_TIMEOUT*1000);
   
@@ -92,7 +94,6 @@ void BufferPool::reserve_pool(const int buffer_pool_size,
   for (int i=0; i<buffer_pool_size; i++) {
     void* buf;
     if (posix_memalign(&buf, page_size, buffer_size) != 0) {
-      std::cerr << "Memalign failed\n";
       throw std::string("Memalign failed.");
     }
     push(static_cast<boost::uint8_t*>(buf));
@@ -102,7 +103,7 @@ void BufferPool::reserve_pool(const int buffer_pool_size,
 void BufferPool::release_pool() {
   while (is_empty() == false) {
     boost::uint8_t* b = pop();
-    // TODO: figure out why free fails here.
+    //! TODO: figure out why free fails here.
   }
 }
 

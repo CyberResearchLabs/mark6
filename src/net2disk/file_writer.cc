@@ -141,25 +141,7 @@ void FileWriter::handle_idle() {
 }
 
 void FileWriter::handle_write_to_disk() {
-  // #define FILE_WRITER_POLL
-#ifdef FILE_WRITER_POLL
-  // Poll file descriptor.
-  int rv = poll(&_pfd, 1, _POLL_TIMEOUT);
-  if (rv < 0) {
-    LOG4CXX_ERROR(logger, "poll returns error: " << strerror(errno));
-    continue;
-  } else if (rv == 0) {
-    LOG4CXX_DEBUG(logger, "poll returns 0");
-    continue;
-  }
-	
-  // Scan file descriptor to see if it is ready for writing.
-  if (_pfd.revents & POLLOUT) {
-    write_block(_pfd.fd);
-  }
-#else
   write_block(_pfd.fd);
-#endif
 }
 
 int FileWriter::open() {
