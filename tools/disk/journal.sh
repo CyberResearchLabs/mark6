@@ -63,22 +63,25 @@ mount_devs() {
 }
 
 mk_raid() {
-	${MEGACLI}  -CfgClr -a1
-	${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 256 -a1
-	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 256 -a1
+	${MEGACLI}  -CfgClr -a0
+	${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 256 -a0
+	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 256 -a0
 	# ${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -a1
 	# ${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -a1
 }
 
 mk_fs() {
-	echo ${PARTED} -s /dev/sdd mklabel gpt
-	${PARTED} -s /dev/sdd mklabel gpt
+	for DEV in sda
+	do
+		# echo ${PARTED} -s /dev/${DEV} mklabel gpt
+		# ${PARTED} -s /dev/sda mklabel gpt
+	
+		# echo ${PARTED} -s -- /dev/${DEV} mkpart primary ext4 1 -1
+		# ${PARTED} -s -- /dev/${DEV} mkpart primary ext4 1 -1
 
-	echo ${PARTED} -s -- /dev/sdd mkpart primary ext4 1 -1
-	${PARTED} -s -- /dev/sdd mkpart primary ext4 1 -1
-
-	echo ${MKFS} /dev/sdd1
-	${MKFS} /dev/sdd1
+		echo ${MKFS} /dev/${DEV}1
+		${MKFS} /dev/${DEV}1
+	done
 }
 
 # mk_raid
