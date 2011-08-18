@@ -53,6 +53,8 @@ MEGASAS1_IRQ=24
 MEGASAS2_IRQ=35
 
 RING_BUFFERS=512
+# RING_BUFFERS=1024
+# RING_BUFFERS=2048
 
 # Setup IRQ AFFINITY (echoing a CPU mask to set affinity)
 echo 1 > /proc/irq/${ETH2_IRQ}/smp_affinity
@@ -84,5 +86,7 @@ ${EXEC} \
     --ring_buffers ${RING_BUFFERS} \
     --write_blocks ${RING_BUFFERS}
 
+    # --interfaces eth2 eth3 eth4 eth5 \
+    # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
     # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
     # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \

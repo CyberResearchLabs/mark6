@@ -1,0 +1,16 @@
+[disk0]
+rw=write
+size=5G
+iodepth=8
+directory=/mnt/disk0
+write_bw_log=1
+stonewall
+
+
+[disk1]
+rw=write
+size=5G
+iodepth=8
+directory=/mnt/disk1
+write_bw_log=2
+stonewall
