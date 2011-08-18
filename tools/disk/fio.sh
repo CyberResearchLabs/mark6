@@ -5,6 +5,7 @@ CONFIG=jobs.fio
 OUTPUT=jobs.out
 
 ${FIO}	--output=${OUTPUT} \
+	--minimal \
 	${CONFIG}
 
 # jobname, groupid, error, 
