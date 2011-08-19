@@ -75,6 +75,9 @@ MOUNT=/bin/mount
 MEGACLI=/usr/sbin/megacli
 PARTED=/sbin/parted
 MKFS=/sbin/mkfs.ext4
+FIO=/usr/bin/fio
+CONFIG=jobs.fio
+OUTPUT=jobs.out
 
 
 tune_devs() {
@@ -151,15 +154,58 @@ mk_fs() {
 	done
 }
 
+perf_test() {
+	${FIO}	--output=${OUTPUT} \
+		--minimal \
+		${CONFIG}
+
+	# Field description.
+	# jobname, groupid, error, 
+	# Read status:
+	# KB I/O, bandwidth (KB/s), runtime (ms)
+
+	# Submission latency:
+	# min, max, mean, standard deviation
+
+	# Completion latency:
+	# min, max, mean, standard deviation
+	# 
+	# Bandwidth:
+	# min, max, aggregate percentage of total, mean, standard deviation
+
+	# Write status:
+	# KB I/O, bandwidth (KB/s), runtime (ms)
+
+	# Submission latency:
+	# min, max, mean, standard deviation
+	# Completion latency:
+	# min, max, mean, standard deviation
+	# Bandwidth:
+	# min, max, aggregate percentage of total, mean, standard deviation
+
+	# CPU usage:
+	# user, system, context switches, major page faults, minor page faults
+
+	# IO depth distribution:
+	# <=1, 2, 4, 8, 16, 32, >=64
+	# 
+	# IO latency distribution (ms):
+	# <=2, 4, 10, 20, 50, 100, 250, 500, 750, 1000, >=2000
+	# 
+	# text description
+}
+
+
 usage() {
-    echo "$0: [-r] [-p] [-f] [-t] [-m] [-a] [-h]"
-    echo "    [--raid] [--part] [--fs] [--tune] [--mount] [--all] [--help]"
+    echo "$0: [-r] [-p] [-f] [-t] [-m] [-a] [-P] [-h]"
+    echo "    [--raid] [--part] [--fs] [--tune] [--mount] [--all] [--perf] [--help]"
     echo "  -r, --raid    Configure RAID"
     echo "  -p, --part    Create partitions"
     echo "  -f, --fs      Create file systems"
     echo "  -t, --tune    Tune file systems"
     echo "  -m, --mount   Mount file systems"
     echo "  -a, --all     Do everything"
+    echo "  -P, --perf    Test disk performance"
     echo "  -h, --help    Display help message"
 }
 
@@ -190,6 +236,8 @@ main() {
 		    -t | --tune )	tune_devs
 			;;
 		    -m | --mount )	mount_devs
+			;;
+		    -P | --perf )	perf_test
 			;;
 		    -a | --all )	mk_raid
 					mk_part
