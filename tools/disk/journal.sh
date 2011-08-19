@@ -5,32 +5,14 @@
 
 
 DEVS=$(cat <<EOF
-sdo
-sdp
-sdq
-sdr
-sds
-sdt
-sdu
-sdv
-sdw
-sdx
-sdy
-sdz
-sdaa
-sdab
-sdac
-sdad
-sdae
-sdaf
-sdag
-sdah
-sdai
-sdaj
-sdak
-sdal
-sdam
-sdan
+sdb
+sdc
+sdd
+sde
+sdf
+sdg
+sdh
+sdi
 EOF
 )
 # sda
@@ -47,6 +29,32 @@ EOF
 # sdl
 # sdm
 # sdn
+# sdo
+# sdp
+# sdq
+# sdr
+# sds
+# sdt
+# sdu
+# sdv
+# sdw
+# sdx
+# sdy
+# sdz
+# sdaa
+# sdab
+# sdac
+# sdad
+# sdae
+# sdaf
+# sdag
+# sdah
+# sdai
+# sdaj
+# sdak
+# sdal
+# sdam
+# sdan
 
 init_dev_map() {
 	echo "Devices to be configured"
@@ -74,16 +82,16 @@ tune_devs() {
 	do
 		echo Configuring ${d}
 		# Enable writeback mode. This mode will typically provide the best ext4 performance.
-		${TUNE2FS} -o journal_data_writeback ${d}
+		${TUNE2FS} -o journal_data_writeback /dev/${d}
 
 		# Delete has_journal option
-		${TUNE2FS} -O ^has_journal  ${d}
+		${TUNE2FS} -O ^has_journal  /dev/${d}
 	
 		# Required fsck
-		${E2FSCK} -f ${d}
+		${E2FSCK} -f /dev/${d}
 
 		# Check fs options
-		${DUMPE2FS} ${d}
+		${DUMPE2FS} /dev/${d}
 	done
 }
 
