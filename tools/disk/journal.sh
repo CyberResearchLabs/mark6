@@ -5,57 +5,59 @@
 
 
 DEVS=$(cat <<EOF
-sda1
-sdb1
-sdc1
-sdd1
-sde1
-sdf1
-sdg1
-sdh1
-sdi1
-sdj1
-sdk1
-sdl1
-sdm1
-sdn1
-sdo1
-sdp1
-sdq1
-sdr1
-sds1
-sdt1
-sdu1
-sdv1
-sdw1
-sdx1
-sdy1
-sdz1
-sdaa1
-sdab1
-sdac1
-sdad1
-sdae1
-sdaf1
-sdag1
-sdah1
-sdai1
-sdaj1
-sdak1
-sdal1
-sdam1
-sdan1
+sdo
+sdp
+sdq
+sdr
+sds
+sdt
+sdu
+sdv
+sdw
+sdx
+sdy
+sdz
+sdaa
+sdab
+sdac
+sdad
+sdae
+sdaf
+sdag
+sdah
+sdai
+sdaj
+sdak
+sdal
+sdam
+sdan
 EOF
 )
-# /dev/sdaa
+# sda
+# sdb
+# sdc
+# sdd
+# sde
+# sdf
+# sdg
+# sdh
+# sdi
+# sdj
+# sdk
+# sdl
+# sdm
+# sdn
 
-
-# Devices
-# DEV_MAP[1]="/dev/sda1:/mnt/disk0"
-# DEV_MAP[1]="/dev/sda1:/mnt/disk0"
-# DEV_MAP[2]="/dev/sdb1:/mnt/disk1"
-# DEV_MAP[3]="/dev/sdc1:/mnt/disk2"
-# DEV_MAP[4]="/dev/sdd1:/mnt/disk3"
+init_dev_map() {
+	echo "Devices to be configured"
+	i=1
+	for d in ${DEVS}
+	do
+		echo /dev/${d} /mnt/disk${i}
+		DEV_MAP[${i}]="/dev/${d}:/mnt/disk${i}"
+		let "i=i+1"
+	done
+}
 
 # Executables
 TUNE2FS=/sbin/tune2fs
@@ -67,7 +69,7 @@ PARTED=/sbin/parted
 MKFS=/sbin/mkfs.ext4
 
 
-config_devs() {
+tune_devs() {
 	for d in ${DEVS}
 	do
 		echo Configuring ${d}
@@ -118,14 +120,14 @@ mk_part() {
 		dev=${a[0]}
 		mnt=${a[1]}
 
-		echo ${PARTED} /dev/${dev} --script mklabel gpt
-		${PARTED} /dev/${dev} --script mklabel gpt
+		echo ${PARTED} ${dev} --script mklabel gpt
+		${PARTED} ${dev} --script mklabel gpt
 	
-		echo ${PARTED} /dev/${dev} --script rm 1
-		${PARTED} /dev/${dev} --script rm 1
+		echo ${PARTED} ${dev} --script rm 1
+		${PARTED} ${dev} --script rm 1
 
-		echo ${PARTED} /dev/${dev} --script mkpart ext4 1049k -- -1
-		${PARTED} /dev/${dev} --script mkpart ext4 1049k -- -1
+		echo ${PARTED} ${dev} --script mkpart ext4 1049k -- -1
+		${PARTED} ${dev} --script mkpart ext4 1049k -- -1
 	done
 }
 
@@ -136,26 +138,68 @@ mk_fs() {
 		dev=${a[0]}
 		mnt=${a[1]}
 
-		echo ${MKFS} /dev/${dev}1
-		${MKFS} /dev/${dev}1
+		echo ${MKFS} ${dev}1
+		${MKFS} ${dev}1
 	done
 }
 
-# mk_raid
-# mk_part
-# mk_fs
-# config_devs
-# mount_devs
+usage() {
+    echo "$0: [-r] [-p] [-f] [-t] [-m] [-a] [-h]"
+    echo "    [--raid] [--part] [--fs] [--tune] [--mount] [--all] [--help]"
+    echo "  -r, --raid    Configure RAID"
+    echo "  -p, --part    Create partitions"
+    echo "  -f, --fs      Create file systems"
+    echo "  -t, --tune    Tune file systems"
+    echo "  -m, --mount   Mount file systems"
+    echo "  -a, --all     Do everything"
+    echo "  -h, --help    Display help message"
+}
 
-i=1
-for d in ${DEVS}
-do
-	echo /dev/${d} /mnt/disk${i}
-	DEV_MAP[${i}]="/dev/${d}:/mnt/disk${i}"
-	let "i=i+1"
-done
+init_dev_map
 
-for f in ${DEV_MAP[@]}
-do
-	echo $f
-done
+main() {
+	if [ $# -eq 0 ] ; then
+	    usage
+	    exit
+	fi
+
+	echo Welcome to the Mark6 disk management program
+	echo
+	echo This software has been developed by MIT Haystack Observatory and
+	echo is released under the terms fo the GPL \(see LICENSE file\)
+	    echo 
+	    echo Please direct any questions to del@haystack.mit.edu
+	    echo
+
+	    while [ "$1" != "" ]; do
+    		case $1 in
+        	    -r | --raid )	mk_raid
+			;;
+		    -p | --part )	mk_part
+			;;
+		    -f | --fs )		mk_fs
+			;;
+		    -t | --tune )	tune_devs
+			;;
+		    -m | --mount )	mount_devs
+			;;
+		    -a | --all )	mk_raid
+					mk_part
+					mk_fs
+					tune_devs
+					mount_devs
+					;;
+		    -h | --help )	usage
+			exit
+			;;
+		    * )             usage
+			exit 1
+		esac
+		shift
+	    done
+    }
+
+
+# Kick off setup.
+echo $*
+main $*
