@@ -80,18 +80,18 @@ MKFS=/sbin/mkfs.ext4
 tune_devs() {
 	for d in ${DEVS}
 	do
-		echo Configuring ${d}
+		echo Configuring /dev/${d}1
 		# Enable writeback mode. This mode will typically provide the best ext4 performance.
-		${TUNE2FS} -o journal_data_writeback /dev/${d}
+		${TUNE2FS} -o journal_data_writeback /dev/${d}1
 
 		# Delete has_journal option
-		${TUNE2FS} -O ^has_journal  /dev/${d}
+		${TUNE2FS} -O ^has_journal  /dev/${d}1
 	
 		# Required fsck
-		${E2FSCK} -f /dev/${d}
+		${E2FSCK} -f /dev/${d}1
 
 		# Check fs options
-		${DUMPE2FS} /dev/${d}
+		${DUMPE2FS} /dev/${d}1
 	done
 }
 
