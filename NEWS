@@ -43,3 +43,47 @@ FEATURES
   Disk configuration scripts include optimizations that disable
   journaling on ext4 file systems and enable driver level throughput
   optimizations.
+
+Release 0.4	7/15/2011	David Lapsley<del@haystack.mit.edu>
+-------------------------------------------------------------------
+
+DESCRIPTION
+
+Major performance milestone. Application software achieves maximum
+network to disk throughput supported by hardware platform and drivers:
+14.1 Gbps sustained for 60 seconds (still room to optimize platform
+configuration). This was using 4 x 8-disk modules. Each module
+configured as a separate RAID-0 array.
+
+FEATURES
+
+- Finalized application architecture (multi-process architecture
+  rather than mult-threaded)
+- Optimized PF_RING driver parameters
+- Optimized Myricom driver settings
+- Optimized IRQ SMP processor affinity for LSI MegaRAID and 
+  Myricom Ethernet devices.
+- Optimized application process SMP processor affinity.
+- Optimized application buffer sizes, and data path.
+- Optimized network packet capture code.
+- Optimized internal buffering code.
+- Optimized disk writing code.
+- Application includes the following major classes:
+	NetReader:
+		Reads data from PF_RING buffers and fills BufferPool
+		allocated buffers with the data.
+	BufferPool:
+		Internal buffers optimally sized and aligned for
+		Direct Disk IO. Includes optimized memory management.
+	FileWriter:
+		Manages memory to disk data transfer.
+	StatsWriter:
+		Instrumentation class. Periodically logs network and
+		disk performance statistics.
+- Interactive command line interface that allows user to launch and
+  stop capture threads in a convenient manner.
+- Startup scripts that automatically set MegaRAID, Myricom, and
+  Application processor affinities at startup.
+- Disk module conditioning scripts that create and configure RAID
+  arrays, label and partition virtual drives, create EXT4 file systems,
+  and optimize file system parameters.

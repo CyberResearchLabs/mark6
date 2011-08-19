@@ -5,33 +5,71 @@
 
 
 DEVS=$(cat <<EOF
-/dev/sdb
-/dev/sdc
-/dev/sdd
-/dev/sde
-/dev/sdf
-/dev/sdg
-/dev/sdh
+sdo
+sdp
+sdq
+sdr
+sds
+sdt
+sdu
+sdv
+sdw
+sdx
+sdy
+sdz
+sdaa
+sdab
+sdac
+sdad
+sdae
+sdaf
+sdag
+sdah
+sdai
+sdaj
+sdak
+sdal
+sdam
+sdan
 EOF
 )
+# sda
+# sdb
+# sdc
+# sdd
+# sde
+# sdf
+# sdg
+# sdh
+# sdi
+# sdj
+# sdk
+# sdl
+# sdm
+# sdn
 
-# /dev/sdaa
+init_dev_map() {
+	echo "Devices to be configured"
+	i=1
+	for d in ${DEVS}
+	do
+		echo /dev/${d} /mnt/disk${i}
+		DEV_MAP[${i}]="/dev/${d}:/mnt/disk${i}"
+		let "i=i+1"
+	done
+}
 
-DEV_MAP[1]="/dev/sdb:/mnt/disk0"
-DEV_MAP[2]="/dev/sdc:/mnt/disk1"
-DEV_MAP[3]="/dev/sdd:/mnt/disk2"
-DEV_MAP[4]="/dev/sde:/mnt/disk3"
-DEV_MAP[5]="/dev/sdf:/mnt/disk4"
-DEV_MAP[6]="/dev/sdg:/mnt/disk5"
-DEV_MAP[7]="/dev/sdh:/mnt/disk6"
-
+# Executables
 TUNE2FS=/sbin/tune2fs
 E2FSCK=/sbin/e2fsck
 DUMPE2FS=/sbin/dumpe2fs
 MOUNT=/bin/mount
+MEGACLI=/usr/sbin/megacli
+PARTED=/sbin/parted
+MKFS=/sbin/mkfs.ext4
 
 
-config_devs() {
+tune_devs() {
 	for d in ${DEVS}
 	do
 		echo Configuring ${d}
@@ -58,9 +96,110 @@ mount_devs() {
 		mnt=${a[1]}
 
 		echo ${MOUNT} -t ext4 -o ${MOUNT_OPTS} ${dev} ${mnt}
+		mkdir -p ${mnt}
 		${MOUNT} -t ext4 -o ${MOUNT_OPTS} ${dev} ${mnt}
 	done
 }
 
-# config_devs
-mount_devs
+mk_raid() {
+	${MEGACLI}  -CfgClr -aALL
+	# ${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7,245:8,245:9,245:10,245:11] WT NORA -strpsz 256 -a0
+	# ${MEGACLI} -CfgLdAdd -R0[245:12,245:13,245:14,245:15,245:16,245:17,245:18,245:19,245:20,245:21,245:22,245:23] WT NORA -strpsz 256 -a0
+	# ${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7,245:8,245:9,245:10,245:11] WT NORA -strpsz 256 -a1
+	# ${MEGACLI} -CfgLdAdd -R0[245:12,245:13,245:14,245:15,245:16,245:17,245:18,245:19,245:20,245:21,245:22,245:23] WT NORA -strpsz 256 -a1
+
+	# Individual disk testing
+  	# ${MEGACLI} -CfgForeign -Clear -aALL
+  	# ${MEGACLI} -CfgEachDiskRaid0 -aALL
+}
+
+mk_part() {
+	for DEV in ${DEV_MAP[@]}
+	do
+		IFS=':' read -ra a <<< "$DEV"
+		dev=${a[0]}
+		mnt=${a[1]}
+
+		echo ${PARTED} ${dev} --script mklabel gpt
+		${PARTED} ${dev} --script mklabel gpt
+	
+		echo ${PARTED} ${dev} --script rm 1
+		${PARTED} ${dev} --script rm 1
+
+		echo ${PARTED} ${dev} --script mkpart ext4 1049k -- -1
+		${PARTED} ${dev} --script mkpart ext4 1049k -- -1
+	done
+}
+
+mk_fs() {
+	for DEV in ${DEV_MAP[@]}
+	do
+		IFS=':' read -ra a <<< "$DEV"
+		dev=${a[0]}
+		mnt=${a[1]}
+
+		echo ${MKFS} ${dev}1
+		${MKFS} ${dev}1
+	done
+}
+
+usage() {
+    echo "$0: [-r] [-p] [-f] [-t] [-m] [-a] [-h]"
+    echo "    [--raid] [--part] [--fs] [--tune] [--mount] [--all] [--help]"
+    echo "  -r, --raid    Configure RAID"
+    echo "  -p, --part    Create partitions"
+    echo "  -f, --fs      Create file systems"
+    echo "  -t, --tune    Tune file systems"
+    echo "  -m, --mount   Mount file systems"
+    echo "  -a, --all     Do everything"
+    echo "  -h, --help    Display help message"
+}
+
+init_dev_map
+
+main() {
+	if [ $# -eq 0 ] ; then
+	    usage
+	    exit
+	fi
+
+	echo Welcome to the Mark6 disk management program
+	echo
+	echo This software has been developed by MIT Haystack Observatory and
+	echo is released under the terms fo the GPL \(see LICENSE file\)
+	    echo 
+	    echo Please direct any questions to del@haystack.mit.edu
+	    echo
+
+	    while [ "$1" != "" ]; do
+    		case $1 in
+        	    -r | --raid )	mk_raid
+			;;
+		    -p | --part )	mk_part
+			;;
+		    -f | --fs )		mk_fs
+			;;
+		    -t | --tune )	tune_devs
+			;;
+		    -m | --mount )	mount_devs
+			;;
+		    -a | --all )	mk_raid
+					mk_part
+					mk_fs
+					tune_devs
+					mount_devs
+					;;
+		    -h | --help )	usage
+			exit
+			;;
+		    * )             usage
+			exit 1
+		esac
+		shift
+	    done
+    }
+
+
+# Kick off setup.
+echo $*
+main $*
