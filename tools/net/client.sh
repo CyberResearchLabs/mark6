@@ -5,14 +5,14 @@ NUTTCP=/usr/bin/nuttcp
 PING=/bin/ping
 
 DEST_IP=10.0.0.1
-PORT=4242
+PORT=6242
 # Sends 32K dgrams.
 # WRITE_BUFFER_SIZE=32K
 WRITE_BUFFER_SIZE=8k
 # BANDWIDTH=1K
-BANDWIDTH=5g
+BANDWIDTH=4g
 THREADS=1
-TIME=60
+TIME=10
 INTERVAL=1
 
 ${PING} -c 1 ${DEST_IP}
@@ -21,9 +21,11 @@ ${PING} -c 1 ${DEST_IP}
 ${NUTTCP} -t -u -v \
 	-l ${WRITE_BUFFER_SIZE} \
 	-R${BANDWIDTH} \
-	-p${PORT} |
-	-T${TIME}
+	-T${TIME} \
+	-P5000 \
+	10.0.0.1
 
+	#-p${PORT} \
 
 
 # for DEST_IP in 10.0.0.1
