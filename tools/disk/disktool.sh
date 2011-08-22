@@ -84,14 +84,17 @@ mount_devs() {
 }
 
 mk_raid() {
-	${MEGACLI}  -CfgClr -aALL
-	# ${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7,245:8,245:9,245:10,245:11] WT NORA -strpsz 256 -a0
-	# ${MEGACLI} -CfgLdAdd -R0[245:12,245:13,245:14,245:15,245:16,245:17,245:18,245:19,245:20,245:21,245:22,245:23] WT NORA -strpsz 256 -a0
-	# ${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7,245:8,245:9,245:10,245:11] WT NORA -strpsz 256 -a1
-	# ${MEGACLI} -CfgLdAdd -R0[245:12,245:13,245:14,245:15,245:16,245:17,245:18,245:19,245:20,245:21,245:22,245:23] WT NORA -strpsz 256 -a1
+	${MEGACLI}  -CfgClr -a0
+  	${MEGACLI} -CfgForeign -Clear -a0
+	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 256 -a0
+	${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 256 -a0
+
+	${MEGACLI}  -CfgClr -a1
+  	${MEGACLI} -CfgForeign -Clear -a1
+	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 256 -a1
+	${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 256 -a1
 
 	# Individual disk testing
-  	# ${MEGACLI} -CfgForeign -Clear -aALL
   	# ${MEGACLI} -CfgEachDiskRaid0 -aALL
 }
 
@@ -249,33 +252,33 @@ main() {
 	init_dev_map
 	
 	if [ $MK_RAID -ne 0 ]; then
-		echo mk_raid
-		# mk_raid
+		echo Configuring RAID...
+		mk_raid
 	fi
 
 	if [ $MK_PART -ne 0 ]; then
-		echo mk_part
-		# mk_part
+		echo Creating partitions...
+		mk_part
 	fi
 
 	if [ $MK_FS -ne 0 ]; then
-		echo mk_fs
-		# mk_fs
+		echo Creating File Systems...
+		mk_fs
 	fi
 
 	if [ $TUNE_DEVS -ne 0 ]; then
-		echo tune_devs
-		# tune_devs
+		echo Tuning devices...
+		tune_devs
 	fi
 
 	if [ $MOUNT_DEVS -ne 0 ]; then
-		echo mount_devs
-		# mount_devs
+		echo Mounting devices...
+		mount_devs
 	fi
 
 	if [ $PERF_TEST -ne 0 ]; then
-		echo perf_test
-		# perf_test
+		echo Running performance tests...
+		perf_test
 	fi
 
 	if [ $ALL -ne 0 ]; then
