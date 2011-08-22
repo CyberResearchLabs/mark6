@@ -20,8 +20,8 @@
  * 
  */
 
-#ifndef _NETREADER_H_
-#define _NETREADER_H_
+#ifndef _NET_READER_H_
+#define _NET_READER_H_
 
 // C includes.
 
@@ -36,30 +36,49 @@
 #include <mark6.h>
 #include <threaded.h>
 
+// External class declarations.
 class FileWriter;
 class StatsWriter;
 struct PFR;
 class BufferPool;
 
-/**
- * Manages high speed writing of data to file.
- */
+
+//! Manages high speed capture of data from network interface using PF_RING.
+//! Data are read in from an assigned interface using the PF_RING API.
+//! The data are read in to specially allocated and sized buffers, that have
+//! been optimized for disk throughput. Once a buffer is full, it is passed 
+//! on to a FileWriter to be written to disk.
 class NetReader: public Threaded {
- private:
-  const std::string _interface;
-  const int _snaplen;
-  const int _payload_length;
-  const int _buffer_size;
-  const bool _promiscuous;
-  FileWriter* const _fw;
-  StatsWriter* const _sw;
-  PFR* _ring;
-  BufferPool* _bp;
-  boost::uint8_t* _net_buf;
-  
-  volatile enum { IDLE, READ_FROM_NETWORK, STOP } _state;
 
  public:
+  //---------------------------------------------------------------------------
+  // Public API
+  //---------------------------------------------------------------------------
+
+  //! Constructor.
+  //! \param id A unique identifies for this object. Used in logging.
+  //! \param interface The name of the network interface from which data will
+  //!        be captured.
+  //! \param snaplen The total amount of data to be captured (data packet
+  //!        headers from layer2 and up are included in the count).
+  //! \param payload_length The total length of the UDP payload. This is the
+  //!        amount of data that needs to be extracted from each packet and
+  //!        then stored to disk.
+  //! \param buffer_size The size of the optimal buffers that are used to 
+  //!        transfer data from network interface to disk. Typically, these
+  //!        are a multiple of the system page size, and aligned to page size
+  //!        boundaries (e..g, page size of 256B, buffer size of 1048576B).
+  //! \param promiscuous Wheter or not to put the network interface into 
+  //!        promiscuous mode.
+  //! \param fw A pointer to a FileWriter object.
+  //! \param sw A pointer to a StatsWriter object.
+  //! \param command_interval The nominal number of seconds between successive
+  //!        checks for new commands. This is done from within the run()
+  //!        method. Currently there is no guarantee that the actual command
+  //!        interval is exactly command_interval seconds as the run() method
+  //!        may be busy performing another task and take slightly longer
+  //!        than command_interval seconds to check for commands. 
+  //!        \todo Robustify this.
   NetReader(const int id,
 	    const std::string interface,
 	    const int snaplen,
@@ -69,25 +88,101 @@ class NetReader: public Threaded {
 	    FileWriter* const fw,
 	    StatsWriter* const sw,
 	    const double command_interval);
+
+  //! Destructor.
   virtual ~NetReader();
 
+  //! Start the main processing loop run() in its own thread of execution.
   virtual void start();
+
+  //! Wait for the main processing loop/thread to exit.
   virtual void join();
 
- protected:
-  virtual void run();
- 
- public:
-  // Commands.
+  //! External API command. Insert a STOP command into the object's command
+  //! queue for processing.
   virtual void cmd_stop();
+
+  //! External API command. Insert a READ_FROM_NETWORK command into the
+  //! object's command queue for processing.
   virtual void cmd_read_from_network();
 
+
  protected:
-  // Handlers.
+  //---------------------------------------------------------------------------
+  // Internal data members
+  //---------------------------------------------------------------------------
+
+  //! The name of the network interface from which to capture data (e.g.,
+  //! eth2).
+  const std::string _interface;
+
+  //! The total amount of bytes to capture from the packet (e.g. 9000).
+  const int _snaplen;
+
+  //! The length of the payload (i.e. the amount of data to extract and 
+  //! write to disk).
+  const int _payload_length;
+
+  //! The size of the buffer being filled. These buffers are optimized
+  //! for disk throughput and have custom memory allocation and alignment
+  //! mechanisms. Typically, these buffers are orders of magnitude larger
+  //! than a packet (e.g. 1 MB v. 9KB).
+  const int _buffer_size;
+
+  //! Whether or not to open the network interface in promiscuous mode.
+  const bool _promiscuous;
+
+  //! A pointer to the FileWriter object that will write the data to disk.
+  //! Once a buffer is filled, it is passed in to the FileWriter object
+  //! where it is queued awaiting transfer to disk.
+  FileWriter* const _fw;
+
+  //! A pointer to a StatsWriter object that will keep track of throughput
+  //! statistics for this object. The StatsWriter will also write these 
+  //! statistics to CSV file on disk.
+  StatsWriter* const _sw;
+
+  //! A pointer to the PF_RING data structure that tracks the PF_RING state
+  //! and data structures.
+  PFR* _ring;
+
+  //! A cached pointer to the BufferPool singleton. This singleton is
+  //! responsible for doing the memory management for the optimally sized and
+  //! aligned buffers used to transfer data from network interface to disk.
+  BufferPool* _bp;
+
+  //! A pointer to the temporary buffer used to store data recently captured
+  //! from the network interface.
+  boost::uint8_t* _net_buf;
+  
+  //! State variable. This variable is changed in response to cmd_X() commands
+  //! applied to this object. The variable is used in the run() method to
+  //! determine what state the object is currently in, so that the appropriate
+  //! handle_X() method can be called.
+  volatile enum { IDLE, READ_FROM_NETWORK, STOP } _state;
+
+
+  //---------------------------------------------------------------------------
+  // Internal methods
+  //---------------------------------------------------------------------------
+
+  //! Main processing loop.
+  virtual void run();
+
+  //! Command handler. Handles the STOP command/state. On receiving this
+  //! command, the FileWriter object will stop processing and exit the 
+  //! run() method at the next opportunity.
   virtual void handle_stop();
+
+  //! Command handler. Handles the IDLE state.
   virtual void handle_idle();
+
+  //! Command handler. Handles the READ_FROM_NETWORK state/command. On
+  //! receiving this command, the NetReader object will start to read data
+  //! from the network interface and pass filled buffers to the FileWriter
+  //! object.
   virtual void handle_read_from_network();
 };
 
-#endif // _NETREADER_H_
+#endif // _NET_READER_H_
 

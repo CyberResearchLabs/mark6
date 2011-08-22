@@ -49,7 +49,70 @@ class StatsWriter;
 //! objects can interact with it via the start(), join(), cmd_XXX(), 
 //! write(), open(), and close() methods.
 class FileWriter: public Threaded {
+
+ public:
+  //---------------------------------------------------------------------------
+  // Public API
+  //---------------------------------------------------------------------------
+
+  //! Constructor
+  //! \param id A unique id for this object. Used for logging.
+  //! \param write_block_size The size of the indidivual write blocks to be
+  //!        written to disk. WRITE_BLOCK bytes of data will be written to
+  //!        disk each time write_block() is called.
+  //! \param write_blocks The total number of write blocks to buffer
+  //!        internally.
+  //! \param poll_timeout \todo Obsolete parameter.
+  //! \param sw A pointer to a StatsWriter object. Performance data will be 
+  //!        logged using this object.
+  //! \param command_interval The main executin thread in run() will attempt
+  //!        to check for new commands every command_interval seconds. The
+  //!        actual interval between checks may be larger than this if the 
+  //!        execution thread spends longer than command_interval processing
+  //!        individual tasks.
+  FileWriter(const int id,
+	     const int write_block_size,
+	     const int write_blocks,
+	     const std::string& capture_file,
+	     const int poll_timeout,
+	     StatsWriter * const sw,
+	     const double command_interval);
+
+  //! Destructor.
+  virtual ~FileWriter();
+
+  //! Start the main processing loop run() in its own thread of execution.
+  virtual void start();
+
+  //! Wait for the main processing loop/thread to exit.
+  virtual void join();
+
+  //! External API command. Insert a STOP command into the object's command
+  //! queue for processing.
+  virtual void cmd_stop();
+
+  //! External API command. Insert a WRITE_TO_DISK command into the object's
+  //! command queue for processing.
+  void cmd_write_to_disk();
+
+  //! Custom API. Open capture file on disk.
+  int open();
+
+  //! Custom API. Close capture file on disk.
+  int close();
+
+  //! External API. Write buffer to disk. The supplied buffer is stored in the
+  //! internal buffer queue where it waits to be written to disk by the main
+  //! processing loop.
+  //! \param buf The buffer to be written to disk.
+  bool write(boost::uint8_t* buf);
+
+
  protected:
+  //---------------------------------------------------------------------------
+  // Internal data members
+  //---------------------------------------------------------------------------
+
   //! The size of blocks to be written to disc.
   const int _WRITE_BLOCK_SIZE;
 
@@ -79,7 +142,11 @@ class FileWriter: public Threaded {
   //! statistics to CSV file.
   StatsWriter* const _sw;
 
- protected:
+
+  //---------------------------------------------------------------------------
+  // Internal methods
+  //---------------------------------------------------------------------------
+
   //! Main processing loop.
   virtual void run();
 
@@ -99,61 +166,6 @@ class FileWriter: public Threaded {
   //! Writes a block to disk using the specified file descriptor.
   //! \param fd The file descriptor to which the data will be sent.
   void write_block(const int fd);
-  
- public:
-  //! Constructor
-  //! \param id A unique id for this object. Used for logging.
-  //! \param write_block_size The size of the indidivual write blocks to be
-  //!        written to disk. WRITE_BLOCK bytes of data will be written to
-  //!        disk each time write_block() is called.
-  //! \param write_blocks The total number of write blocks to buffer
-  //!        internally.
-  //! \param poll_timeout \todo Obsolete parameter.
-  //! \param sw A pointer to a StatsWriter object. Performance data will be 
-  //!        logged using this object.
-  //! \param command_interval The main executin thread in run() will attempt
-  //!        to check for new commands every command_interval seconds. The
-  //!        actual interval between checks may be larger than this if the 
-  //!        execution thread spends longer than command_interval processing
-  //!        individual tasks.
-  FileWriter(const int id,
-	     const int write_block_size,
-	     const int write_blocks,
-	     const std::string& capture_file,
-	     const int poll_timeout,
-	     StatsWriter * const sw,
-	     const double command_interval);
-
-  //! Destructor.
-  virtual ~FileWriter();
-
-  //! Start the main processing loop (run()) in its own thread of execution.
-  virtual void start();
-
-  //! Wait for the main processing loop/thread to exit.
-  virtual void join();
-
-
- public:
-  //! External API command. Insert a STOP command into the object's command
-  //! queue for processing.
-  virtual void cmd_stop();
-
-  //! External API command. Insert a WRITE_TO_DISK command into the object's
-  //! command queue for processing.
-  void cmd_write_to_disk();
-
-  //! Custom API. Open capture file on disk.
-  int open();
-
-  //! Custom API. Close capture file on disk.
-  int close();
-
-  //! External API. Write buffer to disk. The supplied buffer is stored in the
-  //! internal buffer queue where it waits to be written to disk by the main
-  //! processing loop.
-  //! \param buf The buffer to be written to disk.
-  bool write(boost::uint8_t* buf);
 };
 
 #endif // _FILEWRITER_H_
