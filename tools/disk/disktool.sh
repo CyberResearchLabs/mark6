@@ -1,7 +1,29 @@
 #!/bin/bash
 
 # Author:	del@haystack.mit.edu
-# Description:	Disable journaling.
+# Description:	This is a generic collection of disk-related functions that
+#		are used for partitioning, creating file systems, optimizing
+#		file system settings, creating RAID configurations, and
+#		benchmarking disk performance.  The script requires two
+#		input/configuration files:
+#			disktools.rc	A set of colon delimited entries of
+#					the form <device>:<mount point>.
+#					For example...
+#
+#					/dev/sdb:/mnt/disk0
+#					/dev/sdc:/mnt/disk1
+#					/dev/sdd:/mnt/disk2
+#			disktools.fio	An input file for the linux "fio" disk
+#					benchmarking tool.
+#					For example:
+#
+#					[disk8]
+#					rw=write
+#					iodepth=8
+#					directory=/mnt/disk8
+#					write_bw_log=disk8_write
+#					fill_device=1
+
 
 # Executables
 TUNE2FS=/sbin/tune2fs
@@ -146,20 +168,19 @@ perf_test() {
 
 
 usage() {
-    echo "$0: [-r] [-p] [-f] [-t] [-m] [-a] [-T] [-c] [-C] [-h]"
+    echo "$0: [-r] [-p] [-f] [-t] [-m] [-a] [-b] [-c] [-C] [-h]"
     echo "  -r	Configure RAID"
     echo "  -p	Create partitions"
     echo "  -f	Create file systems"
     echo "  -t	Tune file systems"
     echo "  -m	Mount file systems"
     echo "  -a	Do everything"
-    echo "  -T	Test disk performance"
+    echo "  -b	Benchmark disk performance"
     echo "  -c	Device configuration file (default disktool.rc)."
     echo "  -C	FIO/performance configuration file (default disktool.fio)."
     echo "  -h	Display help message"
 }
 
-init_dev_map
 
 main() {
 	if [ $# -eq 0 ] ; then
@@ -203,7 +224,7 @@ main() {
 			;;
 		m )	MOUNT_DEVS=1
 			;;
-		T )	PERF_TEST=1
+		b )	PERF_TEST=1
 			;;
 		a )	ALL=1
 			;;
@@ -224,6 +245,8 @@ main() {
 	echo CONFIGURATION PARAMETERS
 	echo dev_config: ${DEV_CONFIG}
 	echo fio_config: ${FIO_CONFIG}
+
+	init_dev_map
 	
 	if [ $MK_RAID -ne 0 ]; then
 		echo mk_raid
