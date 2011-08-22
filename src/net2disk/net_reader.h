@@ -72,12 +72,11 @@ class NetReader: public Threaded {
   //!        promiscuous mode.
   //! \param fw A pointer to a FileWriter object.
   //! \param sw A pointer to a StatsWriter object.
-  //! \param command_interval The nominal number of seconds between successive
-  //!        checks for new commands. This is done from within the run()
-  //!        method. Currently there is no guarantee that the actual command
-  //!        interval is exactly command_interval seconds as the run() method
-  //!        may be busy performing another task and take slightly longer
-  //!        than command_interval seconds to check for commands. 
+  //! \param command_interval The main executin thread in run() will attempt
+  //!        to check for new commands every command_interval seconds. The
+  //!        actual interval between checks may be larger than this if the 
+  //!        execution thread spends longer than command_interval processing
+  //!        individual tasks.
   //!        \todo Robustify this.
   NetReader(const int id,
 	    const std::string interface,
