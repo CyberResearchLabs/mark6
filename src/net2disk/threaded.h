@@ -33,37 +33,77 @@
 // Local includes
 #include <mark6.h>
 
-class Threaded
-{
- protected:
-  const int _id;
-  const int _command_interval;
-  bool _running;
-  boost::thread _thread;
+//! This is the Abstract Base Class for all classes that require a separate
+//! thread for executing their main procesing loop.
+class Threaded {
 
  public:
+  //---------------------------------------------------------------------------
+  // Public API
+  //---------------------------------------------------------------------------
+
+  //! Constructor.
+  //! \param id A unique id for this object. Used for logging.
+  //! \param command_interval The main executin thread in run() will attempt
+  //!        to check for new commands every command_interval seconds. The
+  //!        actual interval between checks may be larger than this if the 
+  //!        execution thread spends longer than command_interval processing
+  //!        individual tasks.
  Threaded(const int id,
 	  const int command_interval):
   _id(id),
     _command_interval(command_interval),
     _running(false),
-    _thread()
-      {}
+    _thread() {}
+
+  //! Destructor.
   virtual ~Threaded() {}
 
-  // Start/stop thread.
+  //! Start the main processing loop run() in its own thread of execution.
   virtual void start() = 0;
+
+  //! Wait for the main processing loop/thread to exit.
   virtual void join() = 0;
   
-  // Send stop command.
+  //! External API command. Insert a STOP command into the object's command
+  //! queue for processing.
   virtual void cmd_stop() = 0;
 
- protected:
-  virtual void handle_stop() = 0;
-  virtual void handle_idle() = 0;
 
  protected:
+  //---------------------------------------------------------------------------
+  // Internal data members
+  //---------------------------------------------------------------------------
+
+  //! A unique identifier for this object.
+  const int _id;
+
+  //! The command interval.
+  const int _command_interval;
+
+  //! A flag used in the while() conditional at the top of the run() method.
+  //! The main thread of execution only continuines to execute while _running
+  //! is true.
+  bool _running;
+
+  //! The thread data structure.
+  boost::thread _thread;
+
+
+  //---------------------------------------------------------------------------
+  // Internal methods
+  //---------------------------------------------------------------------------
+
+  //! Main processing loop.
   virtual void run() = 0;
+
+  //! Command handler. Handles the STOP command/state. On receiving this
+  //! command, the FileWriter object will stop processing and exit the 
+  //! run() method at the next opportunity.
+  virtual void handle_stop() = 0;
+
+  //! Command handler. Handles the IDLE state.
+  virtual void handle_idle() = 0;
 };
 
 #endif // _THREADED_H_
