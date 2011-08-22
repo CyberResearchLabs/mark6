@@ -3,71 +3,6 @@
 # Author:	del@haystack.mit.edu
 # Description:	Disable journaling.
 
-
-DEVS=$(cat <<EOF
-sdj
-sdk
-sdl
-sdm
-sdn
-sdo
-sdp
-sdq
-EOF
-)
-# sda
-# sdb
-# sdc
-# sdd
-# sde
-# sdf
-# sdg
-# sdh
-# sdi
-# sdj
-# sdk
-# sdl
-# sdm
-# sdn
-# sdo
-# sdp
-# sdq
-# sdr
-# sds
-# sdt
-# sdu
-# sdv
-# sdw
-# sdx
-# sdy
-# sdz
-# sdaa
-# sdab
-# sdac
-# sdad
-# sdae
-# sdaf
-# sdag
-# sdah
-# sdai
-# sdaj
-# sdak
-# sdal
-# sdam
-# sdan
-
-START_DISK=8
-init_dev_map() {
-	echo "Devices to be configured"
-	i=${START_DISK}
-	for d in ${DEVS}
-	do
-		echo /dev/${d} /mnt/disk${i}
-		DEV_MAP[${i}]="/dev/${d}:/mnt/disk${i}"
-		let "i=i+1"
-	done
-}
-
 # Executables
 TUNE2FS=/sbin/tune2fs
 E2FSCK=/sbin/e2fsck
@@ -79,23 +14,36 @@ MKFS=/sbin/mkfs.ext4
 FIO=/usr/bin/fio
 CONFIG=jobs.fio
 OUTPUT=jobs.out
+SEQ=/usr/bin/seq
 
+
+init_dev_map() {
+	DEV_MAP=( $( < disktool.rc ) )
+	#for i in $(${SEQ} 0 $((${#DEV_MAP[@]} - 1)))
+	#do
+		#${DEV_MAP[$i]}
+	#done
+}
 
 tune_devs() {
 	for d in ${DEVS}
 	do
-		echo Configuring /dev/${d}1
+		IFS=':' read -ra a <<< "$p"
+		dev=${a[0]}
+		mnt=${a[1]}
+
+		echo Configuring ${dev}1
 		# Enable writeback mode. This mode will typically provide the best ext4 performance.
-		${TUNE2FS} -o journal_data_writeback /dev/${d}1
+		${TUNE2FS} -o journal_data_writeback ${dev}1
 
 		# Delete has_journal option
-		${TUNE2FS} -O ^has_journal  /dev/${d}1
+		${TUNE2FS} -O ^has_journal  ${dev}1
 	
 		# Required fsck
-		${E2FSCK} -f /dev/${d}1
+		${E2FSCK} -f ${dev}1
 
 		# Check fs options
-		${DUMPE2FS} /dev/${d}1
+		${DUMPE2FS} ${dev}1
 	done
 }
 
@@ -198,16 +146,17 @@ perf_test() {
 
 
 usage() {
-    echo "$0: [-r] [-p] [-f] [-t] [-m] [-a] [-P] [-h]"
-    echo "    [--raid] [--part] [--fs] [--tune] [--mount] [--all] [--perf] [--help]"
-    echo "  -r, --raid    Configure RAID"
-    echo "  -p, --part    Create partitions"
-    echo "  -f, --fs      Create file systems"
-    echo "  -t, --tune    Tune file systems"
-    echo "  -m, --mount   Mount file systems"
-    echo "  -a, --all     Do everything"
-    echo "  -P, --perf    Test disk performance"
-    echo "  -h, --help    Display help message"
+    echo "$0: [-r] [-p] [-f] [-t] [-m] [-a] [-T] [-c] [-C] [-h]"
+    echo "  -r	Configure RAID"
+    echo "  -p	Create partitions"
+    echo "  -f	Create file systems"
+    echo "  -t	Tune file systems"
+    echo "  -m	Mount file systems"
+    echo "  -a	Do everything"
+    echo "  -T	Test disk performance"
+    echo "  -c	Device configuration file (default disktool.rc)."
+    echo "  -C	FIO/performance configuration file (default disktool.fio)."
+    echo "  -h	Display help message"
 }
 
 init_dev_map
@@ -217,43 +166,103 @@ main() {
 	    usage
 	    exit
 	fi
+	
+	DEV_CONFIG="disktool.rc"
+	FIO_CONFIG="disktool.fio"
+	MK_RAID=0
+	MK_PART=0
+	MK_FS=0
+	TUNE_DEVS=0
+	MOUNT_DEVS=0
+	PERF_TEST=0
+	ALL=0
 
 	echo Welcome to the Mark6 disk management program
 	echo
 	echo This software has been developed by MIT Haystack Observatory and
 	echo is released under the terms fo the GPL \(see LICENSE file\)
-	    echo 
-	    echo Please direct any questions to del@haystack.mit.edu
-	    echo
+	echo 
+	echo Please direct any questions to del@haystack.mit.edu
+	echo
 
-	    while [ "$1" != "" ]; do
-    		case $1 in
-        	    -r | --raid )	mk_raid
+	while getopts ":c:C:rpftmTah" opt
+	do
+    		case ${opt} in
+		c )	DEV_CONFIG=$OPTARG
+			echo DEV_CONFIG: ${DEV_CONFIG}
 			;;
-		    -p | --part )	mk_part
+		C )	FIO_CONFIG=$OPTARG
 			;;
-		    -f | --fs )		mk_fs
+		r )	MK_RAID=1
 			;;
-		    -t | --tune )	tune_devs
+		p )	MK_PART=1
 			;;
-		    -m | --mount )	mount_devs
+		f )	MK_FS=1
 			;;
-		    -P | --perf )	perf_test
+		t )	TUNE_DEVS=1
 			;;
-		    -a | --all )	mk_raid
-					mk_part
-					mk_fs
-					tune_devs
-					mount_devs
-					;;
-		    -h | --help )	usage
+		m )	MOUNT_DEVS=1
+			;;
+		T )	PERF_TEST=1
+			;;
+		a )	ALL=1
+			;;
+		h )	usage
 			exit
 			;;
-		    * )             usage
+		\? )	echo "Invalid option: -$OPTARG"
+			usage
 			exit 1
+			;;
+		: )	echo "Option -$OPTARG requires an argument"
+			usage
+			exit 1
+			;;
 		esac
-		shift
-	    done
+	done
+
+	echo CONFIGURATION PARAMETERS
+	echo dev_config: ${DEV_CONFIG}
+	echo fio_config: ${FIO_CONFIG}
+	
+	if [ $MK_RAID -ne 0 ]; then
+		echo mk_raid
+		# mk_raid
+	fi
+
+	if [ $MK_PART -ne 0 ]; then
+		echo mk_part
+		# mk_part
+	fi
+
+	if [ $MK_FS -ne 0 ]; then
+		echo mk_fs
+		# mk_fs
+	fi
+
+	if [ $TUNE_DEVS -ne 0 ]; then
+		echo tune_devs
+		# tune_devs
+	fi
+
+	if [ $MOUNT_DEVS -ne 0 ]; then
+		echo mount_devs
+		# mount_devs
+	fi
+
+	if [ $PERF_TEST -ne 0 ]; then
+		echo perf_test
+		# perf_test
+	fi
+
+	if [ $ALL -ne 0 ]; then
+		echo All
+		mk_raid
+		mk_part
+		mk_fs
+		tune_devs
+		mount_devs
+	fi
     }
 
 
