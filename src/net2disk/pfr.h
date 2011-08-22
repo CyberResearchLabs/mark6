@@ -18,8 +18,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _PFRING_H_
-#define _PFRING_H_
+#ifndef _PFRING_CLASS_
+#define _PFRING_CLASS_
 
 extern "C" {
 #define HAVE_PF_RING
@@ -87,6 +87,6 @@ class PFR {
   
 };
 
-#endif // _PFRING_H_
+#endif // _PFRING_CLASS_
 
 
