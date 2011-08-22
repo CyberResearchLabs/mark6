@@ -5,14 +5,14 @@
 
 
 DEVS=$(cat <<EOF
-sdb
-sdc
-sdd
-sde
-sdf
-sdg
-sdh
-sdi
+sdj
+sdk
+sdl
+sdm
+sdn
+sdo
+sdp
+sdq
 EOF
 )
 # sda
@@ -56,9 +56,10 @@ EOF
 # sdam
 # sdan
 
+START_DISK=8
 init_dev_map() {
 	echo "Devices to be configured"
-	i=0
+	i=${START_DISK}
 	for d in ${DEVS}
 	do
 		echo /dev/${d} /mnt/disk${i}
