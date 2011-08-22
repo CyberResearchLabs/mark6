@@ -1,56 +1,56 @@
-[disk0]
+[disk8]
 rw=write
 iodepth=8
-directory=/mnt/disk0
-write_bw_log=disk0_write
+directory=/mnt/disk8
+write_bw_log=disk8_write
 fill_device=1
 
-[disk1]
+[disk9]
 rw=write
 iodepth=8
-directory=/mnt/disk1
-write_bw_log=disk1_write
+directory=/mnt/disk9
+write_bw_log=disk9_write
 fill_device=1
 
-[disk2]
+[disk10]
 rw=write
 iodepth=8
-directory=/mnt/disk2
-write_bw_log=disk2_write
+directory=/mnt/disk10
+write_bw_log=disk10_write
 fill_device=1
 
-[disk3]
+[disk11]
 rw=write
 iodepth=8
-directory=/mnt/disk3
-write_bw_log=disk3_write
+directory=/mnt/disk11
+write_bw_log=disk11_write
 fill_device=1
 
-[disk4]
+[disk12]
 rw=write
 iodepth=8
-directory=/mnt/disk4
-write_bw_log=disk4_write
+directory=/mnt/disk12
+write_bw_log=disk12_write
 fill_device=1
 stonewall
 
-[disk5]
+[disk13]
 rw=write
 iodepth=8
-directory=/mnt/disk5
-write_bw_log=disk5_write
+directory=/mnt/disk13
+write_bw_log=disk13_write
 fill_device=1
 
-[disk6]
+[disk14]
 rw=write
 iodepth=8
-directory=/mnt/disk6
-write_bw_log=disk6_write
+directory=/mnt/disk14
+write_bw_log=disk14_write
 fill_device=1
 
-[disk7]
+[disk15]
 rw=write
 iodepth=8
-directory=/mnt/disk7
-write_bw_log=disk7_write
+directory=/mnt/disk15
+write_bw_log=disk15_write
 fill_device=1
