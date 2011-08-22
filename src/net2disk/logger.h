@@ -23,6 +23,13 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
+//! This module manages the single, central LOG4CXX logger instance.
+//! The logger instance is used by all classes for logging.
+//! \todo Remove LOG4CXX and replace with more robust solution (perhaps
+//! syslog?).
+//! \todo Encapsulate LOG4CXX as a singleton.
+//! \todo Implement my own LOG4CXX?
+
 // C++ includes
 #include <string>
 
@@ -34,7 +41,10 @@
 using namespace log4cxx;
 using namespace log4cxx::helpers;
 
+//! The single logger instance.
 extern LoggerPtr logger;
+
+//! Initialize logger.
 extern void init_logger(const std::string log_config);
 
-#endif /*_LOGGER_H_*/
+#endif // _LOGGER_H_

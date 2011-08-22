@@ -11,7 +11,9 @@ THREADS=1
 TIME=30
 INTERVAL=1
 
-${PING} -c 1 ${DEST_IP}
+${NUTTCP} -S -P5000
+
+# ${PING} -c 1 ${DEST_IP}
 
 #echo ${IPERF} -c ${DEST_IP} -u -p ${PORT}
 #${IPERF} -s -u \
@@ -21,4 +23,3 @@ ${PING} -c 1 ${DEST_IP}
 	#-i ${INTERVAL}
 	# -B ${INTERFACE}
 
-${NUTTCP} -S -P5000

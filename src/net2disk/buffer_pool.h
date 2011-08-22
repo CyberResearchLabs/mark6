@@ -20,8 +20,8 @@
  * 
  */
 
-#ifndef _BUFFER_POOL_
-#define _BUFFER_POOL_
+#ifndef _BUFFER_POOL_H_
+#define _BUFFER_POOL_H_
 
 // C++ includes
 #include <list>
@@ -55,65 +55,11 @@ struct Timeout {
 //! adequate, and mutexes have advantages over the lockless implementation
 //! (e.g., timed blocking operations).
 class BufferPool {
- protected:
-  //! Pointer to allocated buffers. Buffers are stored in an array and 
-  //! accessed by index. This array, along with _head, _tail, and the
-  //! associated operations, forms a circular queue.
-  boost::uint8_t** _buffers; 
-
-  //! The total capacity of the buffer pool. This is one more than the total
-  //! number of buffers that can be stored (to differentiate between empty
-  //! and full buffers.
-  int _capacity;
-
-  //! An index into _buffers that points to the current tail of the buffer
-  //! pool.
-  volatile unsigned int _tail;
-
-  //! An index into _buffers that points to the current head of the buffer
-  //! pool.
-  volatile unsigned int _head;
-
-  //! How to long to wait before timing out on push() or pop() operations.
-  int _TIMEOUT;
-
-  //! This is the mutex that serializes multi-threaded resources access.
-  boost::mutex _mutex;
-
-  //! Condition variable that signals blocked readers (i.e. pop() operations)
-  //! when a new buffer is re-inserted back into the pool.
-  boost::condition_variable _read_cond;
-
-  //! Condition variable that signals blocked writers (i.e. push() operations)
-  //! when a new buffer is popped from the pool.
-  boost::condition_variable _write_cond;
-
- protected:
-  //! Increment the _buffer index pointed to by idx and wrap around if
-  //! necessary.
-  //! \param idx the index to increment.
-  //! \retun The value idx takes when incremented.
-  unsigned int increment(const unsigned int idx) const;
-
-  //! Push a buffer back into the pool.
-  //! \param b The buffer to be returned to the pool.
-  //! \return True if buffer successfully pushed, False if not (usually
-  //! because the operation timed out).
-  bool push(boost::uint8_t* b);
-
-  //! Pop a buffer from the pool.
-  //! \return The new buffer allocated, or 0 if the operation timed out.
-  boost::uint8_t* pop();
-
-  //! Query state of buffer pool.
-  //! \return True if buffer pool is empty, False otherwise.
-  bool is_empty() const;
-
-  //! Query state of buffer pool.
-  //! \return True if buffer pool is full, False otherwise.
-  bool is_full() const;
 
  public:
+  //---------------------------------------------------------------------------
+  // Public API
+  //---------------------------------------------------------------------------
   //! Returns a pointer to the single instance of BufferPool.
   static BufferPool* instance(); 
 
@@ -146,9 +92,81 @@ class BufferPool {
   //! Destructor.
   virtual ~BufferPool();
 
- private:
+ protected:
+  //---------------------------------------------------------------------------
+  // Internal data members
+  //---------------------------------------------------------------------------
+
+  //! Pointer to allocated buffers. Buffers are stored in an array and 
+  //! accessed by index. This array, along with _head, _tail, and the
+  //! associated operations, forms a circular queue.
+  boost::uint8_t** _buffers; 
+
+  //! The total capacity of the buffer pool. This is one more than the total
+  //! number of buffers that can be stored (to differentiate between empty
+  //! and full buffers.
+  int _capacity;
+
+  //! An index into _buffers that points to the current tail of the buffer
+  //! pool.
+  volatile unsigned int _tail;
+
+  //! An index into _buffers that points to the current head of the buffer
+  //! pool.
+  volatile unsigned int _head;
+
+  //! How to long to wait before timing out on push() or pop() operations.
+  int _TIMEOUT;
+
+  //! This is the mutex that serializes multi-threaded resources access.
+  boost::mutex _mutex;
+
+  //! Condition variable that signals blocked readers (i.e. pop() operations)
+  //! when a new buffer is re-inserted back into the pool.
+  boost::condition_variable _read_cond;
+
+  //! Condition variable that signals blocked writers (i.e. push() operations)
+  //! when a new buffer is popped from the pool.
+  boost::condition_variable _write_cond;
+
   //! Private pointer to the singleton instance.
   static BufferPool* _inst;
+
+
+ protected:
+  //---------------------------------------------------------------------------
+  // Internal methods
+  //---------------------------------------------------------------------------
+
+  //! Increment the _buffer index pointed to by idx and wrap around if
+  //! necessary.
+  //! \param idx the index to increment.
+  //! \retun The value idx takes when incremented.
+  unsigned int increment(const unsigned int idx) const;
+
+  //! Push a buffer back into the pool.
+  //! \param b The buffer to be returned to the pool.
+  //! \return True if buffer successfully pushed, False if not (usually
+  //! because the operation timed out).
+  bool push(boost::uint8_t* b);
+
+  //! Pop a buffer from the pool.
+  //! \return The new buffer allocated, or 0 if the operation timed out.
+  boost::uint8_t* pop();
+
+  //! Query state of buffer pool.
+  //! \return True if buffer pool is empty, False otherwise.
+  bool is_empty() const;
+
+  //! Query state of buffer pool.
+  //! \return True if buffer pool is full, False otherwise.
+  bool is_full() const;
+
+
+ private:
+  //---------------------------------------------------------------------------
+  // "Deleted" methods
+  //---------------------------------------------------------------------------
 
   //! Default constructor cannot be used to create an instance of BufferPool.
   BufferPool();
@@ -161,4 +179,4 @@ class BufferPool {
 };
 
 
-#endif // _BUFFER_POOL_
+#endif // _BUFFER_POOL_H_

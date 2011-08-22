@@ -20,8 +20,11 @@
  * 
  */
 
-#ifndef MARK6_H_
-#define MARK6_H_
+#ifndef _MARK6_H_
+#define _MARK6_H_
+
+//! A collection of common header files, definitions, and name spaces
+//! used across the mark6 software suite.
 
 // Common definitions.
 #include <sys/time.h>
@@ -36,11 +39,12 @@ using namespace boost;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 
-// Convert CDR data/time to epoch.
+//! Convert CDR data/time to epoch.
 extern time_t date_time_to_epoch(const std::string& start_date,
 				 const std::string& start_time);
 
 // Convenience class for keeping IP and port information together.
+//! \todo Is this really required?
 struct IPEndpoint {
   std::string _ip_address;
   int _port;
@@ -61,21 +65,36 @@ struct IPEndpoint {
   }
 };
 
+//! Very useful class for timing intervals.
 class Timer {
  private:
+  //! Start time.
   struct timeval _start;
+
+  //! Stop time.
   struct timeval _stop;
+
+  //! Duration of time that has elapsed since _start was set.
   struct timeval _duration;
  public:
+
+  //! Constructor. Start is set so interval measurement begins as soon as the
+  //! Timer object is constructed.
   Timer() {
     timerclear(&_start);
     timerclear(&_stop);
     timerclear(&_duration);
     gettimeofday(&_start, NULL);
   }
+
+  //! Restart the timer by resetting start time.
   void restart() {
     gettimeofday(&_start, NULL);
   }
+
+  //! Calculate and return the total amount of time that has elapsed since
+  //! _start was last initialized.
+  //! \return Amount of time (in seconds) since _start was initialized.
   double elapsed() {
     gettimeofday(&_stop, NULL);
     timersub(&_stop, &_start, &_duration);
@@ -84,17 +103,16 @@ class Timer {
   }
 };
 
-// Control messages.
+//! Control messages. \todo Remove these and keep them in specific class
+//! header files.
 enum  MessageType { MSG_WRITE_TO_DISK, MSG_READ_FROM_DISK, MSG_STOP };
 
+//! Obsolete. \todo Remove this.
 struct ControlMessage {
   MessageType _type;
 };
 
-// FIXME
-// typedef std::vector<boost::uint8_t> Buffer;
-// typedef boost::circular_buffer<Buffer*> CircularBuffer;
-
+//! Useful macro for drawing horizontal lines in print statements.
 #define HLINE "+------------------------------------------------------------------------------+"
 
-#endif /*MARK6_H_*/
+#endif // _MARK6_H_

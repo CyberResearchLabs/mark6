@@ -87,6 +87,6 @@ class PFR {
   
 };
 
-#endif /* _PFRING_CLASS_ */
+#endif // _PFRING_CLASS_
 
 
