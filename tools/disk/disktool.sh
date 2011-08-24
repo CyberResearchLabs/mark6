@@ -48,7 +48,7 @@ init_dev_map() {
 }
 
 tune_devs() {
-	for d in ${DEVS}
+	for p in ${DEV_MAP[@]}
 	do
 		IFS=':' read -ra a <<< "$p"
 		dev=${a[0]}
@@ -84,15 +84,18 @@ mount_devs() {
 }
 
 mk_raid() {
-	${MEGACLI}  -CfgClr -a0
-  	${MEGACLI} -CfgForeign -Clear -a0
-	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 256 -a0
-	${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 256 -a0
+	# ${MEGACLI}  -CfgClr -a0
+  	# ${MEGACLI} -CfgForeign -Clear -a0
+	# ${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 256 -a0
+	# ${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 256 -a0
 
-	${MEGACLI}  -CfgClr -a1
-  	${MEGACLI} -CfgForeign -Clear -a1
-	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 256 -a1
-	${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 256 -a1
+	# ${MEGACLI}  -CfgClr -a1
+  	# ${MEGACLI} -CfgForeign -Clear -a1
+	# ${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 256 -a1
+	# ${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 256 -a1
+
+	# Omit faulty disk.
+	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:7] WT NORA -strpsz 256 -a1
 
 	# Individual disk testing
   	# ${MEGACLI} -CfgEachDiskRaid0 -aALL

@@ -45,10 +45,10 @@ echo 512 > /sys/block/sdd/queue/nr_requests
 # pf_ring transparent_mode=0 min_num_slots=4096 enable_ip_defrag=1
 
 # IRQ "MAP"
-ETH2_IRQ=63
+ETH2_IRQ=66
 ETH3_IRQ=65
-ETH4_IRQ=66
-ETH5_IRQ=64
+ETH4_IRQ=64
+ETH5_IRQ=63
 MEGASAS1_IRQ=24
 MEGASAS2_IRQ=35
 

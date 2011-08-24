@@ -11,15 +11,15 @@ THREADS=1
 TIME=30
 INTERVAL=1
 
-${NUTTCP} -S -P5000
+# ${NUTTCP} -S -P5000
 
 # ${PING} -c 1 ${DEST_IP}
 
-#echo ${IPERF} -c ${DEST_IP} -u -p ${PORT}
-#${IPERF} -s -u \
-	#-p ${PORT} \
-	#-l ${WRITE_BUFFER_SIZE} \
-	#-t ${TIME} \
-	#-i ${INTERVAL}
+echo ${IPERF} -c ${DEST_IP} -u -p ${PORT}
+${IPERF} -s -u \
+	-p ${PORT} \
+	-l ${WRITE_BUFFER_SIZE} \
+	-t ${TIME} \
+	-i ${INTERVAL}
 	# -B ${INTERFACE}
 
