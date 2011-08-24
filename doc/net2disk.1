@@ -8,60 +8,93 @@
 \- Capture data from network interface and record to disk.
 
 .SH SYNOPSIS
-.B foo [-bar] [-c
-.I config-file
+.B net2disk
+.B [--snaplen 
+.I <capture length>
 .B ]
-.I file
+.B [--promiscuous]
+.B [--log_config
+.I <filename>
+.B ]
+.B [--interfaces
+.I <list of net interfaces>
+.B ]
+.B [--capture_files 
+.I <list of files>
+.B ]
+.B [--smp_affinities
+.I <list of affinities>
+.B ]
+.B [--ring_buffers
+.I <total # ring buffers>
+.B ]
+.B [--write_blocks
+.I <# write blocks per capture file>
+.B ]
+.B [--help]
 .B ...
 
 .SH DESCRIPTION
-.B foo
-frobnicates the bar library by tweaking internal
-symbol tables. By default it parses all baz segments
-and rearranges them in reverse order by time for the
-.BR xyzzy (1)
-linker to find them. The symdef entry is then compressed
-using the WBG (Whiz-Bang-Gizmo) algorithm.
-All files are processed in the order specified.
+.B net2disk
+Captures data from one or more network interfaces and writes data
+to one or more disks. Each network interface is mapped to its own
+disk. Each network interface/disk pair is processed in a separate 
+process.
 
 .SH OPTIONS
-.IP -b
-Do not write `busy' to stdout while processing.
-.IP "-c config-file"
-Use the alternate system wide
-.I config-file
-instead of
-.IR /etc/foo.conf .
-This overrides any
-.B FOOCONF
-environment variable.
-.IP -a
-In addition to the baz segments, also parse the
-blurfl headers.
-.IP -r
-Recursive mode. Operates as fast as lightning
-at the expense of a megabyte of virtual memory.
+.IP "--snaplen <capture length>"
+Length of bytes to capture (includes L2 header and above in the
+protocol stack)
+
+.IP "--promiscuous"
+When present, sets each opened ethernet interface to promiscuous mode.
+
+.IP "--log_config <filename>"
+Configuration file for application logging subsystem.
+
+
+.IP "--interfaces <list of net interfaces>"
+List of network interfaces from which data are captured.
+
+.IP "--capture_files <list of files>"
+List of files to which data are written. These files are paired with
+the network interfaces supplied in the --interfaces option, according
+to their ordering on the command line.
+
+.IP "--smp_affinities <list of affinities>"
+List of SMP processor affinities. Each affinity is specified as a
+number which is the number of the CPU to which a process should be
+mapped (starting from 0). The arguments to the --interfaces,
+--capture_files, and --smp_affinities options create a set of three
+tuples fo the form: <interfaceN, fileN, affinityN>. This represents a
+configuration where interfaceN and fileN are served in the same
+process which is executed on processor affinityN.
+
+.IP "--ring_buffers <total # of ring buffers>"
+The total number of ring buffers to use in the system.
+
+.IP "--write_blocks <# write blocks per capture file>"
+The total number of write blocks to use for each capture file.
+
+.IP"--help"
+Print a usage message.
+
 
 .SH FILES
-.I /etc/foo.conf
+.I /opt/haystack/mark6/etc/net2disk.conf
 .RS
-The system wide configuration file. See
+Application logging configuration file. See
 .BR foo (5)
 for further details.
 .RE
-.I ~/.foorc
+.I /opt/haystack/mark6/bin/run.sh
 .RS
-Per user configuration file. See
+Execution script see
 .BR foo (5)
 for further details.
 
 .SH ENVIRONMENT
-.IP FOOCONF
-If non-null the full pathname for an alternate system wide
-.IR foo.conf .
-Overridden by the
-.B -c
-option.
+None
 
 .SH DIAGNOSTICS
 The following diagnostics may be issued on stderr:
@@ -77,14 +110,12 @@ can only handle new style baz segments. COBOL
 object libraries are not supported in this version.
 
 .SH BUGS
-The command name should have been chosen more carefully
-to reflect its purpose.
+None known at this time.
 
 .SH AUTHOR
 David Lapsley <del at haystack dot mit dot edu>
 
 .SH "SEE ALSO"
-.BR bar (1),
-.BR foo (5),
-.BR xyzzy (1)
+.BR mark6 (1),
+.BR dimino6 (1)
 
