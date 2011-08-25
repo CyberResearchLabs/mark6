@@ -34,8 +34,8 @@ MEGACLI=/usr/sbin/megacli
 PARTED=/sbin/parted
 MKFS=/sbin/mkfs.ext4
 FIO=/usr/bin/fio
-CONFIG=jobs.fio
-OUTPUT=jobs.out
+CONFIG=disktool.fio
+OUTPUT=disktool.out
 SEQ=/usr/bin/seq
 
 
