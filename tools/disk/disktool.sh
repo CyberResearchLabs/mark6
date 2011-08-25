@@ -212,7 +212,7 @@ main() {
 	echo Please direct any questions to del@haystack.mit.edu
 	echo
 
-	while getopts ":c:C:rpftmTah" opt
+	while getopts ":c:C:rpftmbah" opt
 	do
     		case ${opt} in
 		c )	DEV_CONFIG=$OPTARG
