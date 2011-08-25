@@ -3,7 +3,7 @@ rw=write
 iodepth=8
 directory=/mnt/disk0
 write_bw_log=disk0_write
-size=300G
+fill_device=1
 stonewall
 
 [disk1]
@@ -11,7 +11,7 @@ rw=write
 iodepth=8
 directory=/mnt/disk1
 write_bw_log=disk1_write
-size=300G
+fill_device=1
 stonewall
 
 [disk2]
@@ -19,7 +19,7 @@ rw=write
 iodepth=8
 directory=/mnt/disk2
 write_bw_log=disk2_write
-size=300G
+fill_device=1
 stonewall
 
 [disk3]
@@ -27,6 +27,5 @@ rw=write
 iodepth=8
 directory=/mnt/disk3
 write_bw_log=disk3_write
-fill_device=0
-size=300G
+fill_device=1
 stonewall
