@@ -1,0 +1,19 @@
+<gen>
+	<data
+		stream_rate="20480"
+		duration="10"
+		write_block_size="4096"
+		mtu="1500"
+		format="random"
+	/>
+	<receivers>
+		<receiver ip="10.0.0.1" port="7000"/>
+		<receiver ip="10.0.0.1" port="7001"/>
+		<receiver ip="10.0.0.2" port="7002"/>
+		<receiver ip="10.0.0.2" port="7003"/>
+		<receiver ip="10.0.0.3" port="7004"/>
+		<receiver ip="10.0.0.3" port="7005"/>
+		<receiver ip="10.0.0.4" port="7006"/>
+		<receiver ip="10.0.0.4" port="7007"/>
+	</receivers>
+</gen>

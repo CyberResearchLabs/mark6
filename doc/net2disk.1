@@ -83,15 +83,18 @@ Print a usage message.
 .SH FILES
 .I /opt/haystack/mark6/etc/net2disk.conf
 .RS
-Application logging configuration file. See
-.BR foo (5)
-for further details.
+Application logging configuration file.
+
 .RE
 .I /opt/haystack/mark6/bin/run.sh
 .RS
-Execution script see
-.BR foo (5)
-for further details.
+Execution script. This script will start a new net2disk instance.
+
+.RE
+.I /opt/haystack/mark6/var/net2disk.log
+.RS
+Log file. All application logging (DEBUG, INFO, WARNING, ERROR, etc.)
+is sent to this log file.
 
 .SH ENVIRONMENT
 None
