@@ -7,8 +7,8 @@
 %% default_timeout (TIMEOUT = 8000)
 %% lock_timeout (LOCK_TIMEOUT = 5000)
 
-{application, client, [
-    {description, "Client - Dimino6 client"},
+{application, tstmark6, [
+    {description, "tstMark6 - Mark6 CLI"},
     {vsn, "0.1"},
     {modules, []}, 
     {mod, {client_app, ["%MAKETIME%"]}},

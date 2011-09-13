@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 8 Sep 2011 by David <dlapsley@lib1-lt.haystack.mit.edu>
 %%%-------------------------------------------------------------------
--module(client_tests).
+-module(tstmark6_tests).
 -author("dlapsley@haystack.mit.edu").
 -include_lib("eunit/include/eunit.hrl").
 -include("main.hrl").
@@ -55,15 +55,15 @@ commands() ->
 
 % Start of tests...
 basic() ->
-    error_logger:info_msg("client_tests:basic!()~n"),
+    error_logger:info_msg("tstmark6_tests:basic!()~n"),
     process_flag(trap_exit, true),
     {ok, Dummy_pid} = start_server([]),
     timer:sleep(1000),
-    {ok, Client_pid} = client:start_server(true),
+    {ok, Client_pid} = tstmark6:start_server(true),
     timer:sleep(1000),
     lists:foreach(fun(X) -> Client_pid ! {self(), X} end, commands()),
     timer:sleep(1000),
-    exit(Client_pid, "Shutting down client pid."),
+    exit(Client_pid, "Shutting down tstmark6 pid."),
     exit(Dummy_pid, "Sutting down dummy pid."),
     ok.
 
