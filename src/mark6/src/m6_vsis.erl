@@ -1,4 +1,4 @@
-%%%-------------------------------------------------------------------
+%%-------------------------------------------------------------------
 %%% @author David <dlapsley@lib1-lt.haystack.mit.edu>
 %%% @copyright (C) 2011, MIT Haystack Observatory
 %%% @doc
@@ -93,25 +93,36 @@ handle(Command) ->
 %%              xcube system. Retrieves response and then returns it.
 %%--------------------------------------------------------------------
 handle_command(disk_state, Args) ->
-    "received your disk_state command";
+    "received your disk_state command;";
     % x3c_server:send_x3c_cmd(set_volume_state, Args);
 handle_command(disk_state_mask, Args) ->
-    "received your disk_state_mask command";
+    "received your disk_state_mask command;";
     % x3c_server:send_x3c_cmd(set_volume_state_mask, Args);
 handle_command(input_stream, Args) ->
-    "received your input_stream command";
-    % x3c_server:send_x3c_cmd(set_input_stream, Args);
+    case lists:nth(1, Args) of
+	"add" ->
+	    m6_state:insert_input_stream(
+	      lists:nth(2, Args),
+	      #m6_input_stream{stream_label=lists:nth(2, Args),
+			       data_format=lists:nth(3, Args),
+			       interface_id=lists:nth(4, Args),
+			       filter_address=lists:nth(5, Args)
+			      }),
+	    "!input_stream=0:0;";
+	"dismount" ->
+	    "!input_stream=-1:-1;"
+    end;
 handle_command(msn, Args) ->
-    "received your input_stream command";
+    "received your input_stream command;";
     % x3c_server:send_x3c_cmd(set_module_serial_number, Args);
 handle_command(record, Args) ->
-    "received your record command";
+    "received your record command;";
     % x3c_server:send_x3c_cmd(set_record, Args);
 handle_command(vol_def, Args) ->
-    "received your vol_def command";
+    "received your vol_def command;";
     % x3c_server:send_x3c_cmd(define_volume, Args);
 handle_command(vol_action, Args) ->
-    "received your vol_action command".
+    "received your vol_action command;".
     % x3c_server:send_x3c_cmd(set_volume_action, Args).
 
 %%--------------------------------------------------------------------
@@ -124,7 +135,26 @@ handle_query(disk_state, Args) ->
 handle_query(disk_state_mask, Args) ->
     x3c_server:send_x3c_cmd(get_volume_state_mask, Args);
 handle_query(input_stream, Args) ->
-    x3c_server:send_x3c_cmd(get_input_stream, Args);
+    {ok, Streams} = m6_state:get_input_streams(),
+    Stream_output = lists:map(fun(X) ->
+				      [
+				       X#m6_input_stream.stream_label,
+				       X#m6_input_stream.data_format,
+				       X#m6_input_stream.interface_id,
+				       X#m6_input_stream.filter_address
+				      ]
+			      end, Streams),
+    Stream_strings = lists:map(fun(X) ->
+				       string:join(X, ":")
+			       end, Stream_output),
+    Stream_reply = string:join(Stream_strings, "\n"),
+    error_logger:info_msg("Q4: ~p~n", [ Stream_reply ]),
+    string:join([
+		 "!input_stream?0:0:\n",
+		 Stream_reply,
+		 ";"
+		], "");
+
 handle_query(msn, Args) ->
     x3c_server:send_x3c_cmd(get_module_serial_number, Args);
 handle_query(record, _Args) ->

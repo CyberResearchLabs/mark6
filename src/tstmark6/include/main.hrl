@@ -16,7 +16,7 @@
 
 %% Xcube connectivity.
 -define(DEFAULT_HOST, "127.0.0.1").
--define(DEFAULT_PORT, 6050).
+-define(DEFAULT_PORT, 14242).
 -define(DEFAULT_RCV_TO, 1000).
 -define(DEFAULT_CONNECT_RETRIES, 5).
 

@@ -20,4 +20,5 @@ start_link() ->
 init(_Args) ->
     error_logger:info_msg("Init-ing supervisor.~n"),
     M6_server = ?CHILD(m6_server, worker),
-    {ok, {{one_for_one, 5, 10}, [M6_server] }}.
+    M6_state = ?CHILD(m6_state, worker),
+    {ok, {{one_for_one, 5, 10}, [M6_server, M6_state] }}.

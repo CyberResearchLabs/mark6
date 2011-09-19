@@ -36,3 +36,5 @@
 %% For xmerl processing of m6 responses.
 -record(param, {name, type, value}).
 -record(m6_resp, {retval, reason, name, params}).
+-record(m6_input_stream, {stream_label, data_format, interface_id,
+			  filter_address}).

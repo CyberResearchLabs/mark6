@@ -1,6 +1,7 @@
 #!/bin/bash
 
-ERL=/opt/local/bin/erl
+# ERL=/opt/local/bin/erl
+ERL=/usr/bin/erl
 ROOT=/home/dlapsley/mark6/src/tstmark6/
 
 CLIENT_DIR=${ROOT}/ebin

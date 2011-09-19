@@ -53,7 +53,6 @@ loop(Sock, Test) ->
 			    Msg
 		    end;
 		_ ->
-		    error_logger:info_msg("Here"),
 		    io:get_line("mark6>")
 	    end,
     case Input of
@@ -70,7 +69,10 @@ loop(Sock, Test) ->
 		false ->
 		    gen_tcp:send(Sock, Cleaned_cmd),
 		    Response = get_response(Sock, []),
-		    io:format(Response),
+		    Response_lines = string:tokens(Response, "\n"),
+		    lists:map(fun(X) ->
+				      io:format("~s~n", [X])
+			      end, Response_lines),
 		    loop(Sock, Test)
 	    end	
     end.
@@ -78,7 +80,7 @@ loop(Sock, Test) ->
 get_response(Sock, List) ->
     case gen_tcp:recv(Sock, 1) of
 	{ok, ";"} ->
-	    lists:reverse(List) ++ ";";
+	    lists:concat(lists:reverse([ ";" | List]));
 	{ok, Char} ->
 	    get_response(Sock, [Char|List]);
 	Error ->
