@@ -1,11 +1,3 @@
-# Source root.
-MARK6_ROOT=/opt/src/mark6/src/mark6
-MARK6_APP=${MARK6_ROOT}/rel/mark6/bin/mark6
-
-# OTP directories (not used).
-OTP_SRC=otp_src_R14B02
-OTP_DIR=${MARK6_ROOT}/lib/mark6/priv/
-
 # Ubuntu pre-requisite packages.
 # PREQ="ncurses-dev libssl-dev build-essential git-core"
 
@@ -41,7 +33,7 @@ generate:	compile node
 	${CP} src/reltool.config.src rel/reltool.config
 	${RM} -fr rel/mark6
 	${REBAR} generate force=1
-	${CHMOD} u+x ${MARK6_APP}
+	${CHMOD} u+x rel/mark6/bin/mark6
 
 tests:
 	${REBAR} eunit
