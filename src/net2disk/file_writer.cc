@@ -149,8 +149,8 @@ int FileWriter::open() {
 
   // Open files for each path.
   int ret=0;
-  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT
-		   | O_DIRECT, S_IRWXU);
+  // Assumes FALLOCATE
+  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
   if (_pfd.fd<0) {
     LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
 		  << " - " << strerror(errno));
@@ -161,6 +161,16 @@ int FileWriter::open() {
 		  << _pfd.fd);
     _pfd.events = POLLOUT;
   }
+
+  if (::lseek(_pfd.fd, 0, SEEK_SET) < 0) {
+    LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: " << _capture_file
+		  << " - " << strerror(errno));
+    _pfd.fd = -1;
+    ret = -1;
+  } else {
+    LOG4CXX_DEBUG(logger, "Successfully seeked.");
+  }
+
 
   // Debug message.
   LOG4CXX_DEBUG(logger, "pfd: " << _pfd.fd);
