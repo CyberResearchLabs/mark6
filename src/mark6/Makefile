@@ -41,7 +41,5 @@ tests:
 clean:
 	${REBAR} clean
 	${RM} -fr rel
-	${RM} -fr files
-	${RM} -fr reltool.config
 	${RM} -fr lib/mark6/files
 	${RM} -fr lib/mark6/reltool.config
