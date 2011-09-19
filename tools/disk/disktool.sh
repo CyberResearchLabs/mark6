@@ -32,8 +32,8 @@ DUMPE2FS=/sbin/dumpe2fs
 MOUNT=/bin/mount
 MEGACLI=/usr/sbin/megacli
 PARTED=/sbin/parted
-# MKFS=/sbin/mkfs.ext4
-MKFS=/sbin/mkfs.xfs
+MKFS=/sbin/mkfs.ext4
+# MKFS=/sbin/mkfs.xfs
 FIO=/usr/bin/fio
 CONFIG=disktool.fio
 OUTPUT=disktool.out
@@ -73,18 +73,18 @@ tune_devs() {
 mount_devs() {
 	MOUNT_OPTS="defaults,data=writeback,noatime,nodiratime"
 	# FOR XFS
-	MOUNT_OPTS="noatime,nodiratime,allocsize=512m,sunit=1024,swidth=8192"
+	# MOUNT_OPTS="noatime,nodiratime,allocsize=512m,sunit=1024,swidth=8192"
 	for p in ${DEV_MAP[@]}
 	do
 		IFS=':' read -ra a <<< "$p"
 		dev=${a[0]}
 		mnt=${a[1]}
 
-		echo ${MOUNT} -t xfs -o ${MOUNT_OPTS} ${dev}1 ${mnt}
+		echo ${MOUNT} -t ext4 -o ${MOUNT_OPTS} ${dev}1 ${mnt}
 		mkdir -p ${mnt}
-		# ${MOUNT} -t ext4 -o ${MOUNT_OPTS} ${dev}1 ${mnt}
+		${MOUNT} -t ext4 -o ${MOUNT_OPTS} ${dev}1 ${mnt}
 		# For XFS
-		${MOUNT} -t xfs -o ${MOUNT_OPTS} ${dev}1 ${mnt}
+		# ${MOUNT} -t xfs -o ${MOUNT_OPTS} ${dev}1 ${mnt}
 	done
 }
 
@@ -98,7 +98,7 @@ mk_raid() {
   	${MEGACLI} -CfgForeign -Clear -a1
 	${MEGACLI} -CfgLdAdd -R0[245:0,245:1,245:2,245:3,245:4,245:5,245:6,245:7] WT NORA -strpsz 512 -a1
 	# ${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 512 -a1
-	${MEGACLI} -CfgLdAdd -R0[245:8,245:9,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 512 -a1
+	${MEGACLI} -CfgLdAdd -R0[245:9,245:10,245:11,245:12,245:13,245:14,245:15] WT NORA -strpsz 512 -a1
 
 	# Individual disk testing
   	# ${MEGACLI} -CfgEachDiskRaid0 -aALL
@@ -136,22 +136,20 @@ mk_fs() {
 		mnt=${a[1]}
 
 		echo ${MKFS} ${dev}1
-		# For XFS
-		${MKFS} -f \
-			-d sunit=1024,swidth=8192 \
-			${dev}1
-			# \
-			# -d su=1024,sw=1 \
-    			# -l su=64k,version=2,lazy-count=1,size=128m \
-    			# -i attr=2 \
-			# ${dev}1 
+		${MKFS} ${dev}1
+		#-d sunit=1024,swidth=8192 \
+		# \
+		# -d su=1024,sw=1 \
+    		# -l su=64k,version=2,lazy-count=1,size=128m \
+    		# -i attr=2 \
+		# ${dev}1 
 	done
 }
 
 perf_test() {
-	${FIO}	--output=${OUTPUT} \
+	nohup ${FIO}	--output=${OUTPUT} \
 		--minimal \
-		${CONFIG}
+		${CONFIG} &
 
 	# Field description.
 	# jobname, groupid, error, 

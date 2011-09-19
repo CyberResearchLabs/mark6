@@ -1,12 +1,20 @@
 #!/bin/bash
 
 FIO=/usr/bin/fio
-CONFIG=jobs.fio
-OUTPUT=jobs.out
+CONFIG=disktool.fio
+EXPERIMENT=ext4_disk2
+OUTPUT=fio.out
 
-${FIO}	--output=${OUTPUT} \
+
+mkdir -p ${EXPERIMENT}
+
+sudo ${FIO} --output=${OUTPUT} \
 	--minimal \
 	${CONFIG}
+
+mv *.log ${EXPERIMENT}
+mv fio.out ${EXPERIMENT}
+mv nohup.out ${EXPERIMENT}
 
 # jobname, groupid, error, 
 # Read status:

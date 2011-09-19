@@ -1,2 +1,4 @@
-/dev/sdc:/mnt/disk3
-/dev/sdd:/mnt/disk4
+/dev/sda:/mnt/disk0
+/dev/sdb:/mnt/disk1
+/dev/sdc:/mnt/disk2
+/dev/sdd:/mnt/disk3
