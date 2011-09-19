@@ -11,6 +11,3 @@ vtp-legacy/vsocket/.DS_Store
 vtp-legacy/vsocket/src/.DS_Store
 vtp-legacy/vsocket/src/app/.DS_Store
 vtp-legacy/vsocket/src/vsocket/.DS_Store
-Makefile
-src/Makefile
-src/dim/Makefile
