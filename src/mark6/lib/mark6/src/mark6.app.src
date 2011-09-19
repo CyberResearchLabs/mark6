@@ -2,7 +2,7 @@
 	[
 	{description, "Mark6 control plane"},
 	{vsn, "0.1"},
-	{modules,[mark6_app,mark6_sup,x3c_server,m6_x3c,m6_server,m6_vsis]},
+	{modules,[mark6_app,mark6_sup,m6_state,x3c_server,m6_x3c,m6_server,m6_vsis]},
 	{registered,[m6_parser]},
 	{applications,[kernel,stdlib]},
 	{env, [

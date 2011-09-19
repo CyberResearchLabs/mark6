@@ -21,11 +21,7 @@ app:	ebin/$(PKGNAME).app
 
 ebin/$(PKGNAME).app:	src/$(PKGNAME).app.src
 	$(MKDIR) -p ebin
-<<<<<<< HEAD
-	$(SED) -e 's/modules, \[\]/{modules, [$(MODULES)]}/;s/%MAKETIME%/$(MAKETIME)/' < $< > $@
-=======
 	sed -e 's/modules, \[\]/{modules, [$(MODULES)]}/;s/%MAKETIME%/$(MAKETIME)/' < $< > $@
->>>>>>> e1ec64936f9fc146992fe6fa18c35126406e0a72
 
 clean:
 	(cd src; $(MAKE) clean)

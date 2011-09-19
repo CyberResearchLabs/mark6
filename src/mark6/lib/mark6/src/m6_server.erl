@@ -64,9 +64,8 @@ handle_request(Socket, List) ->
 	{ok, ";"} ->
 	    Command = lists:reverse(List) ++ ";",
 	    error_logger:info_msg("m6_server:handle_request request ~p~n", [Command]),
-	    %% {ok, Reply} = m6_vsis:handle(Command),
-	    %%error_logger:info_msg("m6_server:handle_request response ~p~n", [Reply]),
-	    Reply = "cool",
+	    {ok, Reply} = m6_vsis:handle(Command),
+	    error_logger:info_msg("m6_server:handle_request response ~p~n", [Reply]),
 	    gen_tcp:send(Socket, Reply),
 	    handle_request(Socket, []);
 	{ok, Char} ->
