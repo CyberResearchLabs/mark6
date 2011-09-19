@@ -22,7 +22,7 @@ trim_whitespace(Input) ->
     RS.
 
 start_server(Test) ->
-    {ok, spawn(?MODULE, server, [Test])}.
+    {ok, spawn(?MODULE, server, [false])}.
 
 server(Test) ->
     error_logger:info_msg("Server start."),
@@ -32,19 +32,23 @@ server(Test) ->
     io:format("del@haystack.mit.edu~n~n", []),
     io:format("Type 'quit;' to exit CLI...~n", []),
     io:format(?HLINE ++ "\n"),
-    case gen_tcp:connect(?DEFAULT_HOST, ?DEFAULT_PORT,
-			 ?TCP_OPTIONS) of
-	{ok, Sock} ->
-	    io:format("Connected to server...~n"),
-	    loop(Sock, Test);
-	{error, Reason} ->
-	    error_logger:warn_msg("Error connecting to server: ~w~n",
-				  [ Reason ]);
-	_ ->
-	    error_logger:warn_msg("Unknown error connecting to server~n")
-    end.
+    io:get_line("cool>"),
+    %case gen_tcp:connect(?DEFAULT_HOST, ?DEFAULT_PORT,
+    %?TCP_OPTIONS) of
+    %{ok, Sock} ->
+    %io:format("Connected to server...~n"),
+    Sock=true,
+	    loop(Sock, Test).
+%;
+%	{error, Reason} ->
+%	    error_logger:warn_msg("Error connecting to server: ~w~n",
+%				  [ Reason ]);
+%	_ ->
+%	    error_logger:warn_msg("Unknown error connecting to server~n")
+   % end.
 
 loop(Sock, Test) ->
+<<<<<<< HEAD
     Input = case Test of
 		true ->
 		    receive
@@ -56,6 +60,11 @@ loop(Sock, Test) ->
 		    io:get_line("mark6>")
 	    end,
     case Input of
+=======
+    % Input = io:get_line("mark6>"),
+    %error_logger:info_msg("~p~n", [Input]),
+    case io:get_line("mark6>") of
+>>>>>>> 087212810a5458dfdf6e940ce83dd4360398b88d
 	eof ->
 	    error_logger:info_msg("Done");
 	{error, Reason } ->

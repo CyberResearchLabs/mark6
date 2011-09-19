@@ -6,6 +6,7 @@
 %% Settings (defaults in include/main.hrl):
 %% default_timeout (TIMEOUT = 8000)
 %% lock_timeout (LOCK_TIMEOUT = 5000)
+%% {env, [{default_timeout, 5000}]}
 
 {application, tstmark6, [
     {description, "tstMark6 - Mark6 CLI"},
@@ -14,5 +15,5 @@
     {mod, {client_app, ["%MAKETIME%"]}},
     {registered, []},
     {applications, [kernel, stdlib, crypto]},
-    {env, [{default_timeout, 5000}]}
+    {env, [{}]}
 ]}.

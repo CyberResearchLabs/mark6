@@ -29,8 +29,8 @@ compile:
 	${REBAR} compile
 
 generate:	compile node
-	${CP} src/mark6.app.src ebin/mark6.app
-	${CP} src/reltool.config.src rel/reltool.config
+	${CP} lib/mark6/src/mark6.app.src lib/mark6/ebin/mark6.app
+	${CP} lib/mark6/src/reltool.config.src rel/reltool.config
 	${RM} -fr rel/mark6
 	${REBAR} generate force=1
 	${CHMOD} u+x rel/mark6/bin/mark6
@@ -45,5 +45,3 @@ clean:
 	${RM} -fr reltool.config
 	${RM} -fr lib/mark6/files
 	${RM} -fr lib/mark6/reltool.config
-	${RM} -fr lib/client/files
-	${RM} -fr lib/client/reltool.config
