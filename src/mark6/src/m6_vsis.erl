@@ -93,19 +93,26 @@ handle(Command) ->
 %%              xcube system. Retrieves response and then returns it.
 %%--------------------------------------------------------------------
 handle_command(disk_state, Args) ->
-    x3c_server:send_x3c_cmd(set_volume_state, Args);
+    "received your disk_state command";
+    % x3c_server:send_x3c_cmd(set_volume_state, Args);
 handle_command(disk_state_mask, Args) ->
-    x3c_server:send_x3c_cmd(set_volume_state_mask, Args);
+    "received your disk_state_mask command";
+    % x3c_server:send_x3c_cmd(set_volume_state_mask, Args);
 handle_command(input_stream, Args) ->
-    x3c_server:send_x3c_cmd(set_input_stream, Args);
+    "received your input_stream command";
+    % x3c_server:send_x3c_cmd(set_input_stream, Args);
 handle_command(msn, Args) ->
-    x3c_server:send_x3c_cmd(set_module_serial_number, Args);
+    "received your input_stream command";
+    % x3c_server:send_x3c_cmd(set_module_serial_number, Args);
 handle_command(record, Args) ->
-    x3c_server:send_x3c_cmd(set_record, Args);
+    "received your record command";
+    % x3c_server:send_x3c_cmd(set_record, Args);
 handle_command(vol_def, Args) ->
-    x3c_server:send_x3c_cmd(define_volume, Args);
+    "received your vol_def command";
+    % x3c_server:send_x3c_cmd(define_volume, Args);
 handle_command(vol_action, Args) ->
-    x3c_server:send_x3c_cmd(set_volume_action, Args).
+    "received your vol_action command".
+    % x3c_server:send_x3c_cmd(set_volume_action, Args).
 
 %%--------------------------------------------------------------------
 %% Function: handle_query(Type, Args) -> {ok,Result} | {error,Error}
