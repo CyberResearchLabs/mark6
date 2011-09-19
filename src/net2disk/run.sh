@@ -81,7 +81,7 @@ echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 # Note that SMP affinities are ordinals (not mask). CPU numbering from 0.
 for m in disk0 disk1 disk2 disk3
 do
-	fallocate -l 200G /mnt/${m}/cap.m6
+	fallocate -l 2400G /mnt/${m}/cap.m6
 done
 
 ${EXEC} \
