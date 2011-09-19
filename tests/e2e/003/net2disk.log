@@ -1,125 +1,125 @@
-DEBUG 0x7f3a3f05b760 net2disk - Starting.
-DEBUG 0x7f3a3f05b760 net2disk - Parent still here after fork.
-DEBUG 0x7f3a3f05b760 net2disk - Parent still here after fork.
-DEBUG 0x7f3a3f05b760 net2disk - Forked child: 0
-DEBUG 0x7f3a3f05b760 net2disk - Parent still here after fork.
-DEBUG 0x7f3a3f05b760 net2disk - Forked child: 1
-DEBUG 0x7f3a3f05b760 net2disk - Parent still here after fork.
-DEBUG 0x7f3a3f05b760 net2disk - Forked child: 2
-DEBUG 0x7f3a3f05b760 net2disk - Forked child: 3
-DEBUG 0x7f3a3f05b760 net2disk - Started child_cli
-DEBUG 0x7f3a3f05b760 net2disk - Started child_cli
-DEBUG 0x7f3a3f05b760 net2disk - Started child_cli
-DEBUG 0x7f3a3f05b760 net2disk - Started child_cli
-DEBUG 0x7f3a3f05b760 net2disk - Starting fd: 5
-DEBUG 0x7f3a3f05b760 net2disk - Starting fd: 6
-DEBUG 0x7f3a3f05b760 net2disk - Starting fd: 7
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received start
+DEBUG 0x7fca93834760 net2disk - Starting.
+DEBUG 0x7fca93834760 net2disk - Parent still here after fork.
+DEBUG 0x7fca93834760 net2disk - Parent still here after fork.
+DEBUG 0x7fca93834760 net2disk - Forked child: 0
+DEBUG 0x7fca93834760 net2disk - Parent still here after fork.
+DEBUG 0x7fca93834760 net2disk - Forked child: 1
+DEBUG 0x7fca93834760 net2disk - Parent still here after fork.
+DEBUG 0x7fca93834760 net2disk - Forked child: 2
+DEBUG 0x7fca93834760 net2disk - Forked child: 3
+DEBUG 0x7fca93834760 net2disk - Started child_cli
+DEBUG 0x7fca93834760 net2disk - Started child_cli
+DEBUG 0x7fca93834760 net2disk - Started child_cli
+DEBUG 0x7fca93834760 net2disk - Started child_cli
+DEBUG 0x7fca93834760 net2disk - Starting fd: 5
+DEBUG 0x7fca93834760 net2disk - Starting fd: 6
+DEBUG 0x7fca93834760 net2disk - Starting fd: 7
+DEBUG 0x7fca93834760 net2disk - child_cli() received start
 
-DEBUG 0x7f3a3f05b760 net2disk - Starting fd: 8
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received start cmd
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received start
+DEBUG 0x7fca93834760 net2disk - Starting fd: 8
+DEBUG 0x7fca93834760 net2disk - child_cli() received start cmd
+DEBUG 0x7fca93834760 net2disk - child_cli() received start
 
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received start cmd
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Opening FileWriter file: /mnt/disk0/cap.m6
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Opening FileWriter file: /mnt/disk2/cap.m6
-DEBUG 0x7f3a3f05b760 net2disk - File: /mnt/disk0/cap.m6 fd: 10
-DEBUG 0x7f3a3f05b760 net2disk - Successfully seeked.
-DEBUG 0x7f3a3f05b760 net2disk - File: /mnt/disk2/cap.m6 fd: 12
-DEBUG 0x7f3a3f05b760 net2disk - pfd: 10
-DEBUG 0x7f3a3f05b760 net2disk - Successfully seeked.
-DEBUG 0x7f3a3f05b760 net2disk - pfd: 12
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Received READ_FROM_NETWORK...
-INFO 0x7f3a3f05b760 net2disk - Received READ_FROM_NETWORK...
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received start
+DEBUG 0x7fca93834760 net2disk - child_cli() received start cmd
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Opening FileWriter file: /mnt/disk0/cap.m6
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Opening FileWriter file: /mnt/disk2/cap.m6
+DEBUG 0x7fca93834760 net2disk - File: /mnt/disk0/cap.m6 fd: 10
+DEBUG 0x7fca93834760 net2disk - Successfully seeked.
+DEBUG 0x7fca93834760 net2disk - File: /mnt/disk2/cap.m6 fd: 12
+DEBUG 0x7fca93834760 net2disk - pfd: 10
+DEBUG 0x7fca93834760 net2disk - Successfully seeked.
+DEBUG 0x7fca93834760 net2disk - pfd: 12
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Received READ_FROM_NETWORK...
+INFO 0x7fca93834760 net2disk - Received READ_FROM_NETWORK...
+DEBUG 0x7fca93834760 net2disk - child_cli() received start
 
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received start
+DEBUG 0x7fca93834760 net2disk - child_cli() received start
 
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received start cmd
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received start cmd
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Opening FileWriter file: /mnt/disk1/cap.m6
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-DEBUG 0x7f3a3f05b760 net2disk - File: /mnt/disk1/cap.m6 fd: 11
-INFO 0x7f3a3f05b760 net2disk - Opening FileWriter file: /mnt/disk3/cap.m6
-DEBUG 0x7f3a3f05b760 net2disk - Successfully seeked.
-DEBUG 0x7f3a3f05b760 net2disk - pfd: 11
-DEBUG 0x7f3a3f05b760 net2disk - File: /mnt/disk3/cap.m6 fd: 13
-DEBUG 0x7f3a3f05b760 net2disk - Successfully seeked.
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-DEBUG 0x7f3a3f05b760 net2disk - pfd: 13
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Received READ_FROM_NETWORK...
-INFO 0x7f3a3f05b760 net2disk - Received WRITE_TO_DISK
-INFO 0x7f3a3f05b760 net2disk - Received READ_FROM_NETWORK...
-INFO 0x7f3a0aab2700 net2disk - StatsWriter Running...
-INFO 0x7f3a0aab2700 net2disk - StatsWriter Running...
-INFO 0x7f3a0a2b1700 net2disk - NetReader Running...
-INFO 0x7f3a0a2b1700 net2disk - NetReader Running...
-INFO 0x7f3a0bab4700 net2disk - StatsWriter Running...
-INFO 0x7f3a0b2b3700 net2disk - FileWriter Running...
-INFO 0x7f3a0bab4700 net2disk - StatsWriter Running...
-INFO 0x7f3a0b2b3700 net2disk - FileWriter Running...
-INFO 0x7f3a0aab2700 net2disk - StatsWriter Running...
-INFO 0x7f3a0a2b1700 net2disk - NetReader Running...
-INFO 0x7f3a0aab2700 net2disk - StatsWriter Running...
-INFO 0x7f3a0a2b1700 net2disk - NetReader Running...
-INFO 0x7f3a0b2b3700 net2disk - FileWriter Running...
-INFO 0x7f3a0bab4700 net2disk - StatsWriter Running...
-INFO 0x7f3a0b2b3700 net2disk - FileWriter Running...
-INFO 0x7f3a0bab4700 net2disk - StatsWriter Running...
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received stop
+DEBUG 0x7fca93834760 net2disk - child_cli() received start cmd
+DEBUG 0x7fca93834760 net2disk - child_cli() received start cmd
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Opening FileWriter file: /mnt/disk1/cap.m6
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Opening FileWriter file: /mnt/disk3/cap.m6
+DEBUG 0x7fca93834760 net2disk - File: /mnt/disk1/cap.m6 fd: 11
+DEBUG 0x7fca93834760 net2disk - Successfully seeked.
+DEBUG 0x7fca93834760 net2disk - File: /mnt/disk3/cap.m6 fd: 13
+DEBUG 0x7fca93834760 net2disk - pfd: 11
+DEBUG 0x7fca93834760 net2disk - Successfully seeked.
+DEBUG 0x7fca93834760 net2disk - pfd: 13
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Received WRITE_TO_DISK
+INFO 0x7fca93834760 net2disk - Received READ_FROM_NETWORK...
+INFO 0x7fca93834760 net2disk - Received READ_FROM_NETWORK...
+INFO 0x7fca5f28b700 net2disk - StatsWriter Running...
+INFO 0x7fca5f28b700 net2disk - StatsWriter Running...
+INFO 0x7fca5ea8a700 net2disk - NetReader Running...
+INFO 0x7fca5ea8a700 net2disk - NetReader Running...
+INFO 0x7fca6028d700 net2disk - StatsWriter Running...
+INFO 0x7fca5fa8c700 net2disk - FileWriter Running...
+INFO 0x7fca6028d700 net2disk - StatsWriter Running...
+INFO 0x7fca5fa8c700 net2disk - FileWriter Running...
+INFO 0x7fca5f28b700 net2disk - StatsWriter Running...
+INFO 0x7fca5ea8a700 net2disk - NetReader Running...
+INFO 0x7fca5f28b700 net2disk - StatsWriter Running...
+INFO 0x7fca5ea8a700 net2disk - NetReader Running...
+INFO 0x7fca5fa8c700 net2disk - FileWriter Running...
+INFO 0x7fca6028d700 net2disk - StatsWriter Running...
+INFO 0x7fca5fa8c700 net2disk - FileWriter Running...
+INFO 0x7fca6028d700 net2disk - StatsWriter Running...
+DEBUG 0x7fca93834760 net2disk - child_cli() received stop
 
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received stop
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca93834760 net2disk - child_cli() received stop
 
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received stop
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca93834760 net2disk - child_cli() received stop
 
-DEBUG 0x7f3a3f05b760 net2disk - child_cli() received stop
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca93834760 net2disk - child_cli() received stop
 
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0aab2700 net2disk - elapsed run time: 69.0078
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0a2b1700 net2disk - elapsed run time: 69.0083
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0aab2700 net2disk - elapsed run time: 69.0275
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0a2b1700 net2disk - elapsed run time: 69.0277
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0bab4700 net2disk - elapsed run time: 69.0171
-DEBUG 0x7f3a0aab2700 net2disk - elapsed run time: 69.0254
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0a2b1700 net2disk - elapsed run time: 69.0264
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0b2b3700 net2disk - elapsed run time: 69.0203
-DEBUG 0x7f3a0aab2700 net2disk - elapsed run time: 69.0395
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0a2b1700 net2disk - elapsed run time: 69.0399
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0bab4700 net2disk - elapsed run time: 69.03
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0b2b3700 net2disk - elapsed run time: 69.0302
-DEBUG 0x7f3a0bab4700 net2disk - elapsed run time: 70.0217
-DEBUG 0x7f3a0bab4700 net2disk - elapsed run time: 70.018
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-INFO 0x7f3a3f05b760 net2disk - Received STOP
-DEBUG 0x7f3a0b2b3700 net2disk - elapsed run time: 70.018
-DEBUG 0x7f3a0b2b3700 net2disk - elapsed run time: 70.0218
-ERROR 0x7f3a3f05b760 net2disk - Invalid read.
-ERROR 0x7f3a3f05b760 net2disk - CLI input stream closed. Exiting...
-ERROR 0x7f3a3f05b760 net2disk - Invalid read.
-ERROR 0x7f3a3f05b760 net2disk - CLI input stream closed. Exiting...
-ERROR 0x7f3a3f05b760 net2disk - Invalid read.
-ERROR 0x7f3a3f05b760 net2disk - CLI input stream closed. Exiting...
-ERROR 0x7f3a3f05b760 net2disk - Invalid read.
-ERROR 0x7f3a3f05b760 net2disk - CLI input stream closed. Exiting...
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5f28b700 net2disk - elapsed run time: 64.0089
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5ea8a700 net2disk - elapsed run time: 64.0111
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5f28b700 net2disk - elapsed run time: 64.0152
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5ea8a700 net2disk - elapsed run time: 64.0165
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5f28b700 net2disk - elapsed run time: 64.0402
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5ea8a700 net2disk - elapsed run time: 64.0408
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca6028d700 net2disk - elapsed run time: 64.0351
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca6028d700 net2disk - elapsed run time: 64.0393
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5fa8c700 net2disk - elapsed run time: 64.0396
+DEBUG 0x7fca5fa8c700 net2disk - elapsed run time: 64.0361
+DEBUG 0x7fca5f28b700 net2disk - elapsed run time: 64.0569
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5ea8a700 net2disk - elapsed run time: 64.0572
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca6028d700 net2disk - elapsed run time: 65.0125
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5fa8c700 net2disk - elapsed run time: 65.0125
+DEBUG 0x7fca6028d700 net2disk - elapsed run time: 65.0394
+INFO 0x7fca93834760 net2disk - Received STOP
+DEBUG 0x7fca5fa8c700 net2disk - elapsed run time: 65.0394
+ERROR 0x7fca93834760 net2disk - Invalid read.
+ERROR 0x7fca93834760 net2disk - CLI input stream closed. Exiting...
+ERROR 0x7fca93834760 net2disk - Invalid read.
+ERROR 0x7fca93834760 net2disk - CLI input stream closed. Exiting...
+ERROR 0x7fca93834760 net2disk - Invalid read.
+ERROR 0x7fca93834760 net2disk - CLI input stream closed. Exiting...
+ERROR 0x7fca93834760 net2disk - Invalid read.
+ERROR 0x7fca93834760 net2disk - CLI input stream closed. Exiting...
