@@ -5,7 +5,11 @@
 #	Install build dependencies.
 
 # Filesystem variables
-MARK6_ROOT=/home/dlapsley/mark6
+if [ "${MARK6_ROOT}" = "" ]; then
+    echo "Error.  MARK6_ROOT must be set before running this script."
+    exit 1
+fi
+
 EXTERN_ROOT=${MARK6_ROOT}/src/extern
 
 # Binary dependencies
@@ -55,8 +59,8 @@ install_pfring() {
     cd ..
 
     cd userland/lib
-    ./configure --prefix=/opt/haystack
-    make install
+    ./configure --prefix=/opt/haystack/mark6
+    sudo make install
     cd ..
     cd ..
 
@@ -69,23 +73,31 @@ build() {
     cd ${MARK6_ROOT}
     ./bootstrap
     CXXFLAGS=-O4 ./configure \
-	--prefix=/opt/haystack \
+	--prefix=/opt/haystack/mark6 \
 	BOOST_INCDIR=/usr/include/boost \
 	BOOST_LIBDIR=/usr/lib64/boost \
 	PFRING_ROOT=${MARK6_ROOT}/src/extern/PF_RING-4.7.0
     make
 }
 
+install_mark6() {
+    cd ${MARK6_ROOT}
+    sudo make install
+}
+
+
+
 usage() {
     echo "$0: [-b] [-s] [-p] [-B] [-f] [-a] [-h]"
     echo "    [--binary] [--source] [--pfring] [--fix] [--all] [--help]"
-    echo "  -b, --binary Install binary dependencies"
-    echo "  -s, --source Install source dependencies"
-    echo "  -p, --pfring Install PF_RING"
-    echo "  -B, --build  Build software"
-    echo "  -f, --fix    Fix debian os issues"
-    echo "  -a, --all    Do everything"
-    echo "  -h, --help   Display help message"
+    echo "  -b, --binary   Install binary dependencies"
+    echo "  -s, --source   Install source dependencies"
+    echo "  -p, --pfring   Install PF_RING"
+    echo "  -B, --build    Build software"
+    echo "  -i, --install  Build software"
+    echo "  -f, --fix      Fix debian os issues"
+    echo "  -a, --all      Do everything"
+    echo "  -h, --help     Display help message"
 }
 
 main() {
@@ -111,6 +123,8 @@ main() {
 		    -p | --pfring )	install_pfring
 			;;
 		    -B | --build )	build
+			;;
+		    -i | --install )	install_mark6
 			;;
 		    -f | --fix )	fix_squeeze_bugs
 			;;

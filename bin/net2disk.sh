@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# export LD_LIBRARY_PATH=/home/dlapsley/mark6/src/extern/PF_RING-4.7.0/userland/lib
-export LD_LIBRARY_PATH=/opt/haystack/lib
+export LD_LIBRARY_PATH=/opt/haystack/mark6/lib
 
 # Globals
-EXEC=/opt/haystack/bin/net2disk
+EXEC=/opt/haystack/mark6/bin/net2disk
 ETHTOOL=/sbin/ethtool
 BLOCKDEV=/sbin/blockdev
 

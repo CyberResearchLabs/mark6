@@ -86,12 +86,22 @@ Print a usage message.
 Application logging configuration file.
 
 .RE
-.I /opt/haystack/mark6/bin/run.sh
+.I /opt/haystack/mark6/bin/net2disk.sh
 .RS
 Execution script. This script will start a new net2disk instance.
 
 .RE
-.I /opt/haystack/mark6/var/net2disk.log
+.I /opt/haystack/mark6/bin/net2disk
+.RS
+Mark6 data-plane executable. This gets called by net2disk.sh.
+
+.RE
+.I /opt/haystack/mark6/log/
+.RS
+Logging directory. All log files and statistics files are stored here.
+
+.RE
+.I /opt/haystack/mark6/log/net2disk.log
 .RS
 Log file. All application logging (DEBUG, INFO, WARNING, ERROR, etc.)
 is sent to this log file.
