@@ -46,3 +46,7 @@ test:	all
 	${REBAR} eunit
 
 
+EMPTY_AUTOMAKE_TARGETS = dvi pdf ps info html tags ctags
+.PHONY:	$(EMPTY_AUTOMAKE_TARGETS)
+$(EMPTY_AUTOMAKE_TARGETS):
+
