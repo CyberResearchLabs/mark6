@@ -54,13 +54,15 @@ install_pfring() {
     make
     cd ..
 
-    cd userland
-    make
+    cd userland/lib
+    ./configure --prefix=/opt/haystack
+    make install
+    cd ..
     cd ..
 
     cd ..
 
-    /bin/ln -s ${PF_RING} pfring
+    # /bin/ln -s ${PF_RING} pfring
 }
 
 build() {

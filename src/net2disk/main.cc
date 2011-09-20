@@ -71,7 +71,7 @@ const std::string DEFAULT_INTERFACES("eth0");
 const int DEFAULT_SNAPLEN(8234);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
-const std::string DEFAULT_LOG_CONFIG("net2disk-log.cfg");
+const std::string DEFAULT_LOG_CONFIG("/opt/haystack/etc/net2disk-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8192);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_RING_BUFFERS(128);
@@ -81,6 +81,7 @@ const int DEFAULT_WRITE_BLOCKS(32);
 const int MAX_SNAPLEN(9014);
 const int STATS_SLEEP(1);
 const int PAYLOAD_LENGTH(DEFAULT_PAYLOAD_LENGTH);
+const std::string LOG_PREFIX("/opt/haystack/log/");
 
 //----------------------------------------------------------------------
 // Global variables.
@@ -297,7 +298,7 @@ main (int argc, char* argv[]) {
 
 	// Create FileWriter threads.
 	FILE_WRITER_STATS = new StatsWriter(i,
-					    std::string("fw_") + interfaces[i],
+					    LOG_PREFIX + std::string("fw_") + interfaces[i],
 					    STATS_INTERVAL,
 					    COMMAND_INTERVAL);
 	FILE_WRITER = new FileWriter(i,
@@ -311,7 +312,7 @@ main (int argc, char* argv[]) {
 
 	// Create NetReader threads.
 	NET_READER_STATS = new StatsWriter(i+1, // TODO: fix index.
-					   std::string("nr_") + interfaces[i],
+					   LOG_PREFIX + std::string("nr_") + interfaces[i],
 					   STATS_INTERVAL,
 					   COMMAND_INTERVAL);
 	NET_READER = new NetReader(i,

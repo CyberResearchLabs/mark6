@@ -1,7 +1,7 @@
-[disk1]
+[disk0]
 rw=write
 iodepth=8
 directory=/mnt/disk1
 write_bw_log=disk1_write
-size=50G
+size=6000G
 fill_device=0

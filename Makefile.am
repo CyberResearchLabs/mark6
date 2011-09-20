@@ -1,9 +1,16 @@
 MAINTAINERCLEANFILES	=	Makefile.in
-EXTRA_DIST		=	setup bin/dim6.sh
+EXTRA_DIST		=	setup
 SUBDIRS			=	src doc
+dist_bin_SCRIPTS	=	bin/net2disk.sh bin/setup.sh
+sysconf_DATA		=	src/net2disk/net2disk-log.cfg
+logdir 			= 	log
 DISTCHECK_CONFIGURE_FLAGS=\
 				BOOST_LIBDIR=/usr/lib64/boost141 \
 				BOOST_INCDIR=/usr/include/boost141
+
+mark6logdir		=	${prefix}/log
+mark6log_DATA		=	log/.dummy
+EXTRA_DIST		=	${mark6log_DATA}
 
 distclean-local:
 	-rm -rf Makefile.in \
