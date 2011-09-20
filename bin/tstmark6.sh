@@ -5,7 +5,7 @@ ERL=/usr/bin/erl
 ROOT=/opt/haystack/mark6/
 VERSION=0.1
 
-CLIENT_DIR=${ROOT}/lib/tstmark6-${VERSION}
+CLIENT_DIR=${ROOT}/lib/tstmark6-${VERSION}/ebin
 CLIENT_MODULE=tstmark6
 CLIENT_FUNC=start_server
 
