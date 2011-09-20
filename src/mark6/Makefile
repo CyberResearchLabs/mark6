@@ -11,6 +11,7 @@ RM=/bin/rm
 CP=/bin/cp
 MKDIR=/bin/mkdir
 CHMOD=/bin/chmod
+PREFIX=/opt/haystack/mark6
 
 all:	clean generate
 
@@ -37,6 +38,9 @@ generate:	compile node
 
 tests:
 	${REBAR} eunit
+
+install:	generate
+	sudo ${CP} -r rel ${PREFIX}/lib
 
 clean:
 	${REBAR} clean

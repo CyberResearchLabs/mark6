@@ -58,15 +58,18 @@ install_pfring() {
     make
     cd ..
 
-    cd userland/lib
+    cd userland
+    cd lib
     ./configure --prefix=/opt/haystack/mark6
     sudo make install
     cd ..
+
+    cd libpcap-1.1.1-ring
+    ./configure --prefix=/opt/haystack/mark6
+    sudo make install
     cd ..
 
     cd ..
-
-    # /bin/ln -s ${PF_RING} pfring
 }
 
 build() {
