@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export LD_LIBRARY_PATH=/opt/haystack/mark6/lib
+export LD_LIBRARY_PATH=/opt/mit/mark6/lib
 
 # Globals
-EXEC=/opt/haystack/mark6/bin/net2disk
+EXEC=/opt/mit/mark6/bin/net2disk
 ETHTOOL=/sbin/ethtool
 BLOCKDEV=/sbin/blockdev
 

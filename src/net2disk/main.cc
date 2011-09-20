@@ -71,7 +71,7 @@ const std::string DEFAULT_INTERFACES("eth0");
 const int DEFAULT_SNAPLEN(8234);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
-const std::string DEFAULT_LOG_CONFIG("/opt/haystack/mark6/etc/net2disk-log.cfg");
+const std::string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8192);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_RING_BUFFERS(128);
@@ -81,7 +81,7 @@ const int DEFAULT_WRITE_BLOCKS(32);
 const int MAX_SNAPLEN(9014);
 const int STATS_SLEEP(1);
 const int PAYLOAD_LENGTH(DEFAULT_PAYLOAD_LENGTH);
-const std::string LOG_PREFIX("/opt/haystack/mark6/log/");
+const std::string LOG_PREFIX("/opt/mit/mark6/log/");
 
 //----------------------------------------------------------------------
 // Global variables.

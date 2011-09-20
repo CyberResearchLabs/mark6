@@ -37,7 +37,7 @@ package:	all
 	@$(RM) -rf $(PKGNAME)-$(VERSION)
 
 install:	compile
-	@for i in ebin/*.beam ebin/*.app; do install -m 644 -D $$i /opt/haystack/mark6/lib/$(PKGNAME)-$(VERSION)/$$i ; done
+	@for i in ebin/*.beam ebin/*.app; do install -m 644 -D $$i /opt/mit/mark6/lib/$(PKGNAME)-$(VERSION)/$$i ; done
 
 compile:
 	${REBAR} compile

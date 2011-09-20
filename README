@@ -54,5 +54,5 @@ Setup environment:
 	export MARK6_ROOT=<root of source directory> 
 
 After installation, add the following to your .bashrc:
-	export MANPATH=/opt/haystack/mark6/man:${MANPATH}
-	export PATH=/opt/haystack/mark6/bin:${PATH}
+	export MANPATH=/opt/mit/mark6/man:${MANPATH}
+	export PATH=/opt/mit/mark6/bin:${PATH}

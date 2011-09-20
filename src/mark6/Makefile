@@ -11,7 +11,7 @@ RM=/bin/rm
 CP=/bin/cp
 MKDIR=/bin/mkdir
 CHMOD=/bin/chmod
-PREFIX=/opt/haystack/mark6
+PREFIX=/opt/mit/mark6
 
 all:	clean generate
 
