@@ -87,3 +87,19 @@ FEATURES
 - Disk module conditioning scripts that create and configure RAID
   arrays, label and partition virtual drives, create EXT4 file systems,
   and optimize file system parameters.
+
+Release 0.4.1	9/20/2011	David Lapsley<del@haystack.mit.edu>
+-------------------------------------------------------------------
+
+DESCRIPTION
+
+Added control plane and client to the build. Extended build system
+to do complete build and install.
+
+FEATURES
+
+- Incorporated mark6 control plane code (inherited from previous
+  dimino6 work).
+- Incorporated tstmark6 control plane client.
+- Extended build system to do full build and install in
+  /opt/haystack/mark6.
