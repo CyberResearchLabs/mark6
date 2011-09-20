@@ -10,6 +10,11 @@ if [ "${MARK6_ROOT}" = "" ]; then
     exit 1
 fi
 
+if [ "${MARK6_USER}" = "" ]; then
+    echo "Warning.  MARK6_USER not set using default(mark6)."
+    MARK6_USER=mark6
+fi
+
 EXTERN_ROOT=${MARK6_ROOT}/src/extern
 
 # Binary dependencies
@@ -32,11 +37,16 @@ PF_RING=PF_RING-4.7.0
 # Commands
 INSTALL=/usr/bin/apt-get
 TAR=/bin/tar
+RM=/bin/rm
+GROUPADD=/usr/sbin/groupadd
+CHMOD=/bin/chmod
+CHGRP=/bin/chgrp
+USERMOD=/usr/sbin/usermod
 
 fix_squeeze_bugs() {
 	# Debian squeeze has a dangling symlink that breaks erlang packaging:
 	# lrwxrwxrwx 1 root root 19 Jul  5 13:46 /usr/lib/erlang/man/man1/gserialver.1.gz -> gserialver-4.4.1.gz
-    sudo /bin/rm -f /usr/lib/erlang/man/man1/gserialver.1.gz
+    sudo ${RM} -f /usr/lib/erlang/man/man1/gserialver.1.gz
 }
 
 install_binary_deps() {
@@ -86,6 +96,12 @@ build() {
 install_mark6() {
     cd ${MARK6_ROOT}
     sudo make install
+    sudo ${GROUPADD} -f mark6
+    sudo ${CHGRP} -R mark6 /opt/mit/mark6
+    sudo ${CHMOD} g+rwx /opt/mit/mark6/bin/*
+    sudo ${CHMOD} -R g+rwx /opt/mit/mark6/lib
+    sudo ${CHMOD} g+rwx /opt/mit/mark6/lib/rel/mark6/bin/*
+    sudo ${USERMOD} -a -G mark6 ${MARK6_USER}
 }
 
 
