@@ -178,7 +178,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 MAINTAINERCLEANFILES = Makefile.in
 info_TEXINFOS = mark6.texi
-man_MANS = net2disk.1
+man_MANS = net2disk.1 mark6.1
 all: all-am
 
 .SUFFIXES:
