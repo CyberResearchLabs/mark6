@@ -36,8 +36,8 @@ package:	all
 	@COPYFILE_DISABLE=true $(TAR) zcf $(PKGNAME)-$(VERSION).tar.gz $(PKGNAME)-$(VERSION)
 	@$(RM) -rf $(PKGNAME)-$(VERSION)
 
-install:
-	@for i in ebin/*.beam ebin/*.app include/*.hrl src/*.erl; do install -m 644 -D $$i $(prefix)/$(LIBDIR)/$(PKGNAME)-$(VERSION)/$$i ; done
+install:	compile
+	@for i in ebin/*.beam ebin/*.app; do install -m 644 -D $$i /opt/haystack/mark6/lib/$(PKGNAME)-$(VERSION)/$$i ; done
 
 compile:
 	${REBAR} compile
