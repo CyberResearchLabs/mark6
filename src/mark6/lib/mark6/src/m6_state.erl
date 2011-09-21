@@ -11,7 +11,8 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, insert_input_stream/2, get_input_streams/0]).
+-export([start_link/0, add_input_stream/2, dismount_input_stream/1,
+	 get_input_streams/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -35,8 +36,11 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-insert_input_stream(Label, Stream) ->
-    gen_server:call(?MODULE, {insert_input_stream, Label, Stream}).
+add_input_stream(Label, Stream) ->
+    gen_server:call(?MODULE, {add_input_stream, Label, Stream}).
+
+dismount_input_stream(Label) ->
+    gen_server:call(?MODULE, {dismount_input_stream, Label}).
 
 get_input_streams() ->
     gen_server:call(?MODULE, {get_input_streams}).
@@ -75,10 +79,15 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call({insert_input_stream, Label, Stream}, _From, State) ->
+handle_call({add_input_stream, Label, Stream}, _From, State) ->
     Reply = ok,
     error_logger:info_msg("Inserting input_stream: ~p~n", [Stream]),
     ets:insert(State#state.input_stream_table, {Label, Stream}),
+    {reply, Reply, State};
+handle_call({dismount_input_stream, Label}, _From, State) ->
+    Reply = ok,
+    error_logger:info_msg("Removing input_stream: ~p~n", [Label]),
+    ets:delete(State#state.input_stream_table, Label),
     {reply, Reply, State};
 handle_call({get_input_streams}, _From, State) ->
     error_logger:info_msg("IST: ~p~n", [ ets:match_object(State#state.input_stream_table, '$1') ]),

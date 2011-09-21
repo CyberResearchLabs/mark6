@@ -101,7 +101,7 @@ handle_command(disk_state_mask, Args) ->
 handle_command(input_stream, Args) ->
     case lists:nth(1, Args) of
 	"add" ->
-	    m6_state:insert_input_stream(
+	    m6_state:add_input_stream(
 	      lists:nth(2, Args),
 	      #m6_input_stream{stream_label=lists:nth(2, Args),
 			       data_format=lists:nth(3, Args),
@@ -110,7 +110,8 @@ handle_command(input_stream, Args) ->
 			      }),
 	    "!input_stream=0:0;";
 	"dismount" ->
-	    "!input_stream=-1:-1;"
+	    m6_state:dismount_input_stream(lists:nth(2, Args)),
+	    "!input_stream=0:0;"
     end;
 handle_command(msn, Args) ->
     "received your input_stream command;";
