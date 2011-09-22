@@ -8,7 +8,7 @@
 %%% @end
 %%% Created : 29 Mar 2011 by David <dlapsley@lib1-lt.haystack.mit.edu>
 %%%-------------------------------------------------------------------
--module(vdiff).
+-module(vdif).
 -author("dlapsley@haystack.mit.edu").
 -include_lib("xmerl/include/xmerl.hrl").
 -include("main.hrl").

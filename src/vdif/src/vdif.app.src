@@ -8,8 +8,8 @@
 %% lock_timeout (LOCK_TIMEOUT = 5000)
 %% {env, [{default_timeout, 5000}]}
 
-{application, vdiff, [
-    {description, "vdiff - Checker"},
+{application, vdif, [
+    {description, "vdif - Checker"},
     {vsn, "0.1"},
     {modules, []}, 
     {mod, {client_app, ["%MAKETIME%"]}},

@@ -2,8 +2,8 @@ include include.mk
 
 # Source root.
 VERSION=0.1
-PKGNAME=vdiff
-APPNAME=vdiff
+PKGNAME=vdif
+APPNAME=vdif
 REBAR=./rebar
 
 
