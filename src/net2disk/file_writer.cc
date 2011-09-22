@@ -147,8 +147,9 @@ int FileWriter::open() {
   int ret=0;
   // Assumes FALLOCATE
   // _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
-  // FIXME _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
-  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
+  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
+		   S_IRWXU);
+  // _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
   if (_pfd.fd<0) {
     LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
 		  << " - " << strerror(errno));

@@ -293,39 +293,43 @@ main (int argc, char* argv[]) {
 
 	// Setup buffer pool.
 	BufferPool* bp = BufferPool::instance();
-	// FIXME bp->reserve_pool(ring_buffers, LOCAL_PAGES_PER_BUFFER);
-	const int BUFFER_SIZE(822400);
-	bp->reserve_pool_raw(ring_buffers, BUFFER_SIZE);
-	// FIXME const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
+	const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
+	// const int BUFFER_SIZE(822400);
+	bp->reserve_pool(ring_buffers, BUFFER_SIZE);
 
 	// Create FileWriter threads.
-	FILE_WRITER_STATS = new StatsWriter(i,
-					    LOG_PREFIX + std::string("fw_") + interfaces[i],
-					    STATS_INTERVAL,
-					    COMMAND_INTERVAL);
-	FILE_WRITER = new FileWriter(i,
-				     BUFFER_SIZE,
-				     write_blocks,
-				     capture_files[i],
-				     POLL_TIMEOUT,
-				     (StatsWriter* const)FILE_WRITER_STATS,
-				     COMMAND_INTERVAL);
+	FILE_WRITER_STATS
+	  = new StatsWriter(i,
+			    LOG_PREFIX + std::string("fw_") + interfaces[i],
+			    STATS_INTERVAL,
+			    COMMAND_INTERVAL);
+	FILE_WRITER
+	  = new FileWriter(i,
+			   BUFFER_SIZE,
+			   write_blocks,
+			   capture_files[i],
+			   POLL_TIMEOUT,
+			   (StatsWriter* const)FILE_WRITER_STATS,
+			   COMMAND_INTERVAL);
 	FileWriter * const FW(FILE_WRITER);
 
 	// Create NetReader threads.
-	NET_READER_STATS = new StatsWriter(i+1, // TODO: fix index.
-					   LOG_PREFIX + std::string("nr_") + interfaces[i],
-					   STATS_INTERVAL,
-					   COMMAND_INTERVAL);
-	NET_READER = new NetReader(i,
-				   interfaces[i],
-				   snaplen,
-				   PAYLOAD_LENGTH,
-				   BUFFER_SIZE,
-				   promiscuous,
-				   (FileWriter* const)FILE_WRITER,
-				   (StatsWriter* const)NET_READER_STATS,
-				   COMMAND_INTERVAL);
+	NET_READER_STATS
+	  = new StatsWriter(i+1, // TODO: fix index.
+			    LOG_PREFIX + std::string("nr_") + interfaces[i],
+			    STATS_INTERVAL,
+			    COMMAND_INTERVAL);
+
+	NET_READER
+	  = new NetReader(i,
+			  interfaces[i],
+			  snaplen,
+			  PAYLOAD_LENGTH,
+			  BUFFER_SIZE,
+			  promiscuous,
+			  (FileWriter* const)FILE_WRITER,
+			  (StatsWriter* const)NET_READER_STATS,
+			  COMMAND_INTERVAL);
 
 	// Wait for threads to finish.
 	child_cli(fd[0]);

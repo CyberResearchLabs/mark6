@@ -81,6 +81,7 @@ unsigned int BufferPool::increment(unsigned int idx) const {
   return idx;
 }
 
+#ifdef FIXME
 void BufferPool::reserve_pool(const int buffer_pool_size,
 			      const int pages_per_buffer) {
   {
@@ -97,14 +98,16 @@ void BufferPool::reserve_pool(const int buffer_pool_size,
   for (int i=0; i<buffer_pool_size; i++) {
     void* buf;
     if (posix_memalign(&buf, page_size, buffer_size) != 0) {
+      LOG4CXX_ERROR(logger, "Buffer allocation failed.");
       throw std::string("Memalign failed.");
     }
     push(static_cast<boost::uint8_t*>(buf));
   }
 }
+#endif
 
-void BufferPool::reserve_pool_raw(const int buffer_pool_size,
-			          const int buffer_size) {
+void BufferPool::reserve_pool(const int buffer_pool_size,
+			      const int buffer_size) {
   {
     boost::mutex::scoped_lock lock(_mutex);
     _capacity = buffer_pool_size + 1;
@@ -113,8 +116,17 @@ void BufferPool::reserve_pool_raw(const int buffer_pool_size,
 
   LOG4CXX_INFO(logger, "BufferPool::buffer_size " << buffer_size);
 
+  void* buf;
+
   for (int i=0; i<buffer_pool_size; i++) {
-    void* buf = new boost::uint8_t[buffer_size];
+#ifdef NONMEMALIGN
+    buf = new boost::uint8_t[buffer_size];
+#else
+    if (posix_memalign(&buf, getpagesize(), buffer_size) != 0) {
+      LOG4CXX_ERROR(logger, "Buffer allocation failed.");
+      throw std::string("Memalign failed.");
+    }
+#endif
     push(static_cast<boost::uint8_t*>(buf));
   }
 }

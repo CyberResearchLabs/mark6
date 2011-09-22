@@ -69,10 +69,7 @@ class BufferPool {
   //! \param buffer_pool_size The total size of the buffer pool.
   //! \param pages_per_buffer The number of pages per buffer. Buffers are
   //! aligned and sized according to the system pagesize().
-  void reserve_pool(const int buffer_pool_size, const int pages_per_buffer);
-
-  //! FIXME
-  void reserve_pool_raw(const int buffer_pool_size, const int buffer_size);
+  void reserve_pool(const int buffer_pool_size, const int buffer_size);
 
   //! Release the memory occupied by the allocated buffers in _buffers.
   void release_pool();

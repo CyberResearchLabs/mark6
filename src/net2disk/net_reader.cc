@@ -151,11 +151,21 @@ void NetReader::handle_read_from_network() {
   int bytes_left = _buffer_size;
   int bytes_read = 0;
   boost::uint8_t* file_buf = _bp->malloc();
+  static int remainder_len = 0;
+  static boost::uint8_t remainder_buf[8224];
   // static boost::uint8_t file_buf[1048576];
   // static boost::uint8_t file_buf[822400];
   // int bytes_left = 822400;
   boost::uint64_t num_packets = 0;
   boost::uint64_t num_bytes = 0;
+
+  // Copy partial packet.
+  if (remainder_len > 0) {
+    memcpy(&file_buf[bytes_read], remainder_buf, remainder_len);
+    bytes_read += remainder_len;
+    bytes_left -= remainder_len;
+    remainder_len = 0;
+  }
 
   // Fill the new file_buf;
   while (bytes_left > 0) {
@@ -221,16 +231,31 @@ void NetReader::handle_read_from_network() {
 		    << strerror(errno));
       continue;
     }
-    // Accumulate or flush data to disk.
-    // Copy captured payload to file buffer.
-    memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
-    bytes_read += hdr.caplen;
-    bytes_left -= hdr.caplen;
-  }
-  // Pad out rest of buffer then write.
-  memset(&file_buf[bytes_read], 2, bytes_left);
-  _fw->write(file_buf);
 
-  // Update stats.
-  _sw->update(num_packets, num_bytes);
+    // Accumulate or flush data.
+    if (bytes_left < hdr.caplen) {
+      // Copy fragment into buffer.
+      memcpy(&file_buf[bytes_read], payload_ptr, bytes_left);
+      bytes_read += bytes_left;
+      
+      // Copy remainder into remainder_buf.
+      remainder_len = hdr.caplen - bytes_left;
+      memcpy(remainder_buf, payload_ptr + bytes_left, remainder_len);
+      
+      // Flush to disk.
+      _fw->write(file_buf);
+      
+      // Update stats.
+      _sw->update(num_packets, num_bytes);
+      
+      bytes_left = 0;
+      break;
+    } else {
+      // Copy captured payload to file buffer.
+      memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
+      bytes_read += hdr.caplen;
+      bytes_left -= hdr.caplen;
+    }
+  }
 }
+
