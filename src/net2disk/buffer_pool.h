@@ -71,6 +71,9 @@ class BufferPool {
   //! aligned and sized according to the system pagesize().
   void reserve_pool(const int buffer_pool_size, const int pages_per_buffer);
 
+  //! FIXME
+  void reserve_pool_raw(const int buffer_pool_size, const int buffer_size);
+
   //! Release the memory occupied by the allocated buffers in _buffers.
   void release_pool();
 

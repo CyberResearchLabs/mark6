@@ -293,8 +293,10 @@ main (int argc, char* argv[]) {
 
 	// Setup buffer pool.
 	BufferPool* bp = BufferPool::instance();
-	bp->reserve_pool(ring_buffers, LOCAL_PAGES_PER_BUFFER);
-	const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
+	// FIXME bp->reserve_pool(ring_buffers, LOCAL_PAGES_PER_BUFFER);
+	const int BUFFER_SIZE(822400);
+	bp->reserve_pool_raw(ring_buffers, BUFFER_SIZE);
+	// FIXME const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
 
 	// Create FileWriter threads.
 	FILE_WRITER_STATS = new StatsWriter(i,

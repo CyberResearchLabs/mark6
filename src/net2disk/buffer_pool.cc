@@ -103,10 +103,26 @@ void BufferPool::reserve_pool(const int buffer_pool_size,
   }
 }
 
+void BufferPool::reserve_pool_raw(const int buffer_pool_size,
+			          const int buffer_size) {
+  {
+    boost::mutex::scoped_lock lock(_mutex);
+    _capacity = buffer_pool_size + 1;
+    _buffers = new boost::uint8_t*[_capacity];
+  }
+
+  LOG4CXX_INFO(logger, "BufferPool::buffer_size " << buffer_size);
+
+  for (int i=0; i<buffer_pool_size; i++) {
+    void* buf = new boost::uint8_t[buffer_size];
+    push(static_cast<boost::uint8_t*>(buf));
+  }
+}
+
 void BufferPool::release_pool() {
   while (is_empty() == false) {
     boost::uint8_t* b = pop();
-    //! TODO: figure out why free fails here.
+    //! FIXME TODO: figure out why free fails here.
   }
 }
 
