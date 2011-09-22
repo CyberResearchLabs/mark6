@@ -42,6 +42,21 @@
 
 class StatsWriter;
 
+struct Buf {
+  boost::uint8_t* _data;
+  boost::uint32_t _len;
+
+  Buf(): _data(0), _len(0) {}
+
+  Buf(boost::uint8_t* data, const boost::uint32_t len):
+	_data(data), _len(len) {}
+  Buf(const Buf& b) {
+	_data = b._data;
+	_len = b._len;
+  }
+
+};
+
 //! Manages the high speed writing of data to file.
 //! Includes a circular buffer for storing buffers to be written, as well as
 //! a state machine that controls the operation of the thread. The class
@@ -105,8 +120,12 @@ class FileWriter: public Threaded {
   //! internal buffer queue where it waits to be written to disk by the main
   //! processing loop.
   //! \param buf The buffer to be written to disk.
+  //! \param buf Length of buffer to be written.
+  // FIXME bool write(boost::uint8_t* buf, const boost::uint32_t len);
   bool write(boost::uint8_t* buf);
 
+  // FIXME bool write(boost::uint8_t* buf, const boost::uint32_t len);
+  bool write_block(boost::uint8_t* buf, const boost::uint32_t len);
 
  protected:
   //---------------------------------------------------------------------------
@@ -127,6 +146,7 @@ class FileWriter: public Threaded {
 
   //! A circular buffer that contains all of the buffers waiting to be 
   //! written to disk.
+  // FIXME circular_buffer<Buf> _cbuf;
   circular_buffer<boost::uint8_t*> _cbuf;
 
   //! The state of the object.
@@ -165,7 +185,7 @@ class FileWriter: public Threaded {
 
   //! Writes a block to disk using the specified file descriptor.
   //! \param fd The file descriptor to which the data will be sent.
-  void write_block(const int fd);
+  void write_block();
 };
 
 #endif // _FILEWRITER_H_

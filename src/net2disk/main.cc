@@ -68,11 +68,11 @@ void child_cli(const int parent_fd);
 
 // Option defaults.
 const std::string DEFAULT_INTERFACES("eth0");
-const int DEFAULT_SNAPLEN(8234);
+const int DEFAULT_SNAPLEN(8224);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
 const std::string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
-const int DEFAULT_PAYLOAD_LENGTH(8192);
+const int DEFAULT_PAYLOAD_LENGTH(8224);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_RING_BUFFERS(128);
 const int DEFAULT_WRITE_BLOCKS(32);

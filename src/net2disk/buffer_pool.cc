@@ -5,6 +5,7 @@
 
 #include <boost/foreach.hpp>
 #include <buffer_pool.h>
+#include <logger.h>
 
 const int DEFAULT_TIMEOUT(10);
 
@@ -90,6 +91,8 @@ void BufferPool::reserve_pool(const int buffer_pool_size,
 
   const int page_size = getpagesize();
   const int buffer_size = page_size * pages_per_buffer;
+
+  LOG4CXX_INFO(logger, "BufferPool::buffer_size " << buffer_size);
 
   for (int i=0; i<buffer_pool_size; i++) {
     void* buf;

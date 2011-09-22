@@ -52,7 +52,7 @@ ETH5_IRQ=66
 MEGASAS1_IRQ=24
 MEGASAS2_IRQ=35
 
-RING_BUFFERS=512
+RING_BUFFERS=2048
 # RING_BUFFERS=1024
 # RING_BUFFERS=2048
 
@@ -79,18 +79,20 @@ echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 
 # Run! 
 # Note that SMP affinities are ordinals (not mask). CPU numbering from 0.
-for m in disk0 disk1 disk2 disk3
-do
-	fallocate -l 2400G /mnt/${m}/cap.m6
-done
+# for m in disk0 disk1 disk2 disk3
+# do
+	# fallocate -l 2400G /mnt/${m}/cap.m6
+# done
 
 ${EXEC} \
-    --interfaces eth2 eth3 eth4 eth5 \
-    --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
-    --smp_affinities 1 1 3 3 \
+    --interfaces eth2 \
+    --capture_files /mnt/disk0/cap.m6 \
+    --smp_affinities 1 \
     --ring_buffers ${RING_BUFFERS} \
     --write_blocks ${RING_BUFFERS}
 
+    # --smp_affinities 1 1 3 3 \
+    # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
     # --interfaces eth2 eth3 eth4 eth5 \
     # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
     # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \

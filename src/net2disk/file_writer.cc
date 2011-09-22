@@ -60,11 +60,7 @@ FileWriter::FileWriter(const int id,
   _cbuf(_WRITE_BLOCKS),
   _state (IDLE),
   _cbuf_mutex(),
-  _capture_file(capture_file) {
-  // Reserve space in file descriptor vector.
-  struct pollfd pfd;
-  pfd.fd = -1;
-}
+  _capture_file(capture_file) { }
 
 FileWriter::~FileWriter() {
   close();
@@ -141,7 +137,7 @@ void FileWriter::handle_idle() {
 }
 
 void FileWriter::handle_write_to_disk() {
-  write_block(_pfd.fd);
+  write_block();
 }
 
 int FileWriter::open() {
@@ -150,7 +146,9 @@ int FileWriter::open() {
   // Open files for each path.
   int ret=0;
   // Assumes FALLOCATE
-  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
+  // _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
+  // FIXME _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT, S_IRWXU);
+  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
   if (_pfd.fd<0) {
     LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
 		  << " - " << strerror(errno));
@@ -162,6 +160,7 @@ int FileWriter::open() {
     _pfd.events = POLLOUT;
   }
 
+#ifdef FALLOCATE
   if (::lseek(_pfd.fd, 0, SEEK_SET) < 0) {
     LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: " << _capture_file
 		  << " - " << strerror(errno));
@@ -170,6 +169,7 @@ int FileWriter::open() {
   } else {
     LOG4CXX_DEBUG(logger, "Successfully seeked.");
   }
+#endif // FALLOCATE
 
 
   // Debug message.
@@ -187,16 +187,20 @@ int FileWriter::close() {
   return 0;
 }
 
+// FIXME bool FileWriter::write(boost::uint8_t* b, const boost::uint32_t len) {
 bool FileWriter::write(boost::uint8_t* b) {
   boost::mutex::scoped_lock lock(_cbuf_mutex);
   if (_cbuf.full())
     return false;
 
+  // FIXME Buf buf(b, len);
+  // FIXME _cbuf.push_back(buf);
   _cbuf.push_back(b);
   return true;
 }
 
-void FileWriter::write_block(const int fd) {
+void FileWriter::write_block() {
+  // FIXME Buf buf;
   boost::uint8_t* buf;
   if (_cbuf.empty()) {
     return;
@@ -210,7 +214,7 @@ void FileWriter::write_block(const int fd) {
   int bytes_left = _WRITE_BLOCK_SIZE;
   int bytes_written = 0;
   while (bytes_left) {
-    int nb = ::write(fd, &buf[bytes_written], bytes_left);
+    int nb = ::write(_pfd.fd, &buf[bytes_written], bytes_left);
     if (nb > 0) {
       bytes_left -= nb;
       bytes_written += nb;
@@ -219,5 +223,23 @@ void FileWriter::write_block(const int fd) {
     }
   }
   BufferPool::instance()->free(buf);
-  _sw->update(1, _WRITE_BLOCK_SIZE);
+  _sw->update(1, bytes_written);
+}
+
+bool FileWriter::write_block(boost::uint8_t* buf, const boost::uint32_t len) {
+  // Write buffer to disk.
+  int bytes_left = len;
+  int bytes_written = 0;
+  while (bytes_left) {
+    int nb = ::write(_pfd.fd, &buf[bytes_written], bytes_left);
+    if (nb > 0) {
+      LOG4CXX_INFO(logger, "Wrote : " << nb << " bytes.");
+      bytes_left -= nb;
+      bytes_written += nb;
+    } else {
+      LOG4CXX_ERROR(logger, "Write error: " << strerror(errno));
+    }
+  }
+  _sw->update(1, bytes_written);
+  return true;
 }

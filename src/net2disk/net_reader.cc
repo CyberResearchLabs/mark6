@@ -148,9 +148,12 @@ void NetReader::handle_read_from_network() {
   int payload_length;
   boost::uint8_t* payload_ptr;
   
-  int bytes_left = _buffer_size;
+  // FIXME int bytes_left = _buffer_size;
   int bytes_read = 0;
-  boost::uint8_t* file_buf = _bp->malloc();
+  // FIXME boost::uint8_t* file_buf = _bp->malloc();
+  // static boost::uint8_t file_buf[1048576];
+  static boost::uint8_t file_buf[822400];
+  int bytes_left = 822400;
   boost::uint64_t num_packets = 0;
   boost::uint64_t num_bytes = 0;
 
@@ -173,9 +176,10 @@ void NetReader::handle_read_from_network() {
       payload_length = hdr.caplen - payload_offset;
 
       // Check for validity of capture.
-      if (hdr.caplen != _snaplen
-	  || hdr.caplen != hdr.len
-	  || payload_length != _payload_length) {
+      if (hdr.caplen != _snaplen) {
+	  // || hdr.caplen != hdr.len
+	  // || payload_length != _payload_length) {
+#define LOG_SHORT
 #ifdef LOG_SHORT
 	LOG4CXX_ERROR(logger, "Short capture(caplen/snaplen"
 		      "len/payload_length/PAYLOAD_LENGTH"
@@ -186,21 +190,21 @@ void NetReader::handle_read_from_network() {
 	continue;
       }
 	      
-      // #define DUMP
+// #define DUMP
 #ifdef DUMP
-      cout << "Packet dump.\n";
-      cout << "caplen:         " << hdr.caplen << endl;
-      cout << "len:            " << hdr.len << endl;
-      cout << "parsed_hdr_len: " << pep.parsed_header_len << endl;
-      cout << "eth_offset:     " << eth_offset << endl;
-      cout << "l3_offset:      " << l3_offset << endl;
-      cout << "l4_offset:      " << l4_offset << endl;
-      cout << "payload_offset: " << payload_offset << endl;
-      cout << "payload_length: " << payload_length << endl;
+      std::cout << "Packet dump.\n";
+      std::cout << "caplen:         " << hdr.caplen << std::endl;
+      std::cout << "len:            " << hdr.len << std::endl;
+      std::cout << "parsed_hdr_len: " << pep.parsed_header_len << std::endl;
+      std::cout << "eth_offset:     " << eth_offset << std::endl;
+      std::cout << "l3_offset:      " << l3_offset << std::endl;
+      std::cout << "l4_offset:      " << l4_offset << std::endl;
+      std::cout << "payload_offset: " << payload_offset << std::endl;
+      std::cout << "payload_length: " << payload_length << std::endl;
 
       const int dumplen(128);
       for (int i=0; i<dumplen; i++) {
-	printf("%02x ", (unsigned char)_net_buf[i]);
+	printf("%02x ", (unsigned char)_net_buf[i + payload_offset]);
 	if ((i+1)%8 == 0)
 	  printf(" ");
 	if ((i+1)%16 == 0)
@@ -218,11 +222,19 @@ void NetReader::handle_read_from_network() {
       continue;
     }
 
+
+    LOG4CXX_INFO(logger, "Bytes left: " << bytes_left);
+
     // Accumulate or flush data to disk.
+#ifdef FIXME
     if (bytes_left < _payload_length) {
+      LOG4CXX_INFO(logger, "Dumping blocks: " << _payload_length);
       // Pad out rest of buffer then write.
-      memset(&file_buf[bytes_read], 0, bytes_left);
-      _fw->write(file_buf);
+      memset(&file_buf[bytes_read], 2, bytes_left);
+      // _fw->write(file_buf, _payload_length - bytes_left + 1);
+      // _fw->write(file_buf);
+      // FIXME
+      _fw->write_block(file_buf, 822400);
 
       // Update stats.
       _sw->update(num_packets, num_bytes);
@@ -233,5 +245,20 @@ void NetReader::handle_read_from_network() {
       bytes_read += hdr.caplen;
       bytes_left -= hdr.caplen;
     }
+#else
+    // Copy captured payload to file buffer.
+    memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
+    bytes_read += hdr.caplen;
+    bytes_left -= hdr.caplen;
+#endif
   }
+#ifndef FIXME
+  LOG4CXX_INFO(logger, "Dumping blocks: " << _payload_length);
+  // Pad out rest of buffer then write.
+  memset(&file_buf[bytes_read], 2, bytes_left);
+  _fw->write_block(file_buf, 822400);
+
+  // Update stats.
+  _sw->update(num_packets, num_bytes);
+#endif
 }
