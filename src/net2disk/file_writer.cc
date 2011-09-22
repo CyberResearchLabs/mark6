@@ -188,20 +188,16 @@ int FileWriter::close() {
   return 0;
 }
 
-// FIXME bool FileWriter::write(boost::uint8_t* b, const boost::uint32_t len) {
 bool FileWriter::write(boost::uint8_t* b) {
   boost::mutex::scoped_lock lock(_cbuf_mutex);
   if (_cbuf.full())
     return false;
 
-  // FIXME Buf buf(b, len);
-  // FIXME _cbuf.push_back(buf);
   _cbuf.push_back(b);
   return true;
 }
 
 void FileWriter::write_block() {
-  // FIXME Buf buf;
   boost::uint8_t* buf;
   if (_cbuf.empty()) {
     return;
@@ -227,6 +223,7 @@ void FileWriter::write_block() {
   _sw->update(1, bytes_written);
 }
 
+#ifdef FIXME
 bool FileWriter::write_block(boost::uint8_t* buf, const boost::uint32_t len) {
   // Write buffer to disk.
   int bytes_left = len;
@@ -244,3 +241,4 @@ bool FileWriter::write_block(boost::uint8_t* buf, const boost::uint32_t len) {
   _sw->update(1, bytes_written);
   return true;
 }
+#endif

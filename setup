@@ -11,8 +11,8 @@ if [ "${MARK6_ROOT}" = "" ]; then
 fi
 
 if [ "${MARK6_USER}" = "" ]; then
-    echo "Warning.  MARK6_USER not set using default(mark6)."
-    MARK6_USER=mark6
+    echo "Warning.  MARK6_USER must be set before running this script."
+    exit 1
 fi
 
 EXTERN_ROOT=${MARK6_ROOT}/src/extern
@@ -71,11 +71,13 @@ install_pfring() {
     cd userland
     cd lib
     ./configure --prefix=/opt/mit/mark6
+    make 
     sudo make install
     cd ..
 
     cd libpcap-1.1.1-ring
     ./configure --prefix=/opt/mit/mark6
+    make
     sudo make install
     cd ..
 
@@ -95,6 +97,7 @@ build() {
 
 install_mark6() {
     cd ${MARK6_ROOT}
+    make
     sudo make install
     sudo ${GROUPADD} -f mark6
     sudo ${CHGRP} -R mark6 /opt/mit/mark6

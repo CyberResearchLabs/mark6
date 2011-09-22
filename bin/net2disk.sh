@@ -85,13 +85,12 @@ echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 # done
 
 ${EXEC} \
-    --interfaces eth2 \
-    --capture_files /mnt/disk0/cap.m6 \
-    --smp_affinities 1 \
+    --interfaces eth2 eth3 eth4 eth5 \
+    --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
+    --smp_affinities 1 1 3 3 \
     --ring_buffers ${RING_BUFFERS} \
     --write_blocks ${RING_BUFFERS}
 
-    # --smp_affinities 1 1 3 3 \
     # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
     # --interfaces eth2 eth3 eth4 eth5 \
     # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
