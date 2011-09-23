@@ -16,21 +16,77 @@
 %% API
 -export([start_server/1, server/1]).
 -define(FRAME_SIZE, 8224).
+-define(HEADER_SIZE, 32).
+-define(PAYLOAD_SIZE, 8192).
 
 trim_whitespace(Input) ->
     LS = re:replace(Input, "^[ \\t\\n]*", "", [{return, list}]),
     RS = re:replace(LS, "[ \\t\\n]*$", "", [{return, list}]),
     RS.
 
-scan_file(Fd, Frame, {ok, Binary}) ->
-    io:format("~p~n", [ Frame ]),
-    decode_header(binary:part(Binary, {0, 32})),
-    scan_file(Fd, Frame + 1, file:read(Fd, ?FRAME_SIZE));
-scan_file(Fd, Frame, eof) ->
-	file:close(Fd);
-scan_file(Fd, Frame, {error, Reason}) ->
-	file:close(Fd),
-	{error, Reason}.
+is_header(Bin) ->
+    try decode_header(binary:part(Bin, {0, 32}))
+    catch
+	_:_ -> error
+    end.
+
+scan_file(Fd) ->
+    {ok, Binary} = file:read(Fd, ?HEADER_SIZE),
+    scan_file(Fd, start, Binary).
+
+scan_file(Fd, start, Header) ->
+    case is_header(Header) of
+	error ->
+	    [H|T] = binary:bin_to_list(Header),
+	    case file:read(Fd, 1) of
+		{ok, Bin} ->
+		    New_header = binary:list_to_bin(lists:append(T, [Bin])),
+		    scan_file(Fd, start, New_header);
+		{error, Reason} -> scan_file(Fd, error, Reason);
+		eof -> scan_file(Fd, eof, "EOF")
+	    end;
+	ok ->
+	    case file:read(Fd, ?PAYLOAD_SIZE) of
+		{ok, Data} ->
+		    case file:read(Fd, ?HEADER_SIZE) of
+			{ok, New_header} -> scan_file(Fd, sync, New_header);
+			{error, Reason} -> scan_file(Fd, error, Reason);
+			eof -> scan_file(Fd, eof, "")
+		    end;
+		{error, Reason} -> scan_file(Fd, error, Reason);
+		eof -> scan_file(Fd, eof, "EOF")
+	    end
+    end;
+scan_file(Fd, sync, Header) ->
+    case is_header(Header) of
+	error ->
+	    [H|T] = binary:bin_to_list(Header),
+	    case file:read(Fd, 1) of
+		{ok, Bin} ->
+		    New_header = binary:list_to_bin(lists:append(T, [Bin])),
+		    scan_file(Fd, start, New_header);
+		{error, Reason} -> scan_file(Fd, error, Reason);
+		eof -> scan_file(Fd, eof, "")
+	    end;
+	ok ->
+	    case file:read(Fd, ?PAYLOAD_SIZE) of
+		{ok, Bin} ->
+		    case file:read(Fd, ?HEADER_SIZE) of
+			{ok, New_header} -> scan_file(Fd, sync, New_header);
+			{error, Reason} -> scan_file(Fd, error, Reason);
+			eof -> scan_file(Fd, eof, "")
+		    end;
+		{error, Reason} -> scan_file(Fd, error, Reason);
+		eof -> scan_file(Fd, eof, "")
+	    end
+    end;
+scan_file(Fd, error, Reason) ->
+    file:close(Fd),
+    error_logger:error_msg("scan_file: error ~p~n", [ Reason ]);
+scan_file(Fd, eof, _) ->
+    file:close(Fd),
+    error_logger:error_msg("scan_file: eof~n").
+
 
 start_server(File_name) ->
     {ok, spawn(?MODULE, server, [File_name])}.
@@ -40,7 +96,7 @@ server(File_name) ->
     error_logger:info_msg("Filename: ~p~n", [ File_name ]),
     {ok, Fd} = file:open(File_name, [ read, binary ]),
     FRAME_SIZE = 8224,
-    scan_file(Fd, 0, file:read(Fd, ?FRAME_SIZE)).
+    scan_file(Fd).
     
 decode_header(<<
 		W0B0:8, W0B1:8, W0B2:8, W0B3:8, 
@@ -65,7 +121,8 @@ decode_header(<<
 
 
     io:format("MW          : ~.16B~.16B~.16B~.16B~n", [ 0, 0, 0, W7B0 ]),
-    io:format("Data_frame  : ~p~n~n", [ Data_frame ]).
+    io:format("Data_frame  : ~p~n~n", [ Data_frame ]),
+    ok.
 
     % io:format("MW            : ~p ~p~n", [ MW1, MW2]),
     % io:format("Data_frame  : ~.16B~.16B~.16B~n", [ W1B2, W1B1, W1B0 ]),

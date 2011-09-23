@@ -1,7 +1,7 @@
 MAINTAINERCLEANFILES	=	Makefile.in
 EXTRA_DIST		=	setup
 SUBDIRS			=	src doc
-dist_bin_SCRIPTS	=	bin/net2disk.sh bin/net2disk-setup.sh bin/mark6.sh bin/tstmark6.sh
+dist_bin_SCRIPTS	=	bin/net2disk.sh bin/net2disk-setup.sh bin/mark6.sh bin/tstmark6.sh bin/vdif.sh
 sysconf_DATA		=	src/net2disk/net2disk-log.cfg
 logdir 			= 	log
 DISTCHECK_CONFIGURE_FLAGS=\
