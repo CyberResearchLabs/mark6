@@ -103,4 +103,3 @@ FEATURES
 - Incorporated tstmark6 control plane client.
 - Extended build system to do full build and install in
   /opt/haystack/mark6.
-- geoff breaks everything.
