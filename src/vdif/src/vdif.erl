@@ -30,73 +30,87 @@ is_header(Bin) ->
 	_:_ -> error
     end.
 
-scan_file(Fd) ->
-    {ok, Binary} = file:read(Fd, ?HEADER_SIZE),
-    scan_file(Fd, start, Binary).
+scan_file(Fd_data, Fd_in, Fd_out) ->
+    {ok, Binary} = file:read(Fd_in, ?HEADER_SIZE),
+    scan_file(Fd_data, Fd_in, Fd_out, start, Binary, 0).
 
-scan_file(Fd, start, Header) ->
+scan_file(Fd_data, Fd_in, Fd_out, start, Header, _Frame) ->
     case is_header(Header) of
 	error ->
 	    [H|T] = binary:bin_to_list(Header),
-	    case file:read(Fd, 1) of
+	    case file:read(Fd_in, 1) of
 		{ok, Bin} ->
 		    New_header = binary:list_to_bin(lists:append(T, [Bin])),
-		    scan_file(Fd, start, New_header);
-		{error, Reason} -> scan_file(Fd, error, Reason);
-		eof -> scan_file(Fd, eof, "EOF")
+		    scan_file(Fd_data, Fd_in, Fd_out, start, New_header, 0);
+		{error, Reason} -> scan_file(Fd_data, Fd_in, Fd_out, error, Reason, 0);
+		eof -> scan_file(Fd_data, Fd_in, Fd_out, eof, "EOF", 0)
 	    end;
-	ok ->
-	    case file:read(Fd, ?PAYLOAD_SIZE) of
+	{ok, Data_frame, Thread_id, Station_id, Epoch_seconds, Length} ->
+	    io:format(Fd_out, "~p,~p,~p,~p,~p~n", [ Data_frame, Thread_id, Station_id, Epoch_seconds, Length ]),
+	    case file:read(Fd_in, ?PAYLOAD_SIZE) of
 		{ok, Data} ->
-		    case file:read(Fd, ?HEADER_SIZE) of
-			{ok, New_header} -> scan_file(Fd, sync, New_header);
-			{error, Reason} -> scan_file(Fd, error, Reason);
-			eof -> scan_file(Fd, eof, "")
+		    case file:read(Fd_in, ?HEADER_SIZE) of
+			{ok, New_header} -> scan_file(Fd_data, Fd_in, Fd_out, sync, New_header, Data_frame);
+			{error, Reason} -> scan_file(Fd_data, Fd_in, Fd_out, error, Reason, Data_frame);
+			eof -> scan_file(Fd_data, Fd_in, Fd_out, eof, "", Data_frame)
 		    end;
-		{error, Reason} -> scan_file(Fd, error, Reason);
-		eof -> scan_file(Fd, eof, "EOF")
+		{error, Reason} -> scan_file(Fd_data, Fd_in, Fd_out, error, Reason, 0);
+		eof -> scan_file(Fd_data, Fd_in, Fd_out, eof, "EOF", 0)
 	    end
     end;
-scan_file(Fd, sync, Header) ->
+scan_file(Fd_data, Fd_in, Fd_out, sync, Header, Frame) ->
     case is_header(Header) of
 	error ->
 	    [H|T] = binary:bin_to_list(Header),
-	    case file:read(Fd, 1) of
+	    case file:read(Fd_in, 1) of
 		{ok, Bin} ->
 		    New_header = binary:list_to_bin(lists:append(T, [Bin])),
-		    scan_file(Fd, start, New_header);
-		{error, Reason} -> scan_file(Fd, error, Reason);
-		eof -> scan_file(Fd, eof, "")
+		    scan_file(Fd_data, Fd_in, Fd_out, start, New_header, 0);
+		{error, Reason} -> scan_file(Fd_data, Fd_in, Fd_out, error, Reason, 0);
+		eof -> scan_file(Fd_data, Fd_in, Fd_out, eof, "", 0)
 	    end;
-	ok ->
-	    case file:read(Fd, ?PAYLOAD_SIZE) of
+	{ok, Data_frame, Thread_id, Station_id, Epoch_seconds, Length} ->
+	    % io:format(Fd_out, "~p,~p,~p,~p,~p~n", [ Data_frame, Thread_id, Station_id, Epoch_seconds, Length ]),
+	    if
+		Data_frame /= Frame + 1, Data_frame /= Frame ->
+		    io:format("Frame skip: ~p ~p ~p~n", [ Data_frame, Frame, Data_frame - Frame ]);
+		true ->
+		    0
+	    end,
+	    case file:read(Fd_in, ?PAYLOAD_SIZE) of
 		{ok, Bin} ->
-		    case file:read(Fd, ?HEADER_SIZE) of
-			{ok, New_header} -> scan_file(Fd, sync, New_header);
-			{error, Reason} -> scan_file(Fd, error, Reason);
-			eof -> scan_file(Fd, eof, "")
+		    file:write(Fd_data, Header),
+		    file:write(Fd_data, Bin),
+		    case file:read(Fd_in, ?HEADER_SIZE) of
+			{ok, New_header} -> scan_file(Fd_data, Fd_in, Fd_out, sync, New_header, Data_frame);
+			{error, Reason} -> scan_file(Fd_data, Fd_in, Fd_out, error, Reason, Data_frame);
+			eof -> scan_file(Fd_data, Fd_in, Fd_out, eof, "", Data_frame)
 		    end;
-		{error, Reason} -> scan_file(Fd, error, Reason);
-		eof -> scan_file(Fd, eof, "")
+		{error, Reason} -> scan_file(Fd_data, Fd_in, Fd_out, error, Reason, Data_frame);
+		eof -> scan_file(Fd_data, Fd_in, Fd_out, eof, "", Data_frame)
 	    end
     end;
-scan_file(Fd, error, Reason) ->
-    file:close(Fd),
+scan_file(Fd_data, Fd_in, Fd_out, error, Reason, _Frame) ->
+    file:close(Fd_in),
+    file:close(Fd_out),
     error_logger:error_msg("scan_file: error ~p~n", [ Reason ]);
-scan_file(Fd, eof, _) ->
-    file:close(Fd),
+scan_file(Fd_data, Fd_in, Fd_out, eof, _, _Frame) ->
+    file:close(Fd_in),
+    file:close(Fd_out),
     error_logger:error_msg("scan_file: eof~n").
 
 
-start_server(File_name) ->
-    {ok, spawn(?MODULE, server, [File_name])}.
+start_server([File_name_data, File_name_in, File_name_out]) ->
+    {ok, spawn(?MODULE, server, [ [File_name_data, File_name_in, File_name_out] ])}.
 
-server(File_name) ->
+server([File_name_data, File_name_in, File_name_out]) ->
     error_logger:info_msg("Server start."),
-    error_logger:info_msg("Filename: ~p~n", [ File_name ]),
-    {ok, Fd} = file:open(File_name, [ read, binary ]),
+    error_logger:info_msg("Filename: ~p ~p~n", [ File_name_in, File_name_out ]),
+    {ok, Fd_in} = file:open(File_name_in, [ read, binary ]),
+    {ok, Fd_out} = file:open(File_name_out, [ write ]),
+    {ok, Fd_data} = file:open(File_name_data, [ write, binary, raw ]),
     FRAME_SIZE = 8224,
-    scan_file(Fd).
+    scan_file(Fd_data, Fd_in, Fd_out).
     
 decode_header(<<
 		W0B0:8, W0B1:8, W0B2:8, W0B3:8, 
@@ -119,11 +133,11 @@ decode_header(<<
     <<Station_id:32>> = <<2#0:16, W3B1:8, W3B1:8>>,
     <<EDV:8>> = <<W4B3>>,
 
+     % io:format("~p ~p~n", [ Data_frame, Thread_id ]),
+     {ok, Data_frame, Thread_id, Station_id, Epoch_seconds, Length}.
 
-    io:format("MW          : ~.16B~.16B~.16B~.16B~n", [ 0, 0, 0, W7B0 ]),
-    io:format("Data_frame  : ~p~n~n", [ Data_frame ]),
-    ok.
-
+    %io:format("MW          : ~.16B~.16B~.16B~.16B~n", [ 0, 0, 0, W7B0 ]),
+     %io:format("Data_frame  : ~p~n~n", [ Data_frame ]),
     % io:format("MW            : ~p ~p~n", [ MW1, MW2]),
     % io:format("Data_frame  : ~.16B~.16B~.16B~n", [ W1B2, W1B1, W1B0 ]),
     % io:format("Frame_length: ~p~n", [ Length ]),

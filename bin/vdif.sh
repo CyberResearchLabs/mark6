@@ -10,5 +10,5 @@ CLIENT_MODULE=vdif
 CLIENT_FUNC=start_server
 
 ${ERL} -pa ${CLIENT_DIR} \
-	-s ${CLIENT_MODULE} ${CLIENT_FUNC} /mnt/disk0/cap.m6 \
+	-run ${CLIENT_MODULE} ${CLIENT_FUNC} /tmp/disk0.m6 /mnt/disk0/cap.m6 /tmp/cap.chk \
 	-noshell
