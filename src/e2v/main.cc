@@ -29,33 +29,51 @@ namespace po = boost::program_options;
 #define UDP_PROTOCOL_NUMBER (17)
 #define UDP_HEADER_LENGTH (8)
 
-void usage() {
-  std::cout << "e2v <input file> <port list>" << std::endl;
+void
+usage(const po::options_description& desc) {
+  std::cout
+    << "e2v [options]" << std::endl
+    << desc;
 }
 
 // Only look at last two digits of port for demux.
 const int MAX_FDS = 100;
 char fds[MAX_FDS];
 
-std::list<int> PORT_LIST;
-
 int
 main(int argc, char *argv[]) {
-  if (argc < 4) {
-    usage();
-    return(-1);
-  }
+  // Variables to store options.
+  std::string input_file;
+  std::string output_prefix;
+  std::vector<int> thread_ports;
 
-  std::string dev(argv[1]);
-  std::string out(argv[2]);
-  for (int i=3; i<argc; i++) {
-    PORT_LIST.push_back(atoi((const char*)argv[i]));
-  }
+  // Declare supported options, defaults, and variable bindings.
+  po::options_description desc("Allowed options");
+  desc.add_options()
+    ("help", "produce help message")
+    ("input_file",
+     po::value<std::string>(&input_file),
+     "input file")
+    ("output_prefix",
+     po::value<std::string>(&output_prefix),
+     "output prefix")
+    ("thread_ports",
+     po::value< std::vector<int> >(&thread_ports)->multitoken(),
+     "thread udp ports");
 
-  BOOST_FOREACH(unsigned int port, PORT_LIST) {
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help") || argc < 4) {
+    usage(desc);
+    return 1;
+  }
+  
+  BOOST_FOREACH(int port, thread_ports) {
     std::cout << port << " ";
     std::ostringstream oss (std::ostringstream::out);
-    oss << out << "-" << port << ".vdif";
+    oss << output_prefix << "-" << port << ".vdif";
     std::cout << "Opening: " << oss.str() << std::endl;
     fds[port % MAX_FDS] =  ::open(oss.str().c_str(), O_WRONLY
 				  | O_CREAT, S_IRWXU);
@@ -64,15 +82,13 @@ main(int argc, char *argv[]) {
   struct pcap_pkthdr header;
   const u_char* packet;
 
-  std::cout << "Dev: " << dev << std::endl;
-  std::cout << "Out: " << out << std::endl;
-
   //open the pcap file 
   pcap_t *handle; 
   char errbuf[PCAP_ERRBUF_SIZE];
-  handle = pcap_open_offline(dev.c_str(), errbuf);
+  handle = pcap_open_offline(input_file.c_str(), errbuf);
   if (handle == NULL) { 
-    std::cout << "Couldn't open pcap file " << dev << " " << errbuf
+    std::cout << "Couldn't open pcap file " << input_file
+	      << " " << errbuf
 	      << std::endl;
     return(-1); 
   }
@@ -107,7 +123,7 @@ main(int argc, char *argv[]) {
  
   pcap_close(handle);  //close the pcap file 
 
-  BOOST_FOREACH(unsigned int port, PORT_LIST) {
+  BOOST_FOREACH(unsigned int port, thread_ports) {
     close(fds[port % MAX_FDS]);
   }
   return(0);
