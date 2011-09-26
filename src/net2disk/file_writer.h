@@ -108,6 +108,9 @@ class FileWriter: public Threaded {
   //! \param buf Length of buffer to be written.
   bool write(boost::uint8_t* buf);
 
+  bool write_unbuffered(boost::uint8_t* buf, const boost::uint32_t len);
+
+
  protected:
   //---------------------------------------------------------------------------
   // Internal data members

@@ -1,1 +1,1 @@
-SUBDIRS=net2disk
+SUBDIRS=net2disk e2v

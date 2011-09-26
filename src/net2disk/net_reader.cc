@@ -143,21 +143,67 @@ void NetReader::handle_idle() {
   usleep(_command_interval*1000000);
 }
 
+// Example PCAP header
+// 0000000 c3d4 a1b2 0002 0004 0000 0000 0000 0000
+// 0000020 ffff 0000 0001 0000
+
+// FIXME
+//
+// 0000000 d4c3 b2a1 0200 0400 0000 0000 0000 0000
+// 0000020 ffff 0000 0100 0000
+//
+// 0000000 c2d4 a1b2 0002 0004 0000 0000 0000 0000
+// 0000020 ffff 0000 0001 0000
+
+// 09:39:30.018515 01:00:4a:20:00:00 (oui Unknown) > 2a:97:80:4e:44:bf (oui Unknown), ethertype Unknown (0x4a20), length 8266: 
+
+boost::uint8_t PCAP_HEADER[] = {
+	0xd4, 0xc3, 0xb2, 0xa1, 0x2,  0x0,  0x4,  0x0,
+	0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,	
+	0xff, 0xff, 0x0,  0x0,  0x1,  0x0,  0x0,  0x0
+};
+
+const int PCAP_HEADER_LENGTH = 24;
+
+struct PcapPacketHeader {         
+  boost::uint32_t ts_sec;         /* timestamp seconds */         
+  boost::uint32_t ts_usec;        /* timestamp microseconds */         
+  boost::uint32_t incl_len;       /* number of octets of packet saved in file */         
+  boost::uint32_t orig_len;       /* actual length of packet */
+};
+
+const int PCAP_PACKET_HEADER_LENGTH = 16;
+
 void NetReader::handle_read_from_network() {
   struct pfring_pkthdr hdr;
   int payload_length;
   boost::uint8_t* payload_ptr;
   
-  int bytes_left = _buffer_size;
+
   int bytes_read = 0;
-  boost::uint8_t* file_buf = _bp->malloc();
+
   static int remainder_len = 0;
-  static boost::uint8_t remainder_buf[8224];
-  // static boost::uint8_t file_buf[1048576];
-  // static boost::uint8_t file_buf[822400];
-  // int bytes_left = 822400;
+  // static boost::uint8_t remainder_buf[8224];
+  static boost::uint8_t remainder_buf[9000];
+  static bool first_write = true;
+#if DYNAMIC_BUFFER
+  int bytes_left = _buffer_size;
+  boost::uint8_t* file_buf = _bp->malloc();
+#else
+  const int BUFFER_SIZE = 1048576;
+  int bytes_left = BUFFER_SIZE;
+  static boost::uint8_t file_buf[BUFFER_SIZE];
+#endif
   boost::uint64_t num_packets = 0;
   boost::uint64_t num_bytes = 0;
+
+  // FIXME.
+#ifdef DYNAMIC_BUFFER
+  if (first_write) {
+    memcpy(remainder_buf, PCAP_HEADER, PCAP_HEADER_LENGTH);
+    remainder_len = PCAP_HEADER_LENGTH;
+    first_write = false;
+  }
 
   // Copy partial packet.
   if (remainder_len > 0) {
@@ -166,6 +212,12 @@ void NetReader::handle_read_from_network() {
     bytes_left -= remainder_len;
     remainder_len = 0;
   }
+#else
+  if (first_write) {
+    _fw->write_unbuffered((boost::uint8_t*)PCAP_HEADER, PCAP_HEADER_LENGTH);
+    first_write = false;
+  }
+#endif // DYNAMIC
 
   // Fill the new file_buf;
   while (bytes_left > 0) {
@@ -182,7 +234,8 @@ void NetReader::handle_read_from_network() {
       const boost::uint16_t payload_offset(po.payload_offset);
 
       // Get payload information.
-      payload_ptr = &_net_buf[payload_offset];
+      // FIXME payload_ptr = &_net_buf[payload_offset];
+      payload_ptr = _net_buf;
       payload_length = hdr.caplen - payload_offset;
 
       // Check for validity of capture.
@@ -225,7 +278,8 @@ void NetReader::handle_read_from_network() {
 
       // Update stats.
       num_packets++;
-      num_bytes += hdr.caplen;
+      // FIXME num_bytes += hdr.caplen;
+      num_bytes += hdr.len;
     } else {
       LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "
 		    << strerror(errno));
@@ -233,17 +287,83 @@ void NetReader::handle_read_from_network() {
     }
 
     // Accumulate or flush data.
-    if (bytes_left < hdr.caplen) {
+    // FIXME if (bytes_left < hdr.caplen) {
+    PcapPacketHeader pph;
+    pph.ts_sec = hdr.ts.tv_sec;
+    pph.ts_usec = hdr.ts.tv_usec;
+    pph.incl_len = hdr.len;
+    pph.orig_len = hdr.len;
+
+#define DIRECT_PACKET_WRITE
+#ifdef DIRECT_PACKET_WRITE
+    memcpy(file_buf, &pph, PCAP_PACKET_HEADER_LENGTH);
+    bytes_read += PCAP_PACKET_HEADER_LENGTH;
+
+    memcpy(&file_buf[PCAP_PACKET_HEADER_LENGTH], payload_ptr, hdr.len);
+    bytes_read += hdr.len;
+
+    _fw->write_unbuffered(file_buf, PCAP_PACKET_HEADER_LENGTH + hdr.len);
+    _sw->update(num_packets, num_bytes);
+    bytes_left = 0;
+    break;
+#endif
+
+#ifdef BATCH_WRITE
+    if (bytes_left < PCAP_PACKET_HEADER_LENGTH) {
+      memcpy(&file_buf[bytes_read], &pph, bytes_left);
+      bytes_read += bytes_left;
+
+      remainder_len = PCAP_PACKET_HEADER_LENGTH - bytes_left;
+      memcpy(remainder_buf, &pph + bytes_left, remainder_len);
+
+      memcpy(&remainder_buf[remainder_len], payload_ptr, hdr.len);
+      remainder_len += hdr.len;
+      bytes_read += hdr.len;
+
+#ifdef DYNAMIC_BUFFER
+      _fw->write(file_buf);
+#else
+      _fw->write_unbuffered(file_buf, BUFFER_SIZE);
+#endif
+      _sw->update(num_packets, num_bytes);
+      bytes_left = 0;
+      break;
+    } else if (bytes_left == PCAP_PACKET_HEADER_LENGTH) {
+      memcpy(&file_buf[bytes_read], &pph, bytes_left);
+      bytes_read += bytes_left;
+
+      memcpy(remainder_buf, payload_ptr, hdr.len);
+      remainder_len = hdr.len;
+      bytes_read += hdr.len;
+
+#ifdef DYNAMIC_BUFFER
+      _fw->write(file_buf);
+#else
+      _fw->write_unbuffered(file_buf, BUFFER_SIZE);
+#endif
+      _sw->update(num_packets, num_bytes);
+      bytes_left = 0;
+      break;
+    } else if (bytes_left < hdr.len + PCAP_PACKET_HEADER_LENGTH) {
+      memcpy(&file_buf[bytes_read], &pph, PCAP_PACKET_HEADER_LENGTH);
+      bytes_read += PCAP_PACKET_HEADER_LENGTH;
+      bytes_left -= PCAP_PACKET_HEADER_LENGTH;
+
       // Copy fragment into buffer.
       memcpy(&file_buf[bytes_read], payload_ptr, bytes_left);
       bytes_read += bytes_left;
       
       // Copy remainder into remainder_buf.
-      remainder_len = hdr.caplen - bytes_left;
+      // FIXME remainder_len = hdr.caplen - bytes_left;
+      remainder_len = hdr.len - bytes_left;
       memcpy(remainder_buf, payload_ptr + bytes_left, remainder_len);
       
       // Flush to disk.
+#ifdef DYNAMIC_BUFFER
       _fw->write(file_buf);
+#else
+      _fw->write_unbuffered(file_buf, BUFFER_SIZE);
+#endif
       
       // Update stats.
       _sw->update(num_packets, num_bytes);
@@ -251,11 +371,21 @@ void NetReader::handle_read_from_network() {
       bytes_left = 0;
       break;
     } else {
+      memcpy(&file_buf[bytes_read], &pph, PCAP_PACKET_HEADER_LENGTH);
+      bytes_read += PCAP_PACKET_HEADER_LENGTH;
+      bytes_left -= PCAP_PACKET_HEADER_LENGTH;
+      
       // Copy captured payload to file buffer.
-      memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
-      bytes_read += hdr.caplen;
-      bytes_left -= hdr.caplen;
+      // FIXME
+      // memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
+      memcpy(&file_buf[bytes_read], payload_ptr, hdr.len);
+      // FIXME bytes_read += hdr.caplen;
+      bytes_read += hdr.len;
+      // FIXME bytes_left -= hdr.caplen;
+      bytes_left -= hdr.len;
     }
+#endif // BATCH_WRITE
+
   }
 }
 

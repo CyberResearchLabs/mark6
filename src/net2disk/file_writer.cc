@@ -43,7 +43,6 @@
 
 using namespace boost::filesystem;
 
-
 FileWriter::FileWriter(const int id,
 		       const int write_block_size,
 		       const int  write_blocks,
@@ -147,8 +146,12 @@ int FileWriter::open() {
   int ret=0;
   // Assumes FALLOCATE
   // _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
+#ifdef DYNAMIC_BUFFER
   _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
 		   S_IRWXU);
+#else
+  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
+#endif
   // _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
   if (_pfd.fd<0) {
     LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
@@ -171,7 +174,6 @@ int FileWriter::open() {
     LOG4CXX_DEBUG(logger, "Successfully seeked.");
   }
 #endif // FALLOCATE
-
 
   // Debug message.
   LOG4CXX_DEBUG(logger, "pfd: " << _pfd.fd);
@@ -223,15 +225,13 @@ void FileWriter::write_block() {
   _sw->update(1, bytes_written);
 }
 
-#ifdef FIXME
-bool FileWriter::write_block(boost::uint8_t* buf, const boost::uint32_t len) {
+bool FileWriter::write_unbuffered(boost::uint8_t* buf, const boost::uint32_t len) {
   // Write buffer to disk.
   int bytes_left = len;
   int bytes_written = 0;
   while (bytes_left) {
     int nb = ::write(_pfd.fd, &buf[bytes_written], bytes_left);
     if (nb > 0) {
-      LOG4CXX_INFO(logger, "Wrote : " << nb << " bytes.");
       bytes_left -= nb;
       bytes_written += nb;
     } else {
@@ -241,4 +241,4 @@ bool FileWriter::write_block(boost::uint8_t* buf, const boost::uint32_t len) {
   _sw->update(1, bytes_written);
   return true;
 }
-#endif
+

@@ -1,4 +1,4 @@
-#!/opt/local/bin/escript
+#!/usr/bin/escript
 %% -*- erlang -*-
 %%! -smp enable -sname vdif 
 %%%-------------------------------------------------------------------
@@ -57,7 +57,7 @@ valid_frame_number(Prev_frame, Curr_frame) ->
 update_protocol(S, V) ->
     case ets:lookup(S#state.protocol_table, V#vdif.thread_id) of
 	[{Key, Element}|T] ->
-	    io:format("Element: ~p~n", [ Element ]),
+	    % io:format("Element: ~p~n", [ Element ]),
 	    Return = valid_frame_number(Element#vdif.frame, V#vdif.frame),
 	    ets:insert(S#state.protocol_table,
 		       {Element#vdif.thread_id, Element#vdif{frame=V#vdif.frame}});
@@ -123,8 +123,8 @@ scan_file(S, sync, Hdr, Frame) ->
 	    update_protocol(S, V),
 	    case file:read(S#state.fd_in, ?PAYLOAD_SIZE) of
 		{ok, Bin} ->
-		    file:write(S#state.fd_data, Hdr),
-		    file:write(S#state.fd_data, Bin),
+		    % file:write(S#state.fd_data, Hdr),
+		    % file:write(S#state.fd_data, Bin),
 		    case file:read(S#state.fd_in, ?HEADER_SIZE) of
 			{ok, New_hdr} ->
 			    scan_file(S, sync, New_hdr, V#vdif.frame);
