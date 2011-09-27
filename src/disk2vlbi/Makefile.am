@@ -1,7 +1,7 @@
-bin_PROGRAMS	=	e2v
+bin_PROGRAMS	=	disk2vlbi
 
-e2v_SOURCES	= 	main.cc
-e2v_LDADD	= 	-lpcap \
+disk2vlbi_SOURCES	= 	main.cc
+disk2vlbi_LDADD	= 	-lpcap \
 			-L@BOOST_LIBDIR@ \
 			-lboost_program_options-mt \
 			-lboost_system-mt \

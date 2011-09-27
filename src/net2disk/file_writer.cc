@@ -227,11 +227,13 @@ bool FileWriter::write(boost::uint8_t* b) {
 
 void FileWriter::write_block() {
   boost::uint8_t* buf;
+  boost::uint64_t buf_len;
   if (_write_bufs.empty()) {
     return;
   } else {
     boost::mutex::scoped_lock lock(_write_bufs_mutex);
     buf = _write_bufs.front();
+    buf_len = _write_bufs.size();
     _write_bufs.pop_front();
   }
 
@@ -248,12 +250,17 @@ void FileWriter::write_block() {
     }
   }
   if (_sw)
-    _sw->update(1, bytes_written);
+    _sw->update(1, bytes_written, 0, buf_len);
   free_buffer(buf);
 }
 
 bool FileWriter::write_unbuffered(boost::uint8_t* buf,
 				  const boost::uint32_t len) {
+  boost::uint64_t buf_len = 0;
+  {
+    boost::mutex::scoped_lock lock(_write_bufs_mutex);
+    buf_len = _write_bufs.size();
+  }
   // Write buffer to disk.
   int bytes_left = len;
   int bytes_written = 0;
@@ -267,7 +274,7 @@ bool FileWriter::write_unbuffered(boost::uint8_t* buf,
     }
   }
   if (_sw)
-    _sw->update(1, bytes_written);
+    _sw->update(1, bytes_written, 0, buf_len);
   return true;
 }
 

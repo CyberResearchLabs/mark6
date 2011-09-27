@@ -42,7 +42,7 @@ AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  src/Makefile
 		src/net2disk/Makefile
-		src/e2v/Makefile
+		src/disk2vlbi/Makefile
 		])
 
 AC_SUBST(BOOST_LIBDIR)

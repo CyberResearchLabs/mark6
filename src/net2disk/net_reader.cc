@@ -281,7 +281,7 @@ void NetReader::handle_read_from_network() {
       _fw->write_unbuffered(file_buf, BUFFER_SIZE);
 #endif
       // Update stats.
-      _sw->update(num_packets, num_bytes);
+      _sw->update(num_packets, num_bytes, dropped_packets, 0);
       bytes_left = 0;
       break;
     } else if (bytes_left == payload_length) {

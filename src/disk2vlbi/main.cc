@@ -32,7 +32,7 @@ namespace po = boost::program_options;
 void
 usage(const po::options_description& desc) {
   std::cout
-    << "e2v [options]" << std::endl
+    << "disk2vlbi [options]" << std::endl
     << desc;
 }
 

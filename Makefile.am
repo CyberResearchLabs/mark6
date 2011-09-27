@@ -2,6 +2,7 @@ MAINTAINERCLEANFILES	=	Makefile.in
 SUBDIRS			=	src doc
 dist_bin_SCRIPTS	=	src/net2disk/net2disk-run \
 				src/net2disk/net2disk-setup \
+				src/disk2vlbi/disk2vlbi \
 				bin/mark6 \
 				bin/tstmark6 \
 				src/vdif/bin/vdif \
