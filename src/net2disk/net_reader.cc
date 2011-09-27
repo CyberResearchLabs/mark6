@@ -208,7 +208,7 @@ void NetReader::handle_read_from_network() {
   static boost::uint8_t net_buf[9000];
   static PcapPacketHeader pph;
 
-  // #define DYNAMIC_BUFFER
+#define DYNAMIC_BUFFER
 #ifdef DYNAMIC_BUFFER
   int bytes_left = _buffer_size;
   boost::uint8_t* file_buf = _fw->malloc_buffer();
@@ -312,7 +312,8 @@ void NetReader::handle_read_from_network() {
       // Copy remainder into remainder_buf.
       remainder_len = payload_length - bytes_left;
       memcpy(remainder_buf, payload_ptr + bytes_left, remainder_len);
-      
+
+#define BUFFERED_WRITE      
 #ifdef BUFFERED_WRITE
       if (!_fw->write(file_buf))
 	LOG4CXX_INFO(logger, "Buffer full 1");
