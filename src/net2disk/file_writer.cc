@@ -158,7 +158,8 @@ int FileWriter::open() {
   int ret=0;
   // Assumes FALLOCATE
   // _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
-#ifdef DYNAMIC_BUFFER
+#define DIRECT_BUFFER
+#ifdef DIRECT_BUFFER
   _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
 		   S_IRWXU);
 #else

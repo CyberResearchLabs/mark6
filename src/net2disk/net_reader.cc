@@ -172,30 +172,6 @@ struct PcapPacketHeader {
 
 const int PCAP_PACKET_HEADER_LENGTH = 16;
 
-// #define DUMP
-#ifdef DUMP
-      std::cout << "Packet dump.\n";
-      std::cout << "caplen:         " << hdr.caplen << std::endl;
-      std::cout << "len:            " << hdr.len << std::endl;
-      std::cout << "parsed_hdr_len: " << pep.parsed_header_len << std::endl;
-      std::cout << "eth_offset:     " << eth_offset << std::endl;
-      std::cout << "l3_offset:      " << l3_offset << std::endl;
-      std::cout << "l4_offset:      " << l4_offset << std::endl;
-      std::cout << "payload_offset: " << payload_offset << std::endl;
-      std::cout << "payload_length: " << payload_length << std::endl;
-
-      const int dumplen(128);
-      for (int i=0; i<dumplen; i++) {
-	printf("%02x ", (unsigned char)net_buf[i + payload_offset]);
-	if ((i+1)%8 == 0)
-	  printf(" ");
-	if ((i+1)%16 == 0)
-	  printf("\n");
-      }
-      printf("\n");
-#endif // DUMP	
-
-
 void NetReader::handle_read_from_network() {
   struct pfring_pkthdr hdr;
   int payload_length;
@@ -222,6 +198,7 @@ void NetReader::handle_read_from_network() {
   int bytes_left = BUFFER_SIZE;
   static boost::uint8_t file_buf[BUFFER_SIZE];
 #endif
+  boost::uint64_t dropped_packets = 0;
   boost::uint64_t num_packets = 0;
   boost::uint64_t num_bytes = 0;
 
@@ -292,18 +269,6 @@ void NetReader::handle_read_from_network() {
     }
 
     // Accumulate or flush data.
-#ifdef STRAIGHT_WRITE
-    memcpy(file_buf, payload_ptr, payload_length);
-    bytes_read += payload_length;
-
-    _fw->write_unbuffered(file_buf, payload_length);
-    _sw->update(num_packets, num_bytes);
-    bytes_left = 0;
-    break;
-#endif
-
-#define BATCH_WRITE
-#ifdef BATCH_WRITE
     if (bytes_left < payload_length) {
       // Copy fragment into buffer.
       memcpy(&file_buf[bytes_read], payload_ptr, bytes_left);
@@ -316,7 +281,7 @@ void NetReader::handle_read_from_network() {
 #define BUFFERED_WRITE      
 #ifdef BUFFERED_WRITE
       if (!_fw->write(file_buf))
-	LOG4CXX_INFO(logger, "Buffer full 1");
+	++dropped_packets;
 #else
       _fw->write_unbuffered(file_buf, BUFFER_SIZE);
 #endif
@@ -324,14 +289,14 @@ void NetReader::handle_read_from_network() {
       _sw->update(num_packets, num_bytes);
       bytes_left = 0;
       break;
-    } if (bytes_left == payload_length) {
+    } else if (bytes_left == payload_length) {
       // Copy captured payload to file buffer.
       memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
       bytes_read += payload_length;
       bytes_left -= payload_length;
 #ifdef BUFFERED_WRITE
       if (!_fw->write(file_buf))
-	LOG4CXX_INFO(logger, "Buffer full 1");
+	++dropped_packets;
 #else
       _fw->write_unbuffered(file_buf, BUFFER_SIZE);
 #endif
@@ -341,8 +306,6 @@ void NetReader::handle_read_from_network() {
       bytes_read += payload_length;
       bytes_left -= payload_length;
     }
-#endif // BATCH_WRITE
-
   }
 }
 
