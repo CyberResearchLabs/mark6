@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 // C++ includes.
 #include <iostream>
@@ -171,6 +172,30 @@ struct PcapPacketHeader {
 
 const int PCAP_PACKET_HEADER_LENGTH = 16;
 
+// #define DUMP
+#ifdef DUMP
+      std::cout << "Packet dump.\n";
+      std::cout << "caplen:         " << hdr.caplen << std::endl;
+      std::cout << "len:            " << hdr.len << std::endl;
+      std::cout << "parsed_hdr_len: " << pep.parsed_header_len << std::endl;
+      std::cout << "eth_offset:     " << eth_offset << std::endl;
+      std::cout << "l3_offset:      " << l3_offset << std::endl;
+      std::cout << "l4_offset:      " << l4_offset << std::endl;
+      std::cout << "payload_offset: " << payload_offset << std::endl;
+      std::cout << "payload_length: " << payload_length << std::endl;
+
+      const int dumplen(128);
+      for (int i=0; i<dumplen; i++) {
+	printf("%02x ", (unsigned char)net_buf[i + payload_offset]);
+	if ((i+1)%8 == 0)
+	  printf(" ");
+	if ((i+1)%16 == 0)
+	  printf("\n");
+      }
+      printf("\n");
+#endif // DUMP	
+
+
 void NetReader::handle_read_from_network() {
   struct pfring_pkthdr hdr;
   int payload_length;
@@ -178,13 +203,20 @@ void NetReader::handle_read_from_network() {
   
   int bytes_read = 0;
   static int remainder_len = 0;
-  // static boost::uint8_t remainder_buf[8224];
   static boost::uint8_t remainder_buf[9000];
   static bool first_write = true;
-#define DYNAMIC_BUFFER
+  static boost::uint8_t net_buf[9000];
+  static PcapPacketHeader pph;
+
+  // #define DYNAMIC_BUFFER
 #ifdef DYNAMIC_BUFFER
   int bytes_left = _buffer_size;
   boost::uint8_t* file_buf = _fw->malloc_buffer();
+  if (!file_buf) {
+    LOG4CXX_ERROR(logger, "File buffer's full.");
+    return;
+  }
+  assert(file_buf);
 #else
   const int BUFFER_SIZE = 1048576;
   int bytes_left = BUFFER_SIZE;
@@ -193,8 +225,6 @@ void NetReader::handle_read_from_network() {
   boost::uint64_t num_packets = 0;
   boost::uint64_t num_bytes = 0;
 
-  // FIXME.
-#ifdef DYNAMIC_BUFFER
   if (first_write) {
     memcpy(remainder_buf, PCAP_HEADER, PCAP_HEADER_LENGTH);
     remainder_len = PCAP_HEADER_LENGTH;
@@ -208,16 +238,11 @@ void NetReader::handle_read_from_network() {
     bytes_left -= remainder_len;
     remainder_len = 0;
   }
-#else
-  if (first_write) {
-    _fw->write_unbuffered((boost::uint8_t*)PCAP_HEADER, PCAP_HEADER_LENGTH);
-    first_write = false;
-  }
-#endif // DYNAMIC
 
   // Fill the new file_buf;
   while (bytes_left > 0) {
-    if (_ring->get_next_packet(&hdr, _net_buf, _snaplen) > 0) {
+    if (_ring->get_next_packet(&hdr, &net_buf[PCAP_PACKET_HEADER_LENGTH],
+			       _snaplen) > 0) {
       // Successful read.
 
       // Extract offsets etc. from pfring structures.
@@ -231,8 +256,15 @@ void NetReader::handle_read_from_network() {
 
       // Get payload information.
       // FIXME payload_ptr = &_net_buf[payload_offset];
-      payload_ptr = _net_buf;
-      payload_length = hdr.caplen - payload_offset;
+      payload_ptr = net_buf;
+      // FIXME payload_length = hdr.caplen - payload_offset;
+      payload_length = hdr.len + PCAP_PACKET_HEADER_LENGTH;
+
+      pph.ts_sec = hdr.ts.tv_sec;
+      pph.ts_usec = hdr.ts.tv_usec;
+      pph.incl_len = hdr.len;
+      pph.orig_len = hdr.len;
+      memcpy(net_buf, &pph, PCAP_PACKET_HEADER_LENGTH);
 
       // Check for validity of capture.
       if (hdr.caplen != _snaplen) {
@@ -248,29 +280,6 @@ void NetReader::handle_read_from_network() {
 #endif // LOG_SHORT
 	continue;
       }
-	      
-// #define DUMP
-#ifdef DUMP
-      std::cout << "Packet dump.\n";
-      std::cout << "caplen:         " << hdr.caplen << std::endl;
-      std::cout << "len:            " << hdr.len << std::endl;
-      std::cout << "parsed_hdr_len: " << pep.parsed_header_len << std::endl;
-      std::cout << "eth_offset:     " << eth_offset << std::endl;
-      std::cout << "l3_offset:      " << l3_offset << std::endl;
-      std::cout << "l4_offset:      " << l4_offset << std::endl;
-      std::cout << "payload_offset: " << payload_offset << std::endl;
-      std::cout << "payload_length: " << payload_length << std::endl;
-
-      const int dumplen(128);
-      for (int i=0; i<dumplen; i++) {
-	printf("%02x ", (unsigned char)_net_buf[i + payload_offset]);
-	if ((i+1)%8 == 0)
-	  printf(" ");
-	if ((i+1)%16 == 0)
-	  printf("\n");
-      }
-      printf("\n");
-#endif // DUMP	
 
       // Update stats.
       num_packets++;
@@ -283,22 +292,11 @@ void NetReader::handle_read_from_network() {
     }
 
     // Accumulate or flush data.
-    // FIXME if (bytes_left < hdr.caplen) {
-    PcapPacketHeader pph;
-    pph.ts_sec = hdr.ts.tv_sec;
-    pph.ts_usec = hdr.ts.tv_usec;
-    pph.incl_len = hdr.len;
-    pph.orig_len = hdr.len;
+#ifdef STRAIGHT_WRITE
+    memcpy(file_buf, payload_ptr, payload_length);
+    bytes_read += payload_length;
 
-    // #define DIRECT_PACKET_WRITE
-#ifdef DIRECT_PACKET_WRITE
-    memcpy(file_buf, &pph, PCAP_PACKET_HEADER_LENGTH);
-    bytes_read += PCAP_PACKET_HEADER_LENGTH;
-
-    memcpy(&file_buf[PCAP_PACKET_HEADER_LENGTH], payload_ptr, hdr.len);
-    bytes_read += hdr.len;
-
-    _fw->write_unbuffered(file_buf, PCAP_PACKET_HEADER_LENGTH + hdr.len);
+    _fw->write_unbuffered(file_buf, payload_length);
     _sw->update(num_packets, num_bytes);
     bytes_left = 0;
     break;
@@ -306,80 +304,41 @@ void NetReader::handle_read_from_network() {
 
 #define BATCH_WRITE
 #ifdef BATCH_WRITE
-    if (bytes_left < PCAP_PACKET_HEADER_LENGTH) {
-      memcpy(&file_buf[bytes_read], &pph, bytes_left);
-      bytes_read += bytes_left;
-
-      remainder_len = PCAP_PACKET_HEADER_LENGTH - bytes_left;
-      memcpy(remainder_buf, &pph + bytes_left, remainder_len);
-
-      memcpy(&remainder_buf[remainder_len], payload_ptr, hdr.len);
-      remainder_len += hdr.len;
-      bytes_read += hdr.len;
-
-#ifdef DYNAMIC_BUFFER
-      _fw->write(file_buf);
-#else
-      _fw->write_unbuffered(file_buf, BUFFER_SIZE);
-#endif
-      _sw->update(num_packets, num_bytes);
-      bytes_left = 0;
-      break;
-    } else if (bytes_left == PCAP_PACKET_HEADER_LENGTH) {
-      memcpy(&file_buf[bytes_read], &pph, bytes_left);
-      bytes_read += bytes_left;
-
-      memcpy(remainder_buf, payload_ptr, hdr.len);
-      remainder_len = hdr.len;
-      bytes_read += hdr.len;
-
-#ifdef DYNAMIC_BUFFER
-      _fw->write(file_buf);
-#else
-      _fw->write_unbuffered(file_buf, BUFFER_SIZE);
-#endif
-      _sw->update(num_packets, num_bytes);
-      bytes_left = 0;
-      break;
-    } else if (bytes_left < hdr.len + PCAP_PACKET_HEADER_LENGTH) {
-      memcpy(&file_buf[bytes_read], &pph, PCAP_PACKET_HEADER_LENGTH);
-      bytes_read += PCAP_PACKET_HEADER_LENGTH;
-      bytes_left -= PCAP_PACKET_HEADER_LENGTH;
-
+    if (bytes_left < payload_length) {
       // Copy fragment into buffer.
       memcpy(&file_buf[bytes_read], payload_ptr, bytes_left);
       bytes_read += bytes_left;
       
       // Copy remainder into remainder_buf.
-      // FIXME remainder_len = hdr.caplen - bytes_left;
-      remainder_len = hdr.len - bytes_left;
+      remainder_len = payload_length - bytes_left;
       memcpy(remainder_buf, payload_ptr + bytes_left, remainder_len);
       
-      // Flush to disk.
-#ifdef DYNAMIC_BUFFER
-      _fw->write(file_buf);
+#ifdef BUFFERED_WRITE
+      if (!_fw->write(file_buf))
+	LOG4CXX_INFO(logger, "Buffer full 1");
 #else
       _fw->write_unbuffered(file_buf, BUFFER_SIZE);
 #endif
-      
       // Update stats.
       _sw->update(num_packets, num_bytes);
-      
       bytes_left = 0;
       break;
-    } else {
-      memcpy(&file_buf[bytes_read], &pph, PCAP_PACKET_HEADER_LENGTH);
-      bytes_read += PCAP_PACKET_HEADER_LENGTH;
-      bytes_left -= PCAP_PACKET_HEADER_LENGTH;
-      
+    } if (bytes_left == payload_length) {
       // Copy captured payload to file buffer.
-      // FIXME
-      // memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
-      memcpy(&file_buf[bytes_read], payload_ptr, hdr.len);
-      // FIXME bytes_read += hdr.caplen;
-      bytes_read += hdr.len;
-      // FIXME bytes_left -= hdr.caplen;
-      bytes_left -= hdr.len;
+      memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
+      bytes_read += payload_length;
+      bytes_left -= payload_length;
+#ifdef BUFFERED_WRITE
+      if (!_fw->write(file_buf))
+	LOG4CXX_INFO(logger, "Buffer full 1");
+#else
+      _fw->write_unbuffered(file_buf, BUFFER_SIZE);
+#endif
+    } else {
+      // Copy captured payload to file buffer.
+      memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
+      bytes_read += payload_length;
+      bytes_left -= payload_length;
     }
 #endif // BATCH_WRITE
 

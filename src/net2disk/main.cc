@@ -75,7 +75,7 @@ const std::string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8224);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_RING_BUFFERS(128);
-const int DEFAULT_WRITE_BLOCKS(64);
+const int DEFAULT_WRITE_BLOCKS(128);
 
 // Other constants.
 const int MAX_SNAPLEN(9014);

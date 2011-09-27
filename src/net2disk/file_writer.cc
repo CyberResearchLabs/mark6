@@ -247,7 +247,8 @@ void FileWriter::write_block() {
   free_buffer(buf);
 }
 
-bool FileWriter::write_unbuffered(boost::uint8_t* buf, const boost::uint32_t len) {
+bool FileWriter::write_unbuffered(boost::uint8_t* buf,
+				  const boost::uint32_t len) {
   // Write buffer to disk.
   int bytes_left = len;
   int bytes_written = 0;
