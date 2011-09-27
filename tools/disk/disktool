@@ -35,13 +35,14 @@ PARTED=/sbin/parted
 MKFS=/sbin/mkfs.ext4
 # MKFS=/sbin/mkfs.xfs
 FIO=/usr/bin/fio
-CONFIG=disktool.fio
+FIO_CONFIG=/opt/mit/mark6/etc/disktool.fio
+CONFIG=/opt/mit/mark6/etc/disktool.rc
 OUTPUT=disktool.out
 SEQ=/usr/bin/seq
 
 
 init_dev_map() {
-	DEV_MAP=( $( < disktool.rc ) )
+	DEV_MAP=( $( < /opt/mit/mark6/etc/disktool.rc ) )
 	#for i in $(${SEQ} 0 $((${#DEV_MAP[@]} - 1)))
 	#do
 		#${DEV_MAP[$i]}
@@ -153,7 +154,7 @@ mk_fs() {
 perf_test() {
 	nohup ${FIO}	--output=${OUTPUT} \
 		--minimal \
-		${CONFIG} &
+		${FIO_CONFIG} &
 
 	# Field description.
 	# jobname, groupid, error, 
