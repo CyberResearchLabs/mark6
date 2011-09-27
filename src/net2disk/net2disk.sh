@@ -45,9 +45,9 @@ echo 512 > /sys/block/sdd/queue/nr_requests
 # pf_ring transparent_mode=0 min_num_slots=4096 enable_ip_defrag=1
 
 # IRQ "MAP"
-ETH2_IRQ=65
+ETH2_IRQ=64
 ETH3_IRQ=63
-ETH4_IRQ=64
+ETH4_IRQ=65
 ETH5_IRQ=66
 MEGASAS1_IRQ=24
 MEGASAS2_IRQ=35
@@ -79,10 +79,10 @@ echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 
 # Run! 
 # Note that SMP affinities are ordinals (not mask). CPU numbering from 0.
-# for m in disk0 disk1 disk2 disk3
-# do
-	# fallocate -l 2400G /mnt/${m}/cap.m6
-# done
+for m in disk0 disk1 disk2 disk3
+do
+	fallocate -l 30G /mnt/${m}/${m}.m6
+done
 
 ${EXEC} \
     --interfaces eth2 eth3 \

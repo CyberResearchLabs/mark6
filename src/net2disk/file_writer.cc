@@ -156,15 +156,18 @@ int FileWriter::open() {
 
   // Open files for each path.
   int ret=0;
-  // Assumes FALLOCATE
-  // _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
-#define DIRECT_BUFFER
+
+#define FALLOCATE
+#ifdef FALLOCATE
+  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
+#else
 #ifdef DIRECT_BUFFER
   _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
 		   S_IRWXU);
 #else
   _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
-#endif
+#endif // DIRECT_BUFFER
+#endif // FALLOCATE
   if (_pfd.fd<0) {
     LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
 		  << " - " << strerror(errno));
