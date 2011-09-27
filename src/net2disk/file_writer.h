@@ -37,7 +37,6 @@
 // Local includes
 #include <mark6.h>
 #include <threaded.h>
-#include <buffer_pool.h>
 
 class StatsWriter;
 
