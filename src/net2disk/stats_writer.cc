@@ -47,6 +47,10 @@ StatsWriter::StatsWriter(const int id,
 			 const double command_interval):
   Threaded(id, command_interval),
   _stats_interval(stats_interval),
+  _num_packets(0),
+  _num_bytes(0),
+  _dropped_packets(0),
+  _buffer_size(0),
   _stats_stream(),
   _csv_stream(),
   _state(IDLE),
@@ -176,6 +180,8 @@ void StatsWriter::handle_write_to_disk() {
     /instant_delta_seconds;
   const double lifetime_packet_rate = num_packets/delta_seconds;
   const double lifetime_byte_rate = _BPS_TO_MBPS*num_bytes/delta_seconds;
+  const double average_buffer_size = _buffer_size/delta_seconds;
+  const double instant_drop_rate = _dropped_packets/delta_seconds;
 
   _average_packet_rate = (1.0-_ALPHA)*_average_packet_rate
     + _ALPHA*instant_packet_rate;
@@ -230,9 +236,14 @@ void StatsWriter::handle_write_to_disk() {
     <<  _average_packet_rate << ","
     <<  instant_byte_rate << ","
     <<  lifetime_byte_rate << ","
-    <<  _average_byte_rate
+    <<  _average_byte_rate << ","
+    << instant_drop_rate << ","
+    << average_buffer_size
     << std::endl;
   
+  _dropped_packets = 0;
+  _buffer_size = 0;
+
   // Update state.
   gettimeofday(&_last_time, NULL);
   _last_num_packets = num_packets;
@@ -242,8 +253,12 @@ void StatsWriter::handle_write_to_disk() {
 }
 
 void StatsWriter::update(const boost::uint64_t& packets,
-			 const boost::uint64_t& bytes) {
+			 const boost::uint64_t& bytes,
+			 const boost::uint64_t& dropped_packets,
+			 const boost::uint64_t& buffer_size) {
   boost::mutex::scoped_lock lock(_mutex);
   _num_packets += packets;
   _num_bytes += bytes;
+  _dropped_packets += dropped_packets;
+  _buffer_size = buffer_size;
 }

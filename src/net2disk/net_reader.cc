@@ -246,20 +246,16 @@ void NetReader::handle_read_from_network() {
       if (hdr.caplen != _snaplen) {
 	  // || hdr.caplen != hdr.len
 	  // || payload_length != _payload_length) {
-#define LOG_SHORT
-#ifdef LOG_SHORT
-	LOG4CXX_ERROR(logger, "Short capture(caplen/snaplen"
-		      "len/payload_length/PAYLOAD_LENGTH"
+	LOG4CXX_DEBUG(logger, "Short capture(caplen/snaplen"
+		      "len/payload_length/PAYLOAD_LENGTH) -> ("
 		      << hdr.caplen << "/" << _snaplen << "/"
 		      << hdr.len << "/" << payload_length << "/"
-		      << _payload_length);
-#endif // LOG_SHORT
+		      << _payload_length << ")");
 	continue;
       }
 
       // Update stats.
       num_packets++;
-      // FIXME num_bytes += hdr.caplen;
       num_bytes += hdr.len;
     } else {
       LOG4CXX_ERROR(logger, "Error while calling get_next_packet(): "

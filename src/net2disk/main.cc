@@ -52,13 +52,14 @@
 
 // Namespaces.
 namespace po = boost::program_options;
+using namespace std; // Clean up long lines.
 
 //----------------------------------------------------------------------
 // Declarations
 //----------------------------------------------------------------------
 void banner();
-void main_cli(const std::vector<pid_t>& child_pids,
-	      const std::vector<int>& child_fds);
+void main_cli(const vector<pid_t>& child_pids,
+	      const vector<int>& child_fds);
 void child_cli(const int parent_fd);
 
 //----------------------------------------------------------------------
@@ -66,27 +67,25 @@ void child_cli(const int parent_fd);
 //----------------------------------------------------------------------
 
 // Option defaults.
-const std::string DEFAULT_INTERFACES("eth0");
+const string DEFAULT_INTERFACES("eth0");
 const int DEFAULT_SNAPLEN(8224);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
-const std::string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
+const string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8224);
 const int DEFAULT_SMP_AFFINITY(0);
-const int DEFAULT_RING_BUFFERS(128);
 const int DEFAULT_WRITE_BLOCKS(128);
 
 // Other constants.
 const int MAX_SNAPLEN(9014);
 const int STATS_SLEEP(1);
 const int PAYLOAD_LENGTH(DEFAULT_PAYLOAD_LENGTH);
-const std::string LOG_PREFIX("/opt/mit/mark6/log/");
+const string LOG_PREFIX("/opt/mit/mark6/log/");
 
 //----------------------------------------------------------------------
 // Global variables.
 //----------------------------------------------------------------------
 const int LOCAL_PAGES_PER_BUFFER(256);
-const int RING_BUFFER_TIMEOUT(10);
 
 int LOCAL_PAGE_SIZE(0);
 int BUFFER_SIZE(0);
@@ -104,8 +103,8 @@ StatsWriter* NET_READER_STATS(0);
 // @return None.
 void
 usage(const po::options_description& desc) {
-  std::cout
-    << "net2disk [options]" << std::endl
+  cout
+    << "net2disk [options]" << endl
     << desc;
 }
 
@@ -126,29 +125,20 @@ sigproc(int sig) {
   FILE_WRITER_STATS->cmd_stop();
 }
 
-void just_work() {
-}
-
-void make_things_easier_for_me() {
-}
-
-void get_me_out_of_here() {
-}
-
 //----------------------------------------------------------------------
 // Program entry point.
 //----------------------------------------------------------------------
 int
 main (int argc, char* argv[]) {
   // Variables to store options.
-  std::string log_config; 
-  std::string config;
+  string log_config; 
+  string config;
   int snaplen;
   bool promiscuous;
   int time;
-  std::vector<std::string> interfaces;
-  std::vector<std::string> capture_files;
-  std::vector<int> smp_affinities;
+  vector<string> interfaces;
+  vector<string> capture_files;
+  vector<int> smp_affinities;
   int ring_buffers;
   int write_blocks;
 
@@ -172,24 +162,20 @@ main (int argc, char* argv[]) {
      "capture interval")
 
     ("log_config",
-     po::value<std::string>(&log_config)->default_value(DEFAULT_LOG_CONFIG),
+     po::value<string>(&log_config)->default_value(DEFAULT_LOG_CONFIG),
      "log configuration file")
 
     ("interfaces",
-     po::value< std::vector<std::string> >(&interfaces)->multitoken(),
+     po::value< vector<string> >(&interfaces)->multitoken(),
      "list of interfaces from which to capture data")
 
     ("capture_files",
-     po::value< std::vector<std::string> >(&capture_files)->multitoken(),
+     po::value< vector<string> >(&capture_files)->multitoken(),
      "list of capture files")
 
     ("smp_affinities",
-     po::value< std::vector<int> >(&smp_affinities)->multitoken(),
+     po::value< vector<int> >(&smp_affinities)->multitoken(),
      "smp processor affinities")
-
-    ("ring_buffers",
-     po::value<int>(&ring_buffers)->default_value(DEFAULT_RING_BUFFERS),
-     "total number of ring buffers")
 
     ("write_blocks",
      po::value<int>(&write_blocks)->default_value(DEFAULT_WRITE_BLOCKS),
@@ -211,8 +197,8 @@ main (int argc, char* argv[]) {
   }
 
   if (vm.count("v")) {
-    std::cout << "net2disk version: 0.1"
-	      << std::endl;
+    cout << "net2disk version: 0.1"
+	      << endl;
     return 1;
   }
 
@@ -225,33 +211,32 @@ main (int argc, char* argv[]) {
 
   banner();
 
-  std::cout << std::setw(20) << std::left << "interfaces:";
-  BOOST_FOREACH(std::string s, interfaces)
-    std::cout << s << " ";
-  std::cout << std::endl;
+  cout << setw(20) << left << "interfaces:";
+  BOOST_FOREACH(string s, interfaces)
+    cout << s << " ";
+  cout << endl;
 
-  std::cout << std::setw(20) << std::left << "capture_files:";
-  BOOST_FOREACH(std::string s, capture_files)
-    std::cout << s << " ";
-  std::cout << std::endl;
+  cout << setw(20) << left << "capture_files:";
+  BOOST_FOREACH(string s, capture_files)
+    cout << s << " ";
+  cout << endl;
 
-  std::cout << std::setw(20) << std::left << "smp_affinities:";
+  cout << setw(20) << left << "smp_affinities:";
   BOOST_FOREACH(int s, smp_affinities)
-    std::cout << s << " ";
-  std::cout << std::endl;
+    cout << s << " ";
+  cout << endl;
 
-  std::cout
-    << std::setw(20) << std::left << "snaplen:" << snaplen << std::endl
-    << std::setw(20) << std::left << "promiscuous:" << promiscuous << std::endl
-    << std::setw(20) << std::left << "time:" << time << std::endl
-    << std::setw(20) << std::left << "log_config:" << log_config << std::endl
-    << std::setw(20) << std::left << "ring_buffers:" << ring_buffers << std::endl
-    << std::setw(20) << std::left << "write_blocks:" << write_blocks << std::endl
-    << std::setw(20) << std::left << "num_interfaces:" << NUM_INTERFACES << std::endl;
+  cout
+    << setw(20) << left << "snaplen:" << snaplen << endl
+    << setw(20) << left << "promiscuous:" << promiscuous << endl
+    << setw(20) << left << "time:" << time << endl
+    << setw(20) << left << "log_config:" << log_config << endl
+    << setw(20) << left << "write_blocks:" << write_blocks << endl
+    << setw(20) << left << "num_interfaces:" << NUM_INTERFACES << endl;
 
   // Start processing.
-  std::vector<pid_t> child_pids;
-  std::vector<int> child_fds;
+  vector<pid_t> child_pids;
+  vector<int> child_fds;
   try {
     LOG4CXX_DEBUG(logger, "Starting.");
 
@@ -296,7 +281,7 @@ main (int argc, char* argv[]) {
 	// Create FileWriter threads.
 	FILE_WRITER_STATS
 	  = new StatsWriter(i,
-			    LOG_PREFIX + std::string("fw_") + interfaces[i],
+			    LOG_PREFIX + string("fw_") + interfaces[i],
 			    STATS_INTERVAL,
 			    COMMAND_INTERVAL);
 	FILE_WRITER
@@ -312,7 +297,7 @@ main (int argc, char* argv[]) {
 	// Create NetReader threads.
 	NET_READER_STATS
 	  = new StatsWriter(i+1, // TODO: fix index.
-			    LOG_PREFIX + std::string("nr_") + interfaces[i],
+			    LOG_PREFIX + string("nr_") + interfaces[i],
 			    STATS_INTERVAL,
 			    COMMAND_INTERVAL);
 
@@ -340,7 +325,7 @@ main (int argc, char* argv[]) {
       }
     }
   } catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
+    cerr << e.what() << endl;
   }
 
   main_cli(child_pids, child_fds);
@@ -348,28 +333,28 @@ main (int argc, char* argv[]) {
   return 0;
 }
 
-void main_cli(const std::vector<pid_t>& child_pids,
-	      const std::vector<int>& child_fds) {
+void main_cli(const vector<pid_t>& child_pids,
+	      const vector<int>& child_fds) {
   // Command line interpreter.
   const int nbytes(256);
   char line[nbytes];
 
   while (true) {
-    std::cout << "mark6>";
-    if (!std::cin.good()) {
+    cout << "mark6>";
+    if (!cin.good()) {
       LOG4CXX_ERROR(logger, "CLI input stream closed. Exiting...");
       break;
     }
 
-    std::cin.getline(line, nbytes);
-    std::string line_read(line);
+    cin.getline(line, nbytes);
+    string line_read(line);
     trim(line_read);
     if (line_read.size() == 0) {
       continue;
     }
 
-    std::vector<std::string> results;
-    std::string cmd;
+    vector<string> results;
+    string cmd;
     split(results, line_read, is_any_of(" \t"));
     if (results.size() > 0) {
       cmd = results[0];
@@ -377,36 +362,36 @@ void main_cli(const std::vector<pid_t>& child_pids,
       if (cmd.compare("quit") == 0) {
 	exit(0);
       } else if (cmd.compare("help") == 0) {
-	std::cout
-	  << std::endl
-	  << "This is the online help system." << std::endl
-	  << "The following commands are available:" << std::endl
-	  << std::setw(20) << " " << "start" << std::endl
-	  << std::setw(20) << " " << "stop" << std::endl
+	cout
+	  << endl
+	  << "This is the online help system." << endl
+	  << "The following commands are available:" << endl
+	  << setw(20) << " " << "start" << endl
+	  << setw(20) << " " << "stop" << endl
 	  << "Type 'help <command>' to see a description of that command." 
-	  << std::endl
-	  << std::endl;
+	  << endl
+	  << endl;
       } else if (cmd.compare("start") == 0) {
-	std::cout << "Received start()";
+	cout << "Received start()";
 	BOOST_FOREACH(int fd, child_fds) {
 	  LOG4CXX_DEBUG(logger, "Starting fd: " << fd);
 	  write(fd, "start\n", 6);
 	}
       } else if (cmd.compare("stop") == 0) {
-	std::cout << "Received stop()";
+	cout << "Received stop()";
 	BOOST_FOREACH(int fd, child_fds)
 	  write(fd, "stop\n", 5);
 
 	BOOST_FOREACH(pid_t p, child_pids) {
 	  waitpid(p, NULL, 0);
-	  std::cout << "PID: " << (int)p << " terminated..." << std::endl;
+	  cout << "PID: " << (int)p << " terminated..." << endl;
 	}
       } else {
-	std::cout
-	  << std::endl
+	cout
+	  << endl
 	  << "Unknown command. Please try again or type 'help'"
-	  << std::endl
-	  << std::endl;
+	  << endl
+	  << endl;
       }
     }
   }
@@ -432,11 +417,11 @@ void child_cli(int parent_fd) {
       free(line_read);
       break;
     } else {
-      std::string s(line_read);
+      string s(line_read);
       free (line_read);
       LOG4CXX_DEBUG(logger, "child_cli() received " << s);
-      std::vector<std::string> results;
-      std::string cmd;
+      vector<string> results;
+      string cmd;
       split(results, s, is_any_of(" \t"));
       if (results.size() == 0)
 	continue;
@@ -446,52 +431,51 @@ void child_cli(int parent_fd) {
       if (cmd.compare("start") == 0) {
 	LOG4CXX_DEBUG(logger, "child_cli() received start cmd");
 
-	std::cout << "Starting file writer stats...\n";
+	cout << "Starting file writer stats...\n";
 	FILE_WRITER_STATS->start();
 	FILE_WRITER_STATS->cmd_write_to_disk();
-	std::cout << "Started.\n";
+	cout << "Started.\n";
 
-	std::cout << "Starting file writer...\n";
+	cout << "Starting file writer...\n";
 	FILE_WRITER->open();
 	FILE_WRITER->start();
 	FILE_WRITER->cmd_write_to_disk();
-	std::cout << "Sta[rted.\n";
+	cout << "Sta[rted.\n";
 
-	std::cout << "Starting net reader stats...\n";
+	cout << "Starting net reader stats...\n";
 	NET_READER_STATS->start();
 	NET_READER_STATS->cmd_write_to_disk();
-	std::cout << "Started.\n";
+	cout << "Started.\n";
 
-	std::cout << "Starting net reader...\n";
+	cout << "Starting net reader...\n";
 	NET_READER->start();
 	NET_READER->cmd_read_from_network();
-	std::cout << "Started.\n";
+	cout << "Started.\n";
       } else if (cmd.compare("stop") == 0) {
 	NET_READER_STATS->cmd_stop();
 	NET_READER_STATS->join();
-	std::cout << "Stopped net reader stats.\n";
+	cout << "Stopped net reader stats.\n";
 
 	NET_READER->cmd_stop();
 	NET_READER->join();
-	std::cout << "Stopped net reader.\n";
+	cout << "Stopped net reader.\n";
 
 	FILE_WRITER_STATS->cmd_stop();
 	FILE_WRITER_STATS->join();
-	std::cout << "Stopped file writer stats.\n";
+	cout << "Stopped file writer stats.\n";
 
 	FILE_WRITER->cmd_stop();
 	FILE_WRITER->join();
-	std::cout << "Stopped file writer.\n";
+	cout << "Stopped file writer.\n";
       }
     }
   }
 }
 
-
 void banner() {
-  std::cout
+  cout
     << HLINE
-    << std::endl
+    << endl
     << "|                                                                              |\n"
     << "|                              Net2disk v0.1                                   |\n"
     << "|                                                                              |\n"
@@ -500,6 +484,6 @@ void banner() {
     << "|                            del@haystack.mit.edu                              |\n"
     << "|                                                                              |\n"
     << HLINE
-    << std::endl
-    << std::endl;
+    << endl
+    << endl;
 }

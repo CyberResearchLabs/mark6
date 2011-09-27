@@ -247,7 +247,8 @@ void FileWriter::write_block() {
       LOG4CXX_ERROR(logger, "Write error: " << strerror(errno));
     }
   }
-  _sw->update(1, bytes_written);
+  if (_sw)
+    _sw->update(1, bytes_written);
   free_buffer(buf);
 }
 
@@ -265,7 +266,8 @@ bool FileWriter::write_unbuffered(boost::uint8_t* buf,
       LOG4CXX_ERROR(logger, "Write error: " << strerror(errno));
     }
   }
-  _sw->update(1, bytes_written);
+  if (_sw)
+    _sw->update(1, bytes_written);
   return true;
 }
 

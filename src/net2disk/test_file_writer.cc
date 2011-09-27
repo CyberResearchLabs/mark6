@@ -60,28 +60,22 @@ void
 TestFileWriter::basic(void)
 {
   std::cout << "TestFileWriter::basic()" << std::endl;
+  const int id = 0;
+  const std::string capture_file("/tmp/test_file_writer-basic-1.dat");
   const std::string file_name("/tmp/test1.m6");
-  const boost::uint32_t write_block_size(4096);
-  const boost::uint32_t write_blocks(100);
+  const boost::uint32_t write_block_size(1048576);
+  const boost::uint32_t write_blocks(512);
   const boost::uint32_t poll_timeout = 1000; // ms
   const double command_interval = 1; //s
 
-  FileWriter fw(write_block_size, write_blocks, poll_timeout,
-		command_interval);
+  FileWriter fw(id, write_block_size, write_blocks, capture_file,
+		poll_timeout, 0, command_interval);
 
+  fw.open();
   fw.start();
-  fw.open(file_name);
 
   LOG4CXX_DEBUG(logger, "Started file writer.");
     
-  const int page_size(getpagesize());
-  const int buffer_size(16 * page_size);
-  boost::uint8_t* buf;
-  if (posix_memalign((void**)&buf, page_size, buffer_size) != 0) {
-    std::cerr << "Memalign failed\n";
-    throw std::string("Memalign failed.");
-  }
-
   const int NUM_BLOCKS = 100;
   for (boost::uint32_t i=0; i<write_block_size; ++i)
     buf[i] = static_cast<uint8_t>(i);

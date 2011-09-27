@@ -88,7 +88,9 @@ class StatsWriter: public Threaded {
   //!        so far.
   //! \param bytes The total number of bytes that have been processed so far.
   void update(const boost::uint64_t& packets,
-	      const boost::uint64_t& bytes);
+	      const boost::uint64_t& bytes,
+	      const boost::uint64_t& dropped_packets,
+	      const boost::uint64_t& buffer_size);
 
 
  protected:
@@ -104,6 +106,12 @@ class StatsWriter: public Threaded {
 
   //! The total number of bytes that have been processed so far.
   boost::uint64_t _num_bytes;
+
+  //! The number of dropped packets.
+  boost::uint64_t _dropped_packets;
+ 
+  //! The size of the file buffer.
+  boost::uint64_t _buffer_size;
 
   //! Nicely formatted statistics output (useful for real-time stats output).
   std::ofstream _stats_stream;
