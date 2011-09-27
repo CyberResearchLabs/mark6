@@ -56,10 +56,22 @@ FileWriter::FileWriter(const int id,
   _POLL_TIMEOUT(poll_timeout),
   _sw(sw),
   _pfd(),
-  _cbuf(_WRITE_BLOCKS),
+  _write_bufs(),
+  _free_bufs(),
   _state (IDLE),
-  _cbuf_mutex(),
-  _capture_file(capture_file) { }
+  _write_bufs_mutex(),
+  _free_bufs_mutex(),
+  _capture_file(capture_file)
+{
+  void* buf;
+  for (int i=0; i<write_blocks; i++) {
+    if (posix_memalign(&buf, getpagesize(), write_block_size) != 0) {
+      LOG4CXX_ERROR(logger, "FileWriter buffer allocation failed.");
+      throw std::string("Memalign failed.");
+    }
+    _free_bufs.push_back(static_cast<boost::uint8_t*>(buf));
+  }
+}
 
 FileWriter::~FileWriter() {
   close();
@@ -152,7 +164,6 @@ int FileWriter::open() {
 #else
   _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
 #endif
-  // _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
   if (_pfd.fd<0) {
     LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
 		  << " - " << strerror(errno));
@@ -190,23 +201,34 @@ int FileWriter::close() {
   return 0;
 }
 
-bool FileWriter::write(boost::uint8_t* b) {
-  boost::mutex::scoped_lock lock(_cbuf_mutex);
-  if (_cbuf.full())
-    return false;
+boost::uint8_t* FileWriter::malloc_buffer() {
+  boost::mutex::scoped_lock lock(_free_bufs_mutex);
+  if (_free_bufs.empty())
+    return 0;
+  boost::uint8_t* b = _free_bufs.front();
+  _free_bufs.pop_front();
+  return b;
+}
 
-  _cbuf.push_back(b);
+void FileWriter::free_buffer(boost::uint8_t* buf) {
+  boost::mutex::scoped_lock lock(_free_bufs_mutex);
+  _free_bufs.push_back(buf);
+}
+
+bool FileWriter::write(boost::uint8_t* b) {
+  boost::mutex::scoped_lock lock(_write_bufs_mutex);
+  _write_bufs.push_back(b);
   return true;
 }
 
 void FileWriter::write_block() {
   boost::uint8_t* buf;
-  if (_cbuf.empty()) {
+  if (_write_bufs.empty()) {
     return;
   } else {
-    boost::mutex::scoped_lock lock(_cbuf_mutex);
-    buf = _cbuf[0];
-    _cbuf.pop_front();
+    boost::mutex::scoped_lock lock(_write_bufs_mutex);
+    buf = _write_bufs.front();
+    _write_bufs.pop_front();
   }
 
   // Write buffer to disk.
@@ -221,8 +243,8 @@ void FileWriter::write_block() {
       LOG4CXX_ERROR(logger, "Write error: " << strerror(errno));
     }
   }
-  BufferPool::instance()->free(buf);
   _sw->update(1, bytes_written);
+  free_buffer(buf);
 }
 
 bool FileWriter::write_unbuffered(boost::uint8_t* buf, const boost::uint32_t len) {

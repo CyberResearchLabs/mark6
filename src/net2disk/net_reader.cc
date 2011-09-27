@@ -58,16 +58,13 @@ NetReader::NetReader(const int id,
   _fw(fw),
   _sw(sw),
   _ring(0),
-  _bp(0),
   _net_buf(0),
   _state(IDLE) {
   _ring = new PFR(interface.c_str(), snaplen, _promiscuous);
-  _bp = BufferPool::instance();
   _net_buf = new boost::uint8_t[snaplen];
 }
 
 NetReader::~NetReader() {
-  delete _bp;
   delete _ring;
 }
 
@@ -179,16 +176,15 @@ void NetReader::handle_read_from_network() {
   int payload_length;
   boost::uint8_t* payload_ptr;
   
-
   int bytes_read = 0;
-
   static int remainder_len = 0;
   // static boost::uint8_t remainder_buf[8224];
   static boost::uint8_t remainder_buf[9000];
   static bool first_write = true;
-#if DYNAMIC_BUFFER
+#define DYNAMIC_BUFFER
+#ifdef DYNAMIC_BUFFER
   int bytes_left = _buffer_size;
-  boost::uint8_t* file_buf = _bp->malloc();
+  boost::uint8_t* file_buf = _fw->malloc_buffer();
 #else
   const int BUFFER_SIZE = 1048576;
   int bytes_left = BUFFER_SIZE;
@@ -207,7 +203,7 @@ void NetReader::handle_read_from_network() {
 
   // Copy partial packet.
   if (remainder_len > 0) {
-    memcpy(&file_buf[bytes_read], remainder_buf, remainder_len);
+    memcpy(file_buf, remainder_buf, remainder_len);
     bytes_read += remainder_len;
     bytes_left -= remainder_len;
     remainder_len = 0;
@@ -294,7 +290,7 @@ void NetReader::handle_read_from_network() {
     pph.incl_len = hdr.len;
     pph.orig_len = hdr.len;
 
-#define DIRECT_PACKET_WRITE
+    // #define DIRECT_PACKET_WRITE
 #ifdef DIRECT_PACKET_WRITE
     memcpy(file_buf, &pph, PCAP_PACKET_HEADER_LENGTH);
     bytes_read += PCAP_PACKET_HEADER_LENGTH;
@@ -308,6 +304,7 @@ void NetReader::handle_read_from_network() {
     break;
 #endif
 
+#define BATCH_WRITE
 #ifdef BATCH_WRITE
     if (bytes_left < PCAP_PACKET_HEADER_LENGTH) {
       memcpy(&file_buf[bytes_read], &pph, bytes_left);

@@ -27,12 +27,11 @@
 #include <poll.h>
 
 // C++ includes
-#include <vector>
+#include <list>
 
 // Framework includes.
 #include <cstddef>    // for std::size_t
 #include <boost/thread/thread.hpp>
-#include <boost/circular_buffer.hpp>
 #include <boost/thread/mutex.hpp>
 
 // Local includes
@@ -110,6 +109,8 @@ class FileWriter: public Threaded {
 
   bool write_unbuffered(boost::uint8_t* buf, const boost::uint32_t len);
 
+  boost::uint8_t* malloc_buffer();
+  void free_buffer(boost::uint8_t* buf);
 
  protected:
   //---------------------------------------------------------------------------
@@ -130,13 +131,15 @@ class FileWriter: public Threaded {
 
   //! A circular buffer that contains all of the buffers waiting to be 
   //! written to disk.
-  circular_buffer<boost::uint8_t*> _cbuf;
+  std::list<boost::uint8_t*> _write_bufs;
+  std::list<boost::uint8_t*> _free_bufs;
 
   //! The state of the object.
   volatile enum { IDLE, WRITE_TO_DISK, STOP } _state;
 
   //! Mutex that protects the circular buffer from multi-threaded access.
-  boost::mutex _cbuf_mutex;
+  boost::mutex _write_bufs_mutex;
+  boost::mutex _free_bufs_mutex;
 
   //! The name of the file data will be written to.
   const std::string _capture_file;

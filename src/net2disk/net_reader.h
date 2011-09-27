@@ -40,8 +40,6 @@
 class FileWriter;
 class StatsWriter;
 struct PFR;
-class BufferPool;
-
 
 //! Manages high speed capture of data from network interface using PF_RING.
 //! Data are read in from an assigned interface using the PF_RING API.
@@ -144,11 +142,6 @@ class NetReader: public Threaded {
   //! A pointer to the PF_RING data structure that tracks the PF_RING state
   //! and data structures.
   PFR* _ring;
-
-  //! A cached pointer to the BufferPool singleton. This singleton is
-  //! responsible for doing the memory management for the optimally sized and
-  //! aligned buffers used to transfer data from network interface to disk.
-  BufferPool* _bp;
 
   //! A pointer to the temporary buffer used to store data recently captured
   //! from the network interface.

@@ -75,7 +75,7 @@ const std::string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8224);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_RING_BUFFERS(128);
-const int DEFAULT_WRITE_BLOCKS(32);
+const int DEFAULT_WRITE_BLOCKS(64);
 
 // Other constants.
 const int MAX_SNAPLEN(9014);
@@ -292,10 +292,7 @@ main (int argc, char* argv[]) {
 	  LOG4CXX_ERROR(logger, "Unble to set process affinity.");
 
 	// Setup buffer pool.
-	BufferPool* bp = BufferPool::instance();
 	const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
-	// const int BUFFER_SIZE(822400);
-	bp->reserve_pool(ring_buffers, BUFFER_SIZE);
 
 	// Create FileWriter threads.
 	FILE_WRITER_STATS
