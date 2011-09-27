@@ -15,16 +15,12 @@ net2disk_LDADD	= 	-L. \
 			@PFRING_ROOT@/userland/lib/libpfring.a
 
 net2disktest_SOURCES=	test_main.cc \
-			buffer_pool.h \
-			buffer_pool.cc \
 			file_writer.h \
 			file_writer.cc \
 			net_reader.h \
 			net_reader.cc \
 			stats_writer.h \
 			stats_writer.cc \
-			test_buffer_pool.h \
-			test_buffer_pool.cc \
 			test_file_writer.h \
 			test_file_writer.cc \
 			threaded.h
@@ -45,8 +41,6 @@ noinst_LIBRARIES=	libnet2disk.a
 libnet2disk_a_SOURCES	= \
 			pfr.h \
 			pfr.cc \
-			buffer_pool.h \
-			buffer_pool.cc \
 			file_writer.h \
 			file_writer.cc \
 			logger.h \
