@@ -102,6 +102,10 @@ mk_raid() {
 
 	# Individual disk testing
   	# ${MEGACLI} -CfgEachDiskRaid0 -aALL
+	# Disable power saving policy to avoid "other" errors
+	# http://www-947.ibm.com/support/entry/portal/docdisplay?lndocid=MIGR-5087494I
+  	${MEGACLI} -AdpSetProp -DefaultLdPSPolicy -None -a0
+	${MEGACLI} -LDSetPowerPolicy None -Lall -aALL
 }
 
 mk_each_dsk_raid0() {
@@ -209,8 +213,8 @@ main() {
 	    exit
 	fi
 	
-	DEV_CONFIG="disktool.rc"
-	FIO_CONFIG="disktool.fio"
+	DEV_CONFIG="/opt/mit/mark6/etc/disktool.rc"
+	FIO_CONFIG="/opt/mit/mark6/etc/disktool.fio"
 	MK_RAID=0
 	MK_PART=0
 	MK_FS=0

@@ -155,6 +155,7 @@ main() {
 					install_pfring
 					install_source_deps
 					build
+					install_mark6
 					;;
 		    -h | --help )	usage
 			exit

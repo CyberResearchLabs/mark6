@@ -1,12 +1,3 @@
-[disk0]
-rw=write
-iodepth=8
-directory=/mnt/disk0
-write_bw_log=disk1_write
-size=120G
-fill_device=0
-stonewall
-
 [disk1]
 rw=write
 iodepth=8
