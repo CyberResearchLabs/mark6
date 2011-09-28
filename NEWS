@@ -103,3 +103,32 @@ FEATURES
 - Incorporated tstmark6 control plane client.
 - Extended build system to do full build and install in
   /opt/haystack/mark6.
+
+Release 0.4.2	9/28/2011	David Lapsley<del@haystack.mit.edu>
+-------------------------------------------------------------------
+
+DESCRIPTION
+
+Validated 16 Gbps data capture functionality. Recording full
+ethernet frames for robust on-disk framing.
+
+FEATURES
+
+- Full ethernet frame capture for robust on-disk framing and ease of
+  manipulation. Data capture files stored in standard "pcap" format
+  to facilitate manipulation with tcpdump, editcap, and other pcap
+  based applications.
+- Full application installation (binaries, scripts, configuration,
+  and logs) into /opt/mit/mark6 directory.
+- Addition of disk2vlbi tool for converting captured pcap file format
+  to native VLBI format (i.e. vdif, m5b).
+- Migration of BufferPool functionality into FileWriter class to
+  simplify/robustify code.
+- Removal of BufferPool class.
+- Addition of blocking semantics to disk buffer allocation (through
+  FileWriter::buffer_malloc() method.
+- Enhanced instrumentation (buffer level and packet drop metrics added).
+- Automatic ethernet IRQ sensing in net2disk-run script.
+- Incorporation of disk tools into distributed application (eventually will
+  be integrated into control plane as conditioning/test scripts).
+
