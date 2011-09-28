@@ -33,12 +33,19 @@
 #include <cstddef>    // for std::size_t
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
+
 
 // Local includes
 #include <mark6.h>
 #include <threaded.h>
 
 class StatsWriter;
+
+struct Timeout {
+  std::string _msg;
+Timeout(): _msg("Buffer timeout.") {}
+};
 
 //! Manages the high speed writing of data to file.
 //! Includes a circular buffer for storing buffers to be written, as well as
@@ -109,7 +116,7 @@ class FileWriter: public Threaded {
   bool write_unbuffered(boost::uint8_t* buf, const boost::uint32_t len);
 
   boost::uint8_t* malloc_buffer();
-  void free_buffer(boost::uint8_t* buf);
+  bool free_buffer(boost::uint8_t* buf);
 
  protected:
   //---------------------------------------------------------------------------
@@ -136,9 +143,20 @@ class FileWriter: public Threaded {
   //! The state of the object.
   volatile enum { IDLE, WRITE_TO_DISK, STOP } _state;
 
-  //! Mutex that protects the circular buffer from multi-threaded access.
+  //! Mutex that protects the write buffer from multi-threaded access.
   boost::mutex _write_bufs_mutex;
+
+  //! Mutex that protects free list from multi-threaded access.
   boost::mutex _free_bufs_mutex;
+
+  
+  //! Condition variable that signals blocked readers (i.e. pop() operations)
+  //! when a new buffer is re-inserted back into the pool.
+  boost::condition_variable _read_cond;
+  
+  //! Condition variable that signals blocked writers (i.e. push() operations)
+  //! when a new buffer is popped from the pool.
+  boost::condition_variable _write_cond;
 
   //! The name of the file data will be written to.
   const std::string _capture_file;

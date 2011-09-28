@@ -188,7 +188,7 @@ void NetReader::handle_read_from_network() {
   int bytes_left = _buffer_size;
   boost::uint8_t* file_buf = _fw->malloc_buffer();
   if (!file_buf) {
-    LOG4CXX_ERROR(logger, "File buffer's full.");
+    LOG4CXX_ERROR(logger, "File buffer's full: timedout");
     return;
   }
   assert(file_buf);

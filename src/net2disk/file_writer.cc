@@ -206,17 +206,33 @@ int FileWriter::close() {
 }
 
 boost::uint8_t* FileWriter::malloc_buffer() {
-  boost::mutex::scoped_lock lock(_free_bufs_mutex);
-  if (_free_bufs.empty())
-    return 0;
+  boost::system_time timeout = boost::get_system_time() 
+    + boost::posix_time::milliseconds(_POLL_TIMEOUT*1000);
+
+  boost::mutex::scoped_lock lock(_free_bufs_mutex); 
+  while (_free_bufs.empty())
+    if (!_read_cond.timed_wait(lock, timeout))
+      return 0;
+ 
   boost::uint8_t* b = _free_bufs.front();
   _free_bufs.pop_front();
+  _write_cond.notify_one();
+
   return b;
 }
 
-void FileWriter::free_buffer(boost::uint8_t* buf) {
-  boost::mutex::scoped_lock lock(_free_bufs_mutex);
+bool FileWriter::free_buffer(boost::uint8_t* buf) {
+
+  boost::system_time timeout = boost::get_system_time() 
+    + boost::posix_time::milliseconds(_POLL_TIMEOUT*1000);
+
+  // Never block on free because total buffer pool is fixed.
+  // This assumes only buffers allocated from this FileWriter
+  // are returned to it.
+  boost::mutex::scoped_lock lock(_free_bufs_mutex);    
   _free_bufs.push_back(buf);
+  _read_cond.notify_one();
+  return true;
 }
 
 bool FileWriter::write(boost::uint8_t* b) {

@@ -46,6 +46,7 @@ main(int argc, char *argv[]) {
   std::string input_file;
   std::string output_prefix;
   std::vector<int> thread_ports;
+  unsigned int size;
 
   // Declare supported options, defaults, and variable bindings.
   po::options_description desc("Allowed options");
@@ -59,7 +60,12 @@ main(int argc, char *argv[]) {
      "output prefix")
     ("thread_ports",
      po::value< std::vector<int> >(&thread_ports)->multitoken(),
-     "thread udp ports");
+     "thread udp ports")
+    ("size",
+     po::value<unsigned int>(&size),
+     ("Total number of megabytes to output (across all files).")
+     );
+
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -94,7 +100,9 @@ main(int argc, char *argv[]) {
   }
 
   // Packet processing loop.
-  while (packet = pcap_next(handle, &header)) {
+  unsigned int bytes_written = 0;
+  unsigned int mbytes_written = 0;
+  while ( (packet = pcap_next(handle, &header)) && (mbytes_written < size) ) {
     u_char *pkt_ptr = (u_char *)packet;
     int ether_type = ((int)(pkt_ptr[12]) << 8) | (int)pkt_ptr[13]; 
     int ether_offset = 0; 
@@ -118,6 +126,11 @@ main(int argc, char *argv[]) {
       pkt_ptr += UDP_HEADER_LENGTH;
       u_char* data = pkt_ptr;
       int nb = write(fds[dport%MAX_FDS], data, udp_length);
+      bytes_written += nb;
+      if (bytes_written >= 1048576) {
+	mbytes_written++;
+	bytes_written = 0;
+      }
     }
   } //end internal loop for reading packets (all in one file) 
  
