@@ -72,7 +72,8 @@ const int DEFAULT_SNAPLEN(8224);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
 const string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
-const int DEFAULT_PAYLOAD_LENGTH(8224);
+// const int DEFAULT_PAYLOAD_LENGTH(8224);
+const int DEFAULT_PAYLOAD_LENGTH(8268);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_WRITE_BLOCKS(128);
 
