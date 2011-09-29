@@ -81,6 +81,7 @@ const int MAX_SNAPLEN(9014);
 const int STATS_SLEEP(1);
 const int PAYLOAD_LENGTH(DEFAULT_PAYLOAD_LENGTH);
 const string LOG_PREFIX("/opt/mit/mark6/log/");
+const int DISK_RAMP_UP_TIME(2);
 
 //----------------------------------------------------------------------
 // Global variables.
@@ -446,6 +447,8 @@ void child_cli(int parent_fd) {
 	NET_READER_STATS->start();
 	NET_READER_STATS->cmd_write_to_disk();
 	cout << "Started.\n";
+
+	// sleep(DISK_RAMP_UP_TIME);
 
 	cout << "Starting net reader...\n";
 	NET_READER->start();

@@ -180,6 +180,7 @@ void NetReader::handle_read_from_network() {
   static int remainder_len = 0;
   static boost::uint8_t remainder_buf[9000];
   static bool first_write = true;
+  static int start_second = 0;
   static boost::uint8_t net_buf[9000];
   static PcapPacketHeader pph;
 
@@ -220,6 +221,14 @@ void NetReader::handle_read_from_network() {
     if (_ring->get_next_packet(&hdr, &net_buf[PCAP_PACKET_HEADER_LENGTH],
 			       _snaplen) > 0) {
       // Successful read.
+
+      if (start_second == 0) {
+	start_second = hdr.ts.tv_sec;
+	continue;
+      }
+
+      if (hdr.ts.tv_sec < start_second + 2)
+	continue;
 
       // Extract offsets etc. from pfring structures.
       struct pfring_extended_pkthdr& pep(hdr.extended_hdr);

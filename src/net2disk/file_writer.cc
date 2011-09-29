@@ -216,7 +216,6 @@ boost::uint8_t* FileWriter::malloc_buffer() {
  
   boost::uint8_t* b = _free_bufs.front();
   _free_bufs.pop_front();
-  _write_cond.notify_one();
 
   return b;
 }
@@ -238,16 +237,32 @@ bool FileWriter::free_buffer(boost::uint8_t* buf) {
 bool FileWriter::write(boost::uint8_t* b) {
   boost::mutex::scoped_lock lock(_write_bufs_mutex);
   _write_bufs.push_back(b);
+// #define BLOCKING
+#ifdef BLOCKING
+  _write_cond.notify_one();
+#endif
   return true;
 }
 
 void FileWriter::write_block() {
   boost::uint8_t* buf;
   boost::uint64_t buf_len;
-  if (_write_bufs.empty()) {
-    return;
-  } else {
-    boost::mutex::scoped_lock lock(_write_bufs_mutex);
+
+#ifdef BLOCKING
+  boost::system_time timeout = boost::get_system_time() 
+  	+ boost::posix_time::milliseconds(_POLL_TIMEOUT*1000);
+#endif
+
+  {
+    boost::mutex::scoped_lock lock(_write_bufs_mutex); 
+#ifdef BLOCKING
+    while (_write_bufs.empty())
+    	if (!_write_cond.timed_wait(lock, timeout))
+    		return;
+#else
+    if (_write_bufs.empty())
+      return;
+#endif
     buf = _write_bufs.front();
     buf_len = _write_bufs.size();
     _write_bufs.pop_front();
