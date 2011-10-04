@@ -58,9 +58,7 @@ using namespace std; // Clean up long lines.
 // Declarations
 //----------------------------------------------------------------------
 void banner();
-void main_cli(const vector<pid_t>& child_pids,
-	      const vector<int>& child_fds);
-void child_cli(const int parent_fd);
+void cli();
 
 //----------------------------------------------------------------------
 // Constants
@@ -71,7 +69,7 @@ const string DEFAULT_INTERFACES("eth0");
 const int DEFAULT_SNAPLEN(8224);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
-const string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2raid-log.cfg");
+const string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
 // const int DEFAULT_PAYLOAD_LENGTH(8224);
 const int DEFAULT_PAYLOAD_LENGTH(8268);
 const int DEFAULT_SMP_AFFINITY(0);
@@ -106,7 +104,7 @@ StatsWriter* NET_READER_STATS(0);
 void
 usage(const po::options_description& desc) {
   cout
-    << "net2raid [options]" << endl
+    << "net2disk [options]" << endl
     << desc;
 }
 
@@ -138,10 +136,9 @@ main (int argc, char* argv[]) {
   int snaplen;
   bool promiscuous;
   int time;
-  vector<string> interfaces;
+  string interface;
   vector<string> capture_files;
-  vector<int> smp_affinities;
-  int ring_buffers;
+  int smp_affinity;
   int write_blocks;
 
   // Declare supported options, defaults, and variable bindings.
@@ -168,15 +165,15 @@ main (int argc, char* argv[]) {
      "log configuration file")
 
     ("interfaces",
-     po::value< vector<string> >(&interfaces)->multitoken(),
+     po::value< string >(&interface)->multitoken(),
      "list of interfaces from which to capture data")
 
     ("capture_files",
      po::value< vector<string> >(&capture_files)->multitoken(),
-     "list of capture files")
+     "capture files")
 
-    ("smp_affinities",
-     po::value< vector<int> >(&smp_affinities)->multitoken(),
+    ("smp_affinity",
+     po::value< int >(&smp_affinity)->multitoken(),
      "smp processor affinities")
 
     ("write_blocks",
@@ -199,46 +196,26 @@ main (int argc, char* argv[]) {
   }
 
   if (vm.count("v")) {
-    cout << "net2raid version: 0.1"
-	      << endl;
-    return 1;
-  }
-
-  const int NUM_INTERFACES = interfaces.size();
-  if (capture_files.size() != NUM_INTERFACES) {
-    LOG4CXX_ERROR(logger, "Arg length mismatch, capture_files");
-    usage(desc);
+    cout << "net2disk version: 0.1" << endl;
     return 1;
   }
 
   banner();
-
-  cout << setw(20) << left << "interfaces:";
-  BOOST_FOREACH(string s, interfaces)
-    cout << s << " ";
-  cout << endl;
 
   cout << setw(20) << left << "capture_files:";
   BOOST_FOREACH(string s, capture_files)
     cout << s << " ";
   cout << endl;
 
-  cout << setw(20) << left << "smp_affinities:";
-  BOOST_FOREACH(int s, smp_affinities)
-    cout << s << " ";
-  cout << endl;
-
   cout
+    << setw(20) << left << "smp_affinity:" << smp_affinity << endl
     << setw(20) << left << "snaplen:" << snaplen << endl
     << setw(20) << left << "promiscuous:" << promiscuous << endl
     << setw(20) << left << "time:" << time << endl
     << setw(20) << left << "log_config:" << log_config << endl
-    << setw(20) << left << "write_blocks:" << write_blocks << endl
-    << setw(20) << left << "num_interfaces:" << NUM_INTERFACES << endl;
+    << setw(20) << left << "write_blocks:" << write_blocks << endl;
 
   // Start processing.
-  vector<pid_t> child_pids;
-  vector<int> child_fds;
   try {
     LOG4CXX_DEBUG(logger, "Starting.");
 
@@ -246,105 +223,81 @@ main (int argc, char* argv[]) {
     const int STATS_INTERVAL(1);
     const int POLL_TIMEOUT(1);
 
-    pid_t pid;
-    for (int i=0; i<NUM_INTERFACES; i++) {
-      int fd[2];
-      if (pipe(fd) < 0) {
-	LOG4CXX_ERROR(logger, "Pipe error");
-	exit(1);
-      }
+    // Setup shutdown handler.
+    signal(SIGINT, sigproc);
 
-      if ( (pid = fork()) < 0) {
-	LOG4CXX_ERROR(logger, "Unable to fork. Exiting.");
-	exit(1);
-      } else if (pid == 0) {
-	// Child. Do stuff then exit.
-	LOG4CXX_DEBUG(logger, "Forked child: " << i);
+    // Set SMP affinity.
+    const unsigned int cpu_setsize (sizeof(cpu_set_t));
+    cpu_set_t mask;
+    const pid_t mypid(0);
+    CPU_ZERO(&mask);
+    CPU_SET(smp_affinity, &mask);
+    if (sched_setaffinity(mypid, cpu_setsize, &mask) < 0)
+      LOG4CXX_ERROR(logger, "Unble to set process affinity.");
 
-	// Clean pipe for receiving commands from parent. fd[0] will be
-	// read fd.
-	close(fd[1]);
+    // Setup buffer pool.
+    const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
 
-	// Setup shutdown handler.
-	signal(SIGINT, sigproc);
+    // Create FileWriter threads.
+    const int FILE_WRITER_STATS_ID(0);
+    const int FILE_WRITER_ID(1);
+    const int NET_READER_STATS_ID(2);
+    const int NET_READER_ID(3);
 
-	// Set SMP affinity.
-	const unsigned int cpu_setsize (sizeof(cpu_set_t));
-	cpu_set_t mask;
-	const pid_t mypid(0);
-	CPU_ZERO(&mask);
-	CPU_SET(smp_affinities[i], &mask);
-	if (sched_setaffinity(mypid, cpu_setsize, &mask) < 0)
-	  LOG4CXX_ERROR(logger, "Unble to set process affinity.");
+#ifdef FILE_WRITER
+    FILE_WRITER_STATS
+      = new StatsWriter(FILE_WRITER_STATS_ID,
+			LOG_PREFIX + string("fw_") + interfaces[i],
+			STATS_INTERVAL,
+			COMMAND_INTERVAL);
+    FILE_WRITER
+      = new FileWriter(FILE_WRITER_ID,
+		       BUFFER_SIZE,
+		       write_blocks,
+		       capture_files[i],// FIXME
+		       POLL_TIMEOUT,
+		       (StatsWriter* const)FILE_WRITER_STATS,
+		       COMMAND_INTERVAL);
+    FileWriter * const FW(FILE_WRITER);
 
-	// Setup buffer pool.
-	const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
+    // Create NetReader threads.
+    NET_READER_STATS
+      = new StatsWriter(NET_READER_STATS_ID,
+			LOG_PREFIX + string("nr_") + interfaces[i],
+			STATS_INTERVAL,
+			COMMAND_INTERVAL);
 
-	// Create FileWriter threads.
-	FILE_WRITER_STATS
-	  = new StatsWriter(i,
-			    LOG_PREFIX + string("fw_") + interfaces[i],
-			    STATS_INTERVAL,
-			    COMMAND_INTERVAL);
-	FILE_WRITER
-	  = new FileWriter(i,
-			   BUFFER_SIZE,
-			   write_blocks,
-			   capture_files[i],
-			   POLL_TIMEOUT,
-			   (StatsWriter* const)FILE_WRITER_STATS,
-			   COMMAND_INTERVAL);
-	FileWriter * const FW(FILE_WRITER);
+    NET_READER
+      = new NetReader(NET_READER_ID,
+		      interfaces,
+		      snaplen,
+		      PAYLOAD_LENGTH,
+		      BUFFER_SIZE,
+		      promiscuous,
+		      (FileWriter* const)FILE_WRITER,
+		      (StatsWriter* const)NET_READER_STATS,
+		      COMMAND_INTERVAL);
+#endif
 
-	// Create NetReader threads.
-	NET_READER_STATS
-	  = new StatsWriter(i+1, // TODO: fix index.
-			    LOG_PREFIX + string("nr_") + interfaces[i],
-			    STATS_INTERVAL,
-			    COMMAND_INTERVAL);
-
-	NET_READER
-	  = new NetReader(i,
-			  interfaces[i],
-			  snaplen,
-			  PAYLOAD_LENGTH,
-			  BUFFER_SIZE,
-			  promiscuous,
-			  (FileWriter* const)FILE_WRITER,
-			  (StatsWriter* const)NET_READER_STATS,
-			  COMMAND_INTERVAL);
-
-	// Wait for threads to finish.
-	child_cli(fd[0]);
-	break;
-      } else {
-	// Parent.
-	LOG4CXX_DEBUG(logger, "Parent still here after fork.");
-
-	// Clean up pipe for communicating with child. fd[1] will be write fd.
-	close(fd[0]);
-	child_fds.push_back(fd[1]);
-      }
-    }
+    cli();
   } catch (std::exception& e) {
     cerr << e.what() << endl;
   }
 
-  main_cli(child_pids, child_fds);
-
   return 0;
 }
 
-void main_cli(const vector<pid_t>& child_pids,
-	      const vector<int>& child_fds) {
-  // Command line interpreter.
+
+void cli() {
+  LOG4CXX_DEBUG(logger, "Started child_cli");
+
   const int nbytes(256);
   char line[nbytes];
 
   while (true) {
-    cout << "mark6>";
+    cout << ">>";
     if (!cin.good()) {
-      LOG4CXX_ERROR(logger, "CLI input stream closed. Exiting...");
+      LOG4CXX_ERROR(logger, "CLI Input stream closed. Exiting...");
       break;
     }
 
@@ -361,78 +314,10 @@ void main_cli(const vector<pid_t>& child_pids,
     if (results.size() > 0) {
       cmd = results[0];
 
-      if (cmd.compare("quit") == 0) {
-	exit(0);
-      } else if (cmd.compare("help") == 0) {
-	cout
-	  << endl
-	  << "This is the online help system." << endl
-	  << "The following commands are available:" << endl
-	  << setw(20) << " " << "start" << endl
-	  << setw(20) << " " << "stop" << endl
-	  << "Type 'help <command>' to see a description of that command." 
-	  << endl
-	  << endl;
-      } else if (cmd.compare("start") == 0) {
-	cout << "Received start()";
-	BOOST_FOREACH(int fd, child_fds) {
-	  LOG4CXX_DEBUG(logger, "Starting fd: " << fd);
-	  write(fd, "start\n", 6);
-	}
-      } else if (cmd.compare("stop") == 0) {
-	cout << "Received stop()";
-	BOOST_FOREACH(int fd, child_fds)
-	  write(fd, "stop\n", 5);
-
-	BOOST_FOREACH(pid_t p, child_pids) {
-	  waitpid(p, NULL, 0);
-	  cout << "PID: " << (int)p << " terminated..." << endl;
-	}
-      } else {
-	cout
-	  << endl
-	  << "Unknown command. Please try again or type 'help'"
-	  << endl
-	  << endl;
-      }
-    }
-  }
-}
-
-void child_cli(int parent_fd) {
-  LOG4CXX_DEBUG(logger, "Started child_cli");
-
-  FILE* parent_file = fdopen(parent_fd, "r");
-  if (parent_file == NULL) {
-    LOG4CXX_ERROR(logger, "Unable to create file stream.");
-    exit(1);
-  }
-    
-  int bytes_read;
-  size_t nbytes(256);
-  char* line_read;
-  while (true) {
-    line_read = (char*)malloc(nbytes+1);
-    bytes_read = getline(&line_read, &nbytes, parent_file);
-    if (bytes_read < 0) {
-      LOG4CXX_ERROR(logger, "Invalid read.");
-      free(line_read);
-      break;
-    } else {
-      string s(line_read);
-      free (line_read);
-      LOG4CXX_DEBUG(logger, "child_cli() received " << s);
-      vector<string> results;
-      string cmd;
-      split(results, s, is_any_of(" \t"));
-      if (results.size() == 0)
-	continue;
-      
-      cmd = results[0];
-      trim(cmd);
       if (cmd.compare("start") == 0) {
-	LOG4CXX_DEBUG(logger, "child_cli() received start cmd");
+	LOG4CXX_DEBUG(logger, "cli() received start cmd");
 
+#ifdef FILE_WRITER
 	cout << "Starting file writer stats...\n";
 	FILE_WRITER_STATS->start();
 	FILE_WRITER_STATS->cmd_write_to_disk();
@@ -454,23 +339,28 @@ void child_cli(int parent_fd) {
 	cout << "Starting net reader...\n";
 	NET_READER->start();
 	NET_READER->cmd_read_from_network();
+#endif
 	cout << "Started.\n";
       } else if (cmd.compare("stop") == 0) {
+#ifdef FILE_WRITER
 	NET_READER_STATS->cmd_stop();
 	NET_READER_STATS->join();
 	cout << "Stopped net reader stats.\n";
-
+      
 	NET_READER->cmd_stop();
 	NET_READER->join();
 	cout << "Stopped net reader.\n";
-
+      
 	FILE_WRITER_STATS->cmd_stop();
 	FILE_WRITER_STATS->join();
 	cout << "Stopped file writer stats.\n";
 
 	FILE_WRITER->cmd_stop();
 	FILE_WRITER->join();
+#endif
 	cout << "Stopped file writer.\n";
+      } else if (cmd.compare("quit") == 0) {
+	exit(0);
       }
     }
   }

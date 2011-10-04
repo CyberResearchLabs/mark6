@@ -1,1 +1,1 @@
-SUBDIRS=net2raid disk2vlbi
+SUBDIRS=net2raid disk2vlbi net2disk
