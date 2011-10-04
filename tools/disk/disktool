@@ -36,13 +36,13 @@ MKFS=/sbin/mkfs.ext4
 # MKFS=/sbin/mkfs.xfs
 FIO=/usr/bin/fio
 FIO_CONFIG=/opt/mit/mark6/etc/disktool.fio
-CONFIG=/opt/mit/mark6/etc/disktool.rc
+DEV_CONFIG=/opt/mit/mark6/etc/disktool.rc
 OUTPUT=disktool.out
 SEQ=/usr/bin/seq
 
 
 init_dev_map() {
-	DEV_MAP=( $( < /opt/mit/mark6/etc/disktool.rc ) )
+	DEV_MAP=( $( < ${DEV_CONFIG} ) )
 	#for i in $(${SEQ} 0 $((${#DEV_MAP[@]} - 1)))
 	#do
 		#${DEV_MAP[$i]}

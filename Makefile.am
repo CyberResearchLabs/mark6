@@ -1,14 +1,14 @@
 MAINTAINERCLEANFILES	=	Makefile.in
 SUBDIRS			=	src doc
-dist_bin_SCRIPTS	=	src/net2disk/net2disk-run \
-				src/net2disk/net2disk-setup \
+dist_bin_SCRIPTS	=	src/net2raid/net2raid-run \
+				src/net2raid/net2raid-setup \
 				src/disk2vlbi/disk2vlbi \
 				bin/mark6 \
 				bin/tstmark6 \
 				src/vdif/bin/vdif \
 				tools/disk/disktool \
 				tools/disk/fio 
-sysconf_DATA		=	src/net2disk/net2disk-log.cfg \
+sysconf_DATA		=	src/net2raid/net2raid-log.cfg \
 				tools/disk/disktool.fio \
 				tools/disk/disktool.rc
 logdir 			= 	log
