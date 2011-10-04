@@ -264,12 +264,18 @@ void FileWriter::write_block() {
       return;
 #endif
     buf = _write_bufs.front();
+    // FIXME
     buf_len = _write_bufs.size();
     _write_bufs.pop_front();
   }
 
+  write(buf, _WRITE_BLOCK_SIZE);
+}
+
+bool FileWriter::write(boost::uint8_t* buf,
+		       const int buf_len) {
   // Write buffer to disk.
-  int bytes_left = _WRITE_BLOCK_SIZE;
+  int bytes_left = buf_len;
   int bytes_written = 0;
   while (bytes_left) {
     int nb = ::write(_pfd.fd, &buf[bytes_written], bytes_left);

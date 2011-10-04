@@ -101,10 +101,10 @@ class FileWriter: public Threaded {
   void cmd_write_to_disk();
 
   //! Custom API. Open capture file on disk.
-  int open();
+  virtual int open();
 
   //! Custom API. Close capture file on disk.
-  int close();
+  virtual int close();
 
   //! External API. Write buffer to disk. The supplied buffer is stored in the
   //! internal buffer queue where it waits to be written to disk by the main
@@ -188,7 +188,13 @@ class FileWriter: public Threaded {
 
   //! Writes a block to disk using the specified file descriptor.
   //! \param fd The file descriptor to which the data will be sent.
-  void write_block();
+  virtual void write_block();
+
+  //! Writes  a block to disk.
+  //! \param buf The buffer to write to disk.
+  //! \param buf_len The length of the buffer.
+  //! return true if successful, false if not.
+  virtual bool write(boost::uint8_t* buf, const int buf_len);
 };
 
 #endif // _FILEWRITER_H_
