@@ -41,8 +41,9 @@ AM_INIT_AUTOMAKE(mark6, 0.1)
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  src/Makefile
-		src/net2raid/Makefile
+		src/common/Makefile
 		src/net2disk/Makefile
+		src/net2raid/Makefile
 		src/disk2vlbi/Makefile
 		])
 

@@ -15,7 +15,6 @@
 
 @SET_MAKE@
 
-
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -46,14 +45,6 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-LIBRARIES = $(noinst_LIBRARIES)
-AR = ar
-ARFLAGS = cru
-libnet2disk_a_AR = $(AR) $(ARFLAGS)
-libnet2disk_a_LIBADD =
-am_libnet2disk_a_OBJECTS = pfr.$(OBJEXT) file_writer.$(OBJEXT) \
-	logger.$(OBJEXT) net_reader.$(OBJEXT) stats_writer.$(OBJEXT)
-libnet2disk_a_OBJECTS = $(am_libnet2disk_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_net2disk_OBJECTS = main.$(OBJEXT)
@@ -61,9 +52,7 @@ net2disk_OBJECTS = $(am_net2disk_OBJECTS)
 net2disk_DEPENDENCIES =  \
 	@PFRING_ROOT@/userland/libpcap-1.1.1-ring/libpcap.a \
 	@PFRING_ROOT@/userland/lib/libpfring.a
-am_net2disktest_OBJECTS = test_main.$(OBJEXT) file_writer.$(OBJEXT) \
-	net_reader.$(OBJEXT) stats_writer.$(OBJEXT) \
-	test_file_writer.$(OBJEXT)
+am_net2disktest_OBJECTS = test_main.$(OBJEXT)
 net2disktest_OBJECTS = $(am_net2disktest_OBJECTS)
 net2disktest_DEPENDENCIES =  \
 	@PFRING_ROOT@/userland/libpcap-1.1.1-ring/libpcap.a \
@@ -77,14 +66,8 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libnet2disk_a_SOURCES) $(net2disk_SOURCES) \
-	$(net2disktest_SOURCES)
-DIST_SOURCES = $(libnet2disk_a_SOURCES) $(net2disk_SOURCES) \
-	$(net2disktest_SOURCES)
+SOURCES = $(net2disk_SOURCES) $(net2disktest_SOURCES)
+DIST_SOURCES = $(net2disk_SOURCES) $(net2disktest_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -186,7 +169,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 net2disk_SOURCES = main.cc
 net2disk_LDADD = -L. \
-			-lnet2disk \
+			-L../common \
+			-lcommon \
 			-lreadline \
 			-L@BOOST_LIBDIR@ \
 			-lboost_program_options-mt \
@@ -197,19 +181,10 @@ net2disk_LDADD = -L. \
 			@PFRING_ROOT@/userland/libpcap-1.1.1-ring/libpcap.a \
 			@PFRING_ROOT@/userland/lib/libpfring.a
 
-net2disktest_SOURCES = test_main.cc \
-			file_writer.h \
-			file_writer.cc \
-			net_reader.h \
-			net_reader.cc \
-			stats_writer.h \
-			stats_writer.cc \
-			test_file_writer.h \
-			test_file_writer.cc \
-			threaded.h
-
+net2disktest_SOURCES = test_main.cc
 net2disktest_LDADD = -L. \
-			-lnet2disk \
+			-L../common \
+			-lcommon \
 			-L@BOOST_LIBDIR@ \
 			-lboost_program_options-mt \
 			-lboost_system-mt \
@@ -219,21 +194,8 @@ net2disktest_LDADD = -L. \
 			@PFRING_ROOT@/userland/libpcap-1.1.1-ring/libpcap.a \
 			@PFRING_ROOT@/userland/lib/libpfring.a
 
-noinst_LIBRARIES = libnet2disk.a
-libnet2disk_a_SOURCES = \
-			pfr.h \
-			pfr.cc \
-			file_writer.h \
-			file_writer.cc \
-			logger.h \
-			logger.cc \
-			net_reader.h \
-			net_reader.cc \
-			stats_writer.h \
-			stats_writer.cc \
-			threaded.h
-
-INCLUDES = -I@top_srcdir@/src/net2disk \
+INCLUDES = -I../common \
+			-I@top_srcdir@/src/net2disk \
 			-I/usr/include \
 			-I@PFRING_ROOT@/kernel \
 			-I@PFRING_ROOT@/kernel/plugins \
@@ -277,13 +239,6 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libnet2disk.a: $(libnet2disk_a_OBJECTS) $(libnet2disk_a_DEPENDENCIES) 
-	-rm -f libnet2disk.a
-	$(libnet2disk_a_AR) libnet2disk.a $(libnet2disk_a_OBJECTS) $(libnet2disk_a_LIBADD)
-	$(RANLIB) libnet2disk.a
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
@@ -337,13 +292,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file_writer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logger.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net_reader.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pfr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stats_writer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_file_writer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_main.Po@am__quote@
 
 .cc.o:
@@ -538,7 +487,7 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile $(LIBRARIES) $(PROGRAMS)
+all-am: Makefile $(PROGRAMS)
 installdirs:
 	for dir in "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -571,7 +520,7 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-noinstLIBRARIES mostlyclean-am
+	mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -641,18 +590,17 @@ uninstall-am: uninstall-binPROGRAMS
 .MAKE: check-am install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
-	clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-noinstLIBRARIES ctags distclean distclean-compile \
-	distclean-generic distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-binPROGRAMS
+	clean-binPROGRAMS clean-checkPROGRAMS clean-generic ctags \
+	distclean distclean-compile distclean-generic distclean-tags \
+	distdir dvi dvi-am html html-am info info-am install \
+	install-am install-binPROGRAMS install-data install-data-am \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-info install-info-am \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
+	ps ps-am tags uninstall uninstall-am uninstall-binPROGRAMS
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
