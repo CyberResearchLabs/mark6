@@ -67,6 +67,7 @@ class FileWriter: public Threaded {
   //!        disk each time write_block() is called.
   //! \param write_blocks The total number of write blocks to buffer
   //!        internally.
+  //! \param capture_file The file to capture data to.
   //! \param poll_timeout \todo Obsolete parameter.
   //! \param sw A pointer to a StatsWriter object. Performance data will be 
   //!        logged using this object.
