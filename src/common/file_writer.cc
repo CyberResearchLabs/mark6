@@ -183,16 +183,18 @@ int FileWriter::open() {
     _pfd.events = POLLOUT;
   }
 
-#ifdef FALLOCATE
-  if (::lseek(_pfd.fd, 0, SEEK_SET) < 0) {
-    LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: " << _capture_file
-		  << " - " << strerror(errno));
-    _pfd.fd = -1;
-    ret = -1;
+  if (_preallocated) {
+    if (::lseek(_pfd.fd, 0, SEEK_SET) < 0) {
+      LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: "
+		    << _capture_file
+		    << " - " << strerror(errno));
+      _pfd.fd = -1;
+      ret = -1;
+    }
+
   } else {
     LOG4CXX_DEBUG(logger, "Successfully seeked.");
   }
-#endif // FALLOCATE
 
   // Debug message.
   LOG4CXX_DEBUG(logger, "pfd: " << _pfd.fd);

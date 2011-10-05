@@ -106,7 +106,9 @@ class PFileWriter: public FileWriter {
   //---------------------------------------------------------------------------
   std::list<std::string> _capture_files;
   struct pollfd* _pfds;
+  int* _fds;
   nfds_t _nfds;
+  int _pfds_idx;
 
   //---------------------------------------------------------------------------
   // Internal methods

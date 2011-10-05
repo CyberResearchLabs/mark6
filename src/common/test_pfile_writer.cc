@@ -38,7 +38,7 @@
 //Local includes.
 #include <mark6.h>
 #include <logger.h>
-#include <file_writer.h>
+#include <pfile_writer.h>
 #include <test_pfile_writer.h>
 
 using namespace boost;
@@ -66,7 +66,7 @@ TestPFileWriter::basic(void)
   for (int i=0; i<N; i++) {
     std::ostringstream oss;
     oss << "/tmp/test_pfile_writer-basic-" << i << ".dat";
-    capture_file.push_back(oss.str());
+    capture_files.push_back(oss.str());
   }
 
   const boost::uint32_t write_block_size(1048576);
@@ -87,7 +87,7 @@ TestPFileWriter::basic(void)
   LOG4CXX_DEBUG(logger, "Started pfile writer.");
     
   const int NUM_BLOCKS = 100;
-  boost::uint8_t* buf = fw.malloc_buffer();
+  boost::uint8_t* buf = pfw.malloc_buffer();
   for (boost::uint32_t i=0; i<write_block_size; ++i) 
     buf[i] = static_cast<uint8_t>(i);
 

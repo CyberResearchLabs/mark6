@@ -58,15 +58,19 @@ PFileWriter::PFileWriter(const int id,
 	     poll_timeout, sw, command_interval, preallocated, directio),
   _capture_files(capture_files),
   _pfds(0),
-  _nfds(0)
+  _fds(0),
+  _nfds(0),
+  _pfds_idx(0)
 {
   _nfds = _capture_files.size();
   _pfds = new struct pollfd[_nfds];
+  _fds = new int[_nfds];
 }
 
 PFileWriter::~PFileWriter() {
   close();
   delete _pfds;
+  delete _fds;
 }
 
 int PFileWriter::open() {
@@ -76,44 +80,47 @@ int PFileWriter::open() {
   BOOST_FOREACH(std::string capture_file, _capture_files) {
     LOG4CXX_INFO(logger, "Opening PFileWriter file: " << capture_file);
 
-#define FALLOCATE
-#ifdef FALLOCATE
-    int fd = ::open(capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
-#else
-#ifdef DIRECT_BUFFER
-    int fd = ::open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
+    int fd = -1;
+    if (_preallocated) {
+      fd = ::open(capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
+    } else {
+      if (_directio) {
+	fd = ::open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
 		    S_IRWXU);
-#else
-    int fd = ::open(capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
-#endif // DIRECT_BUFFER
-#endif // FALLOCATE
-    if (fd<0) {
+      } else {
+	fd = ::open(capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
+      }
+    }
+
+    if (fd<=0) {
       LOG4CXX_ERROR(logger, "Unable to open file: " << capture_file
 		    << " - " << strerror(errno));
       fd = -1;
       ret = -1;
     } else {
       LOG4CXX_DEBUG(logger, "File: " << capture_file << " fd: " << fd);
-  }
-    
-#ifdef FALLOCATE
-    if (::lseek(fd, 0, SEEK_SET) < 0) {
-      LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: " << _capture_file
-		    << " - " << strerror(errno));
-      fd = -1;
-      ret = -1;
-    } else {
-      LOG4CXX_DEBUG(logger, "Successfully seeked.");
+      _fds[i] = fd;
     }
-#endif // FALLOCATE
-
+    
+    if (_preallocated) {
+      if (::lseek(fd, 0, SEEK_SET) < 0) {
+	LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: "
+		      << _capture_file
+		      << " - " << strerror(errno));
+	fd = -1;
+	ret = -1;
+      } else {
+	LOG4CXX_DEBUG(logger, "Successfully seeked.");
+      }
+    }
+    
     if (i >= _nfds) {
       LOG4CXX_ERROR(logger, "_pfds index out of bounds: " << i);
       break;
     }
-    
-    struct pollfd pfd = { fd, POLLOUT, 0 };
-    _pfds[i] = pfd;
+
+    // Don't forget this!
+    i++;
   }
 
   return ret;
@@ -121,8 +128,8 @@ int PFileWriter::open() {
 
 int PFileWriter::close() {
   for (int i=0; i<_nfds; i++) {
-    if ( (_pfds[i].fd>0) && (::close(_pfds[i].fd)<0) ) {
-      LOG4CXX_ERROR(logger, "Unable to close fd: " << _pfds[i].fd
+    if ( (_fds[i]>0) && (::close(_fds[i])<0) ) {
+      LOG4CXX_ERROR(logger, "Unable to close fd: " << _fds[i]
 		    << " - " << strerror(errno));
       return -1;
     }
@@ -136,7 +143,14 @@ bool PFileWriter::write(boost::uint8_t* buf,
   // Block indefinitely.
   int pret = 0;
   while (true) {
+    for (int i=0; i<_nfds; i++) {
+      _pfds[i].fd = _fds[i];
+      _pfds[i].events = POLLOUT;
+      _pfds[i].revents = 0;
+    }
+
     pret = poll(_pfds, _nfds, -1);
+
     if (pret > 0) {
       break;
     } else if (pret < 0) {
@@ -148,15 +162,18 @@ bool PFileWriter::write(boost::uint8_t* buf,
 
   // Find writeable fd.
   int write_fd = -1;
+  int idx = 0;
   for (int i=0; i<_nfds; i++) {
-    if (_pfds[i].revents & POLLOUT) {
-      write_fd = _pfds[i].fd;
+    idx = _pfds_idx % _nfds;
+    _pfds_idx++;
+    if (_pfds[idx].revents & POLLOUT) {
+      write_fd = _pfds[idx].fd;
       break;
     }
   }
 
-  if (write_fd < 0) {
-    LOG4CXX_ERROR(logger, "Invalid write_fd.");
+  if (write_fd <= 0) {
+    LOG4CXX_ERROR(logger, "Invalid write_fd: " << write_fd);
     return false;
   }
 
