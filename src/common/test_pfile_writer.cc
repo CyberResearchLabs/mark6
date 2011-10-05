@@ -86,7 +86,7 @@ TestPFileWriter::basic(void)
 
   LOG4CXX_DEBUG(logger, "Started pfile writer.");
     
-  const int NUM_BLOCKS = 100;
+  const int NUM_BLOCKS = 10000;
   boost::uint8_t* buf = pfw.malloc_buffer();
   for (boost::uint32_t i=0; i<write_block_size; ++i) 
     buf[i] = static_cast<uint8_t>(i);
@@ -97,7 +97,7 @@ TestPFileWriter::basic(void)
 
   pfw.cmd_write_to_disk();
 
-  sleep(10);
+  sleep(20);
 
   pfw.cmd_stop();
   pfw.join();

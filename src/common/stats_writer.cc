@@ -71,6 +71,10 @@ StatsWriter::StatsWriter(const int id,
   const std::string csv_stream_name = stats_file + std::string(".csv");
   _csv_stream.open(csv_stream_name.c_str(),
 		   std::fstream::out | std::fstream::trunc);
+  _start_time.tv_sec = 0;
+  _start_time.tv_usec = 0;
+  _last_time.tv_sec = 0;
+  _last_time.tv_usec = 0;
 }
 
 StatsWriter::~StatsWriter() {
@@ -165,6 +169,9 @@ void StatsWriter::handle_write_to_disk() {
   if (_start_time.tv_sec == 0) {
     gettimeofday(&_start_time, NULL);
   }
+  if (_last_time.tv_sec == 0) {
+    gettimeofday(&_last_time, NULL);
+  }
   gettimeofday(&end_time, NULL);
 
   // Elapsed _interval.
@@ -174,6 +181,9 @@ void StatsWriter::handle_write_to_disk() {
   const double delta_seconds = diff.tv_sec + diff.tv_usec/1000000.0;
   const double instant_delta_seconds = instant_diff.tv_sec
     + instant_diff.tv_usec/1000000.0;
+  if (delta_seconds <= 0 || instant_delta_seconds <=0)
+    return;
+
   const double instant_packet_rate = (num_packets - _last_num_packets)
     /instant_delta_seconds;
   const double instant_byte_rate = _BPS_TO_MBPS*(num_bytes - _last_num_bytes)

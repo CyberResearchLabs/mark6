@@ -38,6 +38,7 @@
 //Local includes.
 #include <mark6.h>
 #include <logger.h>
+#include <stats_writer.h>
 #include <file_writer.h>
 #include <test_file_writer.h>
 
@@ -70,8 +71,15 @@ TestFileWriter::basic(void)
   const bool preallocated(false);
   const bool directio(true);
 
+  const std::string stats_file("/tmp/test_pfile_write-stats.dat");
+  const int stats_interval(1);
+
+  StatsWriter sw(id, stats_file, stats_interval, command_interval);
   FileWriter fw(id, write_block_size, write_blocks, capture_file,
-		poll_timeout, 0, command_interval, preallocated, directio);
+		poll_timeout, &sw, command_interval, preallocated, directio);
+
+  sw.start();
+  sw.cmd_write_to_disk();
 
   fw.open();
   fw.start();
@@ -95,6 +103,9 @@ TestFileWriter::basic(void)
   fw.join();
 
   fw.close();
+
+  sw.cmd_stop();
+  sw.join();
 
   LOG4CXX_DEBUG(logger, "Joined file writer.");
 }
