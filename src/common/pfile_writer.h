@@ -66,13 +66,19 @@ class PFileWriter: public FileWriter {
   //!        actual interval between checks may be larger than this if the 
   //!        execution thread spends longer than command_interval processing
   //!        individual tasks.
+  //! \param preallocated Whether or not file has been preallocated using 
+  //!        fallocate.
+  //! \param directio Whether or not to use DIRECT_IO and bypass linux
+  //!        page cache.
   PFileWriter(const int id,
-	     const int write_block_size,
-	     const int write_blocks,
-	     const std::list<std::string>& capture_files,
-	     const int poll_timeout,
-	     StatsWriter * const sw,
-	     const double command_interval);
+	      const int write_block_size,
+	      const int write_blocks,
+	      const std::list<std::string>& capture_files,
+	      const int poll_timeout,
+	      StatsWriter * const sw,
+	      const double command_interval,
+	      const bool preallocated,
+	      const bool directio);
 
   //! Destructor.
   virtual ~PFileWriter();

@@ -51,9 +51,11 @@ PFileWriter::PFileWriter(const int id,
 			 const std::list<std::string>& capture_files,
 			 const int poll_timeout,
 			 StatsWriter* const sw,
-			 const double command_interval):
+			 const double command_interval,
+			 const bool preallocated,
+			 const bool directio):
   FileWriter(id, write_block_size, write_blocks, std::string(""),
-	     poll_timeout, sw, command_interval),
+	     poll_timeout, sw, command_interval, preallocated, directio),
   _capture_files(capture_files),
   _pfds(0),
   _nfds(0)

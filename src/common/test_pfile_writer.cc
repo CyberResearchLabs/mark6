@@ -39,30 +39,36 @@
 #include <mark6.h>
 #include <logger.h>
 #include <file_writer.h>
-#include <test_file_writer.h>
+#include <test_pfile_writer.h>
 
 using namespace boost;
 
-CPPUNIT_TEST_SUITE_REGISTRATION (TestFileWriter);
+CPPUNIT_TEST_SUITE_REGISTRATION (TestPFileWriter);
 
 void
-TestFileWriter :: setUp (void)
+TestPFileWriter :: setUp (void)
 {
   // set up test environment (initializing objects)
 }
 
 void
-TestFileWriter :: tearDown (void)
+TestPFileWriter :: tearDown (void)
 {
 }
 
 void
-TestFileWriter::basic(void)
+TestPFileWriter::basic(void)
 {
-  std::cout << "TestFileWriter::basic()" << std::endl;
+  std::cout << "TestPFileWriter::basic()" << std::endl;
   const int id = 0;
-  const std::string capture_file("/tmp/test_file_writer-basic-1.dat");
-  const std::string file_name("/tmp/test1.m6");
+  std::list<std::string> capture_files;
+  const int N = 8;
+  for (int i=0; i<N; i++) {
+    std::ostringstream oss;
+    oss << "/tmp/test_pfile_writer-basic-" << i << ".dat";
+    capture_file.push_back(oss.str());
+  }
+
   const boost::uint32_t write_block_size(1048576);
   const boost::uint32_t write_blocks(512);
   const boost::uint32_t poll_timeout = 1000; // ms
@@ -70,13 +76,15 @@ TestFileWriter::basic(void)
   const bool preallocated(false);
   const bool directio(true);
 
-  FileWriter fw(id, write_block_size, write_blocks, capture_file,
+
+
+  PFileWriter pfw(id, write_block_size, write_blocks, capture_files,
 		poll_timeout, 0, command_interval, preallocated, directio);
 
-  fw.open();
-  fw.start();
+  pfw.open();
+  pfw.start();
 
-  LOG4CXX_DEBUG(logger, "Started file writer.");
+  LOG4CXX_DEBUG(logger, "Started pfile writer.");
     
   const int NUM_BLOCKS = 100;
   boost::uint8_t* buf = fw.malloc_buffer();
@@ -84,17 +92,17 @@ TestFileWriter::basic(void)
     buf[i] = static_cast<uint8_t>(i);
 
   for (int i=0; i<NUM_BLOCKS; ++i) {
-    fw.write(buf);
+    pfw.write(buf);
   }
 
-  fw.cmd_write_to_disk();
+  pfw.cmd_write_to_disk();
 
   sleep(10);
 
-  fw.cmd_stop();
-  fw.join();
+  pfw.cmd_stop();
+  pfw.join();
 
-  fw.close();
+  pfw.close();
 
   LOG4CXX_DEBUG(logger, "Joined file writer.");
 }

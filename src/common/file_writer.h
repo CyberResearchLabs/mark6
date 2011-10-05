@@ -82,7 +82,9 @@ class FileWriter: public Threaded {
 	     const std::string& capture_file,
 	     const int poll_timeout,
 	     StatsWriter * const sw,
-	     const double command_interval);
+	     const double command_interval,
+	     const bool preallocated,
+	     const bool directio);
 
   //! Destructor.
   virtual ~FileWriter();
@@ -166,6 +168,12 @@ class FileWriter: public Threaded {
   //! statistics to CSV file.
   StatsWriter* const _sw;
 
+  //! Whether or not file has been pre-allocated using fallocate().
+  bool _preallocated;
+
+  //! Whether or not to use DIRECT_IO and bypass the linux page cache
+  //! (Can provide performance improvements.)
+  bool _directio;
 
   //---------------------------------------------------------------------------
   // Internal methods

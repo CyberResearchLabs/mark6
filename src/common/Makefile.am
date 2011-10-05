@@ -11,6 +11,8 @@ commontest_SOURCES=	test_main.cc \
 			stats_writer.cc \
 			test_file_writer.h \
 			test_file_writer.cc \
+			test_pfile_writer.h \
+			test_pfile_writer.cc \
 			threaded.h
 
 commontest_LDADD= 	-L. \

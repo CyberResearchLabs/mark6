@@ -49,7 +49,7 @@
 
 int
 main(int argc, char** argv) {
-  init_logger("net2disk-log.cfg");
+  init_logger("common-log.cfg");
 
   // informs test-listener about testresults
   CPPUNIT_NS::TestResult testresult;
