@@ -67,6 +67,7 @@ TestFileWriter::basic(void)
   const boost::uint32_t write_blocks(512);
   const boost::uint32_t poll_timeout = 1000; // ms
   const double command_interval = 1; //s
+  boost::uint8_t buf[write_block_size];
 
   FileWriter fw(id, write_block_size, write_blocks, capture_file,
 		poll_timeout, 0, command_interval);

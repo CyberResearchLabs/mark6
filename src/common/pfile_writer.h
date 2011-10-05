@@ -58,7 +58,7 @@ class PFileWriter: public FileWriter {
   //! \param write_blocks The total number of write blocks to buffer
   //!        internally.
   //! \param capture_files A list of capture files to use for the stored data.
-  //! \param poll_timeout \todo Obsolete parameter.
+  //! \param poll_timeout (poll timeout in ms).
   //! \param sw A pointer to a StatsWriter object. Performance data will be 
   //!        logged using this object.
   //! \param command_interval The main executin thread in run() will attempt
@@ -98,7 +98,9 @@ class PFileWriter: public FileWriter {
   //---------------------------------------------------------------------------
   // Internal data members
   //---------------------------------------------------------------------------
-
+  std::list<std::string> _capture_files;
+  struct pollfd* _pfds;
+  nfds_t _nfds;
 
   //---------------------------------------------------------------------------
   // Internal methods

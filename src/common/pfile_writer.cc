@@ -34,6 +34,7 @@
 // Framework includes.
 #include <boost/crc.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 
 // Local includes.
 #include <mark6.h>
@@ -52,75 +53,116 @@ PFileWriter::PFileWriter(const int id,
 			 StatsWriter* const sw,
 			 const double command_interval):
   FileWriter(id, write_block_size, write_blocks, std::string(""),
-	     poll_timeout, sw, command_interval)
+	     poll_timeout, sw, command_interval),
+  _capture_files(capture_files),
+  _pfds(0),
+  _nfds(0)
 {
+  _nfds = _capture_files.size();
+  _pfds = new struct pollfd[_nfds];
 }
 
 PFileWriter::~PFileWriter() {
   close();
+  delete _pfds;
 }
 
 int PFileWriter::open() {
-  LOG4CXX_INFO(logger, "Opening PFileWriter file: " << _capture_file);
-
   // Open files for each path.
   int ret=0;
+  int i = 0;
+  BOOST_FOREACH(std::string capture_file, _capture_files) {
+    LOG4CXX_INFO(logger, "Opening PFileWriter file: " << capture_file);
 
 #define FALLOCATE
 #ifdef FALLOCATE
-  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
+    int fd = ::open(capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
 #else
 #ifdef DIRECT_BUFFER
-  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
-		   S_IRWXU);
+    int fd = ::open(capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
+		    S_IRWXU);
 #else
-  _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
+    int fd = ::open(capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
 #endif // DIRECT_BUFFER
 #endif // FALLOCATE
-  if (_pfd.fd<0) {
-    LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
-		  << " - " << strerror(errno));
-    _pfd.fd = -1;
-    ret = -1;
-  } else {
-    LOG4CXX_DEBUG(logger, "File: " << _capture_file << " fd: "
-		  << _pfd.fd);
-    _pfd.events = POLLOUT;
+    if (fd<0) {
+      LOG4CXX_ERROR(logger, "Unable to open file: " << capture_file
+		    << " - " << strerror(errno));
+      fd = -1;
+      ret = -1;
+    } else {
+      LOG4CXX_DEBUG(logger, "File: " << capture_file << " fd: " << fd);
   }
-
+    
 #ifdef FALLOCATE
-  if (::lseek(_pfd.fd, 0, SEEK_SET) < 0) {
-    LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: " << _capture_file
-		  << " - " << strerror(errno));
-    _pfd.fd = -1;
-    ret = -1;
-  } else {
-    LOG4CXX_DEBUG(logger, "Successfully seeked.");
-  }
+    if (::lseek(fd, 0, SEEK_SET) < 0) {
+      LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: " << _capture_file
+		    << " - " << strerror(errno));
+      fd = -1;
+      ret = -1;
+    } else {
+      LOG4CXX_DEBUG(logger, "Successfully seeked.");
+    }
 #endif // FALLOCATE
 
-  // Debug message.
-  LOG4CXX_DEBUG(logger, "pfd: " << _pfd.fd);
+    if (i >= _nfds) {
+      LOG4CXX_ERROR(logger, "_pfds index out of bounds: " << i);
+      break;
+    }
+    
+    struct pollfd pfd = { fd, POLLOUT, 0 };
+    _pfds[i] = pfd;
+  }
 
   return ret;
 }
 
 int PFileWriter::close() {
-  if ( (_pfd.fd>0) && (::close(_pfd.fd)<0) ) {
-    LOG4CXX_ERROR(logger, "Unable to close fd: " << _pfd.fd
-		  << " - " << strerror(errno));
-    return -1;
+  for (int i=0; i<_nfds; i++) {
+    if ( (_pfds[i].fd>0) && (::close(_pfds[i].fd)<0) ) {
+      LOG4CXX_ERROR(logger, "Unable to close fd: " << _pfds[i].fd
+		    << " - " << strerror(errno));
+      return -1;
+    }
   }
   return 0;
 }
 
 bool PFileWriter::write(boost::uint8_t* buf,
 		       const int buf_len) {
+
+  // Block indefinitely.
+  int pret = 0;
+  while (true) {
+    pret = poll(_pfds, _nfds, -1);
+    if (pret > 0) {
+      break;
+    } else if (pret < 0) {
+      LOG4CXX_ERROR(logger, "Write to disk failed: " << strerror(errno));
+      return false;
+    }
+    // Continue looping if no file descriptors available (pret==0).
+  }
+
+  // Find writeable fd.
+  int write_fd = -1;
+  for (int i=0; i<_nfds; i++) {
+    if (_pfds[i].revents & POLLOUT) {
+      write_fd = _pfds[i].fd;
+      break;
+    }
+  }
+
+  if (write_fd < 0) {
+    LOG4CXX_ERROR(logger, "Invalid write_fd.");
+    return false;
+  }
+
   // Write buffer to disk.
   int bytes_left = buf_len;
   int bytes_written = 0;
   while (bytes_left) {
-    int nb = ::write(_pfd.fd, &buf[bytes_written], bytes_left);
+    int nb = ::write(write_fd, &buf[bytes_written], bytes_left);
     if (nb > 0) {
       bytes_left -= nb;
       bytes_written += nb;
