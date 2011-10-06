@@ -183,7 +183,7 @@ int FileWriter::open() {
 
   if (_preallocated) {
     off_t len = _file_size * 1000000;
-    LOG4CXX_INFO(logger, "Fallocat()-ed " << len << " bytes");
+    LOG4CXX_INFO(logger, "Preallcoating  " << len/1000000 << " MBytes");
 
     // Scope errno locally for fallocate.
     int myerrno = fallocate(_pfd.fd, 0, 0, len);
