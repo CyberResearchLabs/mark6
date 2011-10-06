@@ -343,6 +343,10 @@ main (int argc, char* argv[]) {
     cerr << e.what() << endl;
   }
 
+  sleep(5);
+
+  cout << "Launching main CLI.\n";
+
   main_cli(time, child_pids, child_fds);
 
   return 0;
@@ -356,7 +360,7 @@ void main_cli(const int time, const vector<pid_t>& child_pids,
     << "Recording for " << time << " seconds\n";
 
   BOOST_FOREACH(int fd, child_fds) {
-    LOG4CXX_DEBUG(logger, "Starting fd: " << fd);
+    LOG4CXX_INFO(logger, "Starting child fd: " << fd);
     write(fd, "start\n", 6);
   }
 
