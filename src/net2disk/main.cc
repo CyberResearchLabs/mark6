@@ -74,6 +74,7 @@ const string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2disk-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8268);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_WRITE_BLOCKS(128);
+const int DEFAULT_RATE(4000);
 
 // Other constants.
 const int MAX_SNAPLEN(9014);
@@ -136,6 +137,7 @@ main (int argc, char* argv[]) {
   int snaplen;
   bool promiscuous;
   int time;
+  int rate;
   string interface;
   vector<string> capture_files;
   int smp_affinity;
@@ -159,6 +161,10 @@ main (int argc, char* argv[]) {
     ("time",
      po::value<int>(&time)->default_value(DEFAULT_TIME),
      "capture interval")
+
+    ("rate",
+     po::value<int>(&rate)->default_value(DEFAULT_RATE),
+     "individual file rate (Mbps)")
 
     ("log_config",
      po::value<string>(&log_config)->default_value(DEFAULT_LOG_CONFIG),

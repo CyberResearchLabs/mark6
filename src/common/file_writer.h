@@ -76,6 +76,11 @@ class FileWriter: public Threaded {
   //!        actual interval between checks may be larger than this if the 
   //!        execution thread spends longer than command_interval processing
   //!        individual tasks.
+  //! \param file_size Size of file in MB.
+  //! \param preallocated Whether or not file has been preallocated using 
+  //!        fallocate.
+  //! \param directio Whether or not to use DIRECT_IO and bypass linux
+  //!        page cache.
   FileWriter(const int id,
 	     const int write_block_size,
 	     const int write_blocks,
@@ -83,6 +88,7 @@ class FileWriter: public Threaded {
 	     const int poll_timeout,
 	     StatsWriter * const sw,
 	     const double command_interval,
+	     const unsigned long file_size,
 	     const bool preallocated,
 	     const bool directio);
 
@@ -167,6 +173,9 @@ class FileWriter: public Threaded {
   //! Reference to statistics writer object for capturing throughput
   //! statistics to CSV file.
   StatsWriter* const _sw;
+
+  //! Size of file to write in MB.
+  unsigned long _file_size;
 
   //! Whether or not file has been pre-allocated using fallocate().
   bool _preallocated;

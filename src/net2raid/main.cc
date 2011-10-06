@@ -58,7 +58,8 @@ using namespace std; // Clean up long lines.
 // Declarations
 //----------------------------------------------------------------------
 void banner();
-void main_cli(const vector<pid_t>& child_pids,
+void main_cli(const int time,
+	      const vector<pid_t>& child_pids,
 	      const vector<int>& child_fds);
 void child_cli(const int parent_fd);
 
@@ -76,6 +77,7 @@ const string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2raid-log.cfg");
 const int DEFAULT_PAYLOAD_LENGTH(8268);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_WRITE_BLOCKS(128);
+const int DEFAULT_RATE(4000);
 
 // Other constants.
 const int MAX_SNAPLEN(9014);
@@ -138,6 +140,7 @@ main (int argc, char* argv[]) {
   int snaplen;
   bool promiscuous;
   int time;
+  int rate;
   vector<string> interfaces;
   vector<string> capture_files;
   vector<int> smp_affinities;
@@ -162,6 +165,10 @@ main (int argc, char* argv[]) {
     ("time",
      po::value<int>(&time)->default_value(DEFAULT_TIME),
      "capture interval")
+
+    ("rate",
+     po::value<int>(&rate)->default_value(DEFAULT_RATE),
+     "individual file rate (Mbps)")
 
     ("log_config",
      po::value<string>(&log_config)->default_value(DEFAULT_LOG_CONFIG),
@@ -245,6 +252,9 @@ main (int argc, char* argv[]) {
     const int COMMAND_INTERVAL(1);
     const int STATS_INTERVAL(1);
     const int POLL_TIMEOUT(1);
+    const bool PREALLOCATED(true);
+    const bool DIRECTIO(true);
+    const unsigned long FILE_SIZE(time*rate/8); // MB
 
     pid_t pid;
     for (int i=0; i<NUM_INTERFACES; i++) {
@@ -293,7 +303,10 @@ main (int argc, char* argv[]) {
 			   capture_files[i],
 			   POLL_TIMEOUT,
 			   (StatsWriter* const)FILE_WRITER_STATS,
-			   COMMAND_INTERVAL);
+			   COMMAND_INTERVAL,
+			   FILE_SIZE,
+			   PREALLOCATED,
+			   DIRECTIO);
 	FileWriter * const FW(FILE_WRITER);
 
 	// Create NetReader threads.
@@ -330,11 +343,36 @@ main (int argc, char* argv[]) {
     cerr << e.what() << endl;
   }
 
-  main_cli(child_pids, child_fds);
+  main_cli(time, child_pids, child_fds);
 
   return 0;
 }
 
+void main_cli(const int time, const vector<pid_t>& child_pids,
+	      const vector<int>& child_fds) {
+  // START recording.
+  cout
+    << "Received start()\n"
+    << "Recording for " << time << " seconds\n";
+
+  BOOST_FOREACH(int fd, child_fds) {
+    LOG4CXX_DEBUG(logger, "Starting fd: " << fd);
+    write(fd, "start\n", 6);
+  }
+
+  sleep(time);
+
+  cout << "Received stop()";
+  BOOST_FOREACH(int fd, child_fds)
+    write(fd, "stop\n", 5);
+
+  BOOST_FOREACH(pid_t p, child_pids) {
+    waitpid(p, NULL, 0);
+    cout << "PID: " << (int)p << " terminated..." << endl;
+  }
+}
+
+#ifdef INTERACTIVE_MAIN_CLI
 void main_cli(const vector<pid_t>& child_pids,
 	      const vector<int>& child_fds) {
   // Command line interpreter.
@@ -398,6 +436,7 @@ void main_cli(const vector<pid_t>& child_pids,
     }
   }
 }
+#endif // INTERACTIVE_MAIN_CLI
 
 void child_cli(int parent_fd) {
   LOG4CXX_DEBUG(logger, "Started child_cli");

@@ -68,6 +68,7 @@ TestFileWriter::basic(void)
   const boost::uint32_t write_blocks(512);
   const boost::uint32_t poll_timeout = 1000; // ms
   const double command_interval = 1; //s
+  const unsigned long file_size(0);
   const bool preallocated(false);
   const bool directio(true);
 
@@ -76,7 +77,8 @@ TestFileWriter::basic(void)
 
   StatsWriter sw(id, stats_file, stats_interval, command_interval);
   FileWriter fw(id, write_block_size, write_blocks, capture_file,
-		poll_timeout, &sw, command_interval, preallocated, directio);
+		poll_timeout, &sw, command_interval, file_size,
+		preallocated, directio);
 
   sw.start();
   sw.cmd_write_to_disk();

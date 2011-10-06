@@ -66,6 +66,7 @@ class PFileWriter: public FileWriter {
   //!        actual interval between checks may be larger than this if the 
   //!        execution thread spends longer than command_interval processing
   //!        individual tasks.
+  //! \param file_size Size of file to write in MB.
   //! \param preallocated Whether or not file has been preallocated using 
   //!        fallocate.
   //! \param directio Whether or not to use DIRECT_IO and bypass linux
@@ -77,6 +78,7 @@ class PFileWriter: public FileWriter {
 	      const int poll_timeout,
 	      StatsWriter * const sw,
 	      const double command_interval,
+	      const unsigned long file_size,
 	      const bool preallocated,
 	      const bool directio);
 

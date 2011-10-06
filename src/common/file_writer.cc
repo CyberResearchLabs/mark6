@@ -50,6 +50,7 @@ FileWriter::FileWriter(const int id,
 		       const int poll_timeout,
 		       StatsWriter* const sw,
 		       const double command_interval,
+		       const unsigned long file_size,
 		       const bool preallocated=false,
 		       const bool directio=false):
   Threaded(id, command_interval),
@@ -64,6 +65,7 @@ FileWriter::FileWriter(const int id,
   _write_bufs_mutex(),
   _free_bufs_mutex(),
   _capture_file(capture_file),
+  _file_size(file_size),
   _preallocated(preallocated),
   _directio(directio)
 {
@@ -161,17 +163,13 @@ int FileWriter::open() {
   // Open files for each path.
   int ret=0;
 
-  if (_preallocated) {
-    _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_DIRECT, S_IRWXU);
+  if (_directio) {
+    _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
+		     S_IRWXU);
   } else {
-    if (_directio) {
-      _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT | O_DIRECT,
-		       S_IRWXU);
-    } else {
-      _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
-    }
+    _pfd.fd = ::open(_capture_file.c_str(), O_WRONLY | O_CREAT, S_IRWXU);
   }
-
+ 
   if (_pfd.fd<0) {
     LOG4CXX_ERROR(logger, "Unable to open file: " << _capture_file
 		  << " - " << strerror(errno));
@@ -184,6 +182,16 @@ int FileWriter::open() {
   }
 
   if (_preallocated) {
+    off_t len = _file_size * 1000000;
+    LOG4CXX_INFO(logger, "Fallocat()-ed " << len << " bytes");
+
+    // Scope errno locally for fallocate.
+    int myerrno = fallocate(_pfd.fd, 0, 0, len);
+    if (myerrno != 0) {
+      LOG4CXX_ERROR(logger, "Fallocate() failed: " << strerror(myerrno));
+      return -1;
+    }
+    
     if (::lseek(_pfd.fd, 0, SEEK_SET) < 0) {
       LOG4CXX_ERROR(logger, "Unable to seek to beginning of file: "
 		    << _capture_file

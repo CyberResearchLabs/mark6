@@ -73,14 +73,14 @@ TestPFileWriter::basic(void)
   const boost::uint32_t write_blocks(512);
   const boost::uint32_t poll_timeout = 1000; // ms
   const double command_interval = 1; //s
+  const unsigned long file_size(0);
   const bool preallocated(false);
   const bool directio(true);
 
 
-
   PFileWriter pfw(id, write_block_size, write_blocks, capture_files,
-		poll_timeout, 0, command_interval, preallocated, directio);
-
+		  poll_timeout, 0, command_interval, file_size, preallocated,
+		  directio);
   pfw.open();
   pfw.start();
 
