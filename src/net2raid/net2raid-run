@@ -10,6 +10,7 @@ BLOCKDEV=/sbin/blockdev
 VMSTAT=/usr/bin/vmstat
 LOG_DIR=${INSTALL_ROOT}/log
 KILLALL=/usr/bin/killall
+GRAPHS=${INSTALL_ROOT}/bin/net2raid-graphs
 
 # Configure ethernet drivers
 ${ETHTOOL} -K eth2 gro on
@@ -93,7 +94,7 @@ DURATION=60
 SNAPLEN=8266
 VMSTAT_INTERVAL=1
 
-${VMSTAT} -n ${VMSTAT_INTERVAL} > ${LOG_DIR}/vmstat.log
+${VMSTAT} -n ${VMSTAT_INTERVAL} > ${LOG_DIR}/vmstat.log &
 
 ${EXEC} \
     --interfaces \
@@ -116,3 +117,4 @@ ${EXEC} \
     --time ${DURATION}
 
 ${KILLALL} vmstat
+${GRAPHS}
