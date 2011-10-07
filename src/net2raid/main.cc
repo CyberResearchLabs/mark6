@@ -90,6 +90,7 @@ const int DISK_RAMP_UP_TIME(2);
 // Global variables.
 //----------------------------------------------------------------------
 const int LOCAL_PAGES_PER_BUFFER(256);
+// const int LOCAL_PAGES_PER_BUFFER(64);
 
 int LOCAL_PAGE_SIZE(0);
 int BUFFER_SIZE(0);
@@ -329,7 +330,7 @@ main (int argc, char* argv[]) {
 
 	// Wait for threads to finish.
 	child_cli(fd[0]);
-	break;
+	return 0;
       } else {
 	// Parent.
 	LOG4CXX_DEBUG(logger, "Parent still here after fork.");
@@ -343,9 +344,7 @@ main (int argc, char* argv[]) {
     cerr << e.what() << endl;
   }
 
-  sleep(5);
-
-  cout << "Launching main CLI.\n";
+  LOG4CXX_INFO(logger, "Launching main.\n");
 
   main_cli(time, child_pids, child_fds);
 
@@ -458,13 +457,12 @@ void child_cli(int parent_fd) {
     line_read = (char*)malloc(nbytes+1);
     bytes_read = getline(&line_read, &nbytes, parent_file);
     if (bytes_read < 0) {
-      LOG4CXX_ERROR(logger, "Invalid read.");
+      LOG4CXX_INFO(logger, "Closed CLI stream.");
       free(line_read);
       break;
     } else {
       string s(line_read);
       free (line_read);
-      LOG4CXX_DEBUG(logger, "child_cli() received " << s);
       vector<string> results;
       string cmd;
       split(results, s, is_any_of(" \t"));
@@ -474,46 +472,44 @@ void child_cli(int parent_fd) {
       cmd = results[0];
       trim(cmd);
       if (cmd.compare("start") == 0) {
-	LOG4CXX_DEBUG(logger, "child_cli() received start cmd");
-
-	cout << "Starting file writer stats...\n";
+	// cout << "Starting file writer stats...\n";
 	FILE_WRITER_STATS->start();
 	FILE_WRITER_STATS->cmd_write_to_disk();
-	cout << "Started.\n";
+	// cout << "Started.\n";
 
-	cout << "Starting file writer...\n";
+	// cout << "Starting file writer...\n";
 	FILE_WRITER->open();
 	FILE_WRITER->start();
 	FILE_WRITER->cmd_write_to_disk();
-	cout << "Sta[rted.\n";
+	// cout << "Started.\n";
 
-	cout << "Starting net reader stats...\n";
+	// cout << "Starting net reader stats...\n";
 	NET_READER_STATS->start();
 	NET_READER_STATS->cmd_write_to_disk();
-	cout << "Started.\n";
+	// cout << "Started.\n";
 
 	// sleep(DISK_RAMP_UP_TIME);
 
-	cout << "Starting net reader...\n";
+	// cout << "Starting net reader...\n";
 	NET_READER->start();
 	NET_READER->cmd_read_from_network();
-	cout << "Started.\n";
+	LOG4CXX_INFO(logger, "Started capture process.");
       } else if (cmd.compare("stop") == 0) {
 	NET_READER_STATS->cmd_stop();
 	NET_READER_STATS->join();
-	cout << "Stopped net reader stats.\n";
+	// cout << "Stopped net reader stats.\n";
 
 	NET_READER->cmd_stop();
 	NET_READER->join();
-	cout << "Stopped net reader.\n";
+	// cout << "Stopped net reader.\n";
 
 	FILE_WRITER_STATS->cmd_stop();
 	FILE_WRITER_STATS->join();
-	cout << "Stopped file writer stats.\n";
+	// cout << "Stopped file writer stats.\n";
 
 	FILE_WRITER->cmd_stop();
 	FILE_WRITER->join();
-	cout << "Stopped file writer.\n";
+	LOG4CXX_INFO(logger, "Stopped capture process.");
       }
     }
   }

@@ -240,14 +240,14 @@ void StatsWriter::handle_write_to_disk() {
     << "|\n";
   
   _csv_stream
-    <<  delta_seconds << ","
-    <<  instant_packet_rate << ","
-    <<  lifetime_packet_rate << ","
-    <<  _average_packet_rate << ","
-    <<  instant_byte_rate << ","
-    <<  lifetime_byte_rate << ","
-    <<  _average_byte_rate << ","
-    << instant_drop_rate << ","
+    <<  delta_seconds << " "
+    <<  instant_packet_rate << " "
+    <<  lifetime_packet_rate << " "
+    <<  _average_packet_rate << " "
+    <<  instant_byte_rate << " "
+    <<  lifetime_byte_rate << " "
+    <<  _average_byte_rate << " "
+    << instant_drop_rate << " "
     << average_buffer_size
     << std::endl;
   

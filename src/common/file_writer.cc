@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <linux/falloc.h>
 
 // C++ includes.
 #include <sstream>
@@ -186,7 +187,7 @@ int FileWriter::open() {
     LOG4CXX_INFO(logger, "Preallocating  " << len/1000000 << " MBytes");
 
     // Scope errno locally for fallocate.
-    int myerrno = fallocate(_pfd.fd, 0, 0, len);
+    int myerrno = fallocate(_pfd.fd, FALLOC_FL_KEEP_SIZE, 0, len);
     if (myerrno != 0) {
       LOG4CXX_ERROR(logger, "Fallocate() failed: " << strerror(myerrno));
       return -1;

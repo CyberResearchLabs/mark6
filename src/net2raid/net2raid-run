@@ -3,9 +3,13 @@
 export LD_LIBRARY_PATH=/opt/mit/mark6/lib
 
 # Globals
-EXEC=/opt/mit/mark6/bin/net2raid
+INSTALL_ROOT=/opt/mit/mark6
+EXEC=${INSTALL_ROOT}/bin/net2raid
 ETHTOOL=/sbin/ethtool
 BLOCKDEV=/sbin/blockdev
+VMSTAT=/usr/bin/vmstat
+LOG_DIR=${INSTALL_ROOT}/log
+KILLALL=/usr/bin/killall
 
 # Configure ethernet drivers
 ${ETHTOOL} -K eth2 gro on
@@ -57,9 +61,6 @@ ETH5_IRQ=`cat /proc/interrupts | grep eth5 | awk -F: '{ print $1; }' \
 MEGASAS1_IRQ=24
 MEGASAS2_IRQ=35
 
-WRITE_BLOCKS=2048
-# WRITE_BLOCKS=1024
-# WRITE_BLOCKS=2048
 
 # Setup IRQ AFFINITY (echoing a CPU mask to set affinity)
 echo 1 > /proc/irq/${ETH2_IRQ}/smp_affinity
@@ -83,11 +84,16 @@ echo 4 > /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 
 # Run! 
-# Note that SMP affinities are ordinals (not mask). CPU numbering from 0.
-#for m in disk0 disk1 disk2 disk3
-#do
-	#fallocate -l 30G /mnt/${m}/${m}.m6
-#done
+
+# Args
+# WRITE_BLOCKS=2048
+# WRITE_BLOCKS=8192
+WRITE_BLOCKS=2048
+DURATION=60
+SNAPLEN=8266
+VMSTAT_INTERVAL=1
+
+${VMSTAT} -n ${VMSTAT_INTERVAL} > ${LOG_DIR}/vmstat.log
 
 ${EXEC} \
     --interfaces \
@@ -106,10 +112,7 @@ ${EXEC} \
 	3 \
 	3 \
     --write_blocks ${WRITE_BLOCKS} \
-    --snaplen 8266
+    --snaplen ${SNAPLEN} \
+    --time ${DURATION}
 
-    # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
-    # --interfaces eth2 eth3 eth4 eth5 \
-    # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
-    # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
-    # --capture_files /mnt/disk0/cap.m6 /mnt/disk1/cap.m6 /mnt/disk2/cap.m6 /mnt/disk3/cap.m6 \
+${KILLALL} vmstat
