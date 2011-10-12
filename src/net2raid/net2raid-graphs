@@ -163,9 +163,11 @@ plot FW_ETH5 using 1:5 t 'inst bit rate' with lines, \
 	FW_ETH5 using 1:6 t 'life bit rate' with lines, \
 	FW_ETH5 using 1:7 t 'avg bit rate' with lines
 
+unset multiplot
+set output
 set output "/opt/mit/mark6/log/nr_mp.pdf"
-set size 1,1
 set multiplot
+set size 1,1
 
 set origin 0,0
 set size 0.5, 0.5
