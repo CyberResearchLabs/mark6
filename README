@@ -24,6 +24,10 @@ distributed systems.
 Please direct any questions, comments, suggestions, or bug reports to 
 <del@haystack.mit.edu>.
 
+Install debian squeeze (6.0.4) from netinst image:
+
+	wget http://cdimage.debian.org/debian-cd/6.0.3/amd64/iso-cd/debian-6.0.3-amd64-netinst.iso
+
 Prior to installation, you will need to install git-core as follows:
 	sudo apt-get install git-core
 	ssh-keygen

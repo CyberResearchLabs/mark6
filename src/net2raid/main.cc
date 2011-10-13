@@ -255,6 +255,7 @@ main (int argc, char* argv[]) {
     const int POLL_TIMEOUT(1);
     const bool PREALLOCATED(true);
     const bool DIRECTIO(true);
+    const bool TRANSLATE(true);
     const unsigned long FILE_SIZE(time*rate/8); // MB
 
     pid_t pid;
@@ -307,7 +308,8 @@ main (int argc, char* argv[]) {
 			   COMMAND_INTERVAL,
 			   FILE_SIZE,
 			   PREALLOCATED,
-			   DIRECTIO);
+			   DIRECTIO,
+			   TRANSLATE);
 	FileWriter * const FW(FILE_WRITER);
 
 	// Create NetReader threads.

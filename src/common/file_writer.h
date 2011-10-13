@@ -81,6 +81,7 @@ class FileWriter: public Threaded {
   //!        fallocate.
   //! \param directio Whether or not to use DIRECT_IO and bypass linux
   //!        page cache.
+  //! \param translate Whether or not to translate the file once it has been recorded.
   FileWriter(const int id,
 	     const int write_block_size,
 	     const int write_blocks,
@@ -90,7 +91,8 @@ class FileWriter: public Threaded {
 	     const double command_interval,
 	     const unsigned long file_size,
 	     const bool preallocated,
-	     const bool directio);
+	     const bool directio,
+	     const bool translate);
 
   //! Destructor.
   virtual ~FileWriter();
@@ -183,6 +185,10 @@ class FileWriter: public Threaded {
   //! Whether or not to use DIRECT_IO and bypass the linux page cache
   //! (Can provide performance improvements.)
   bool _directio;
+
+  //! Whether or not to translate file from pcap format to native format
+  //! after recording has finished.
+  bool _translate;
 
   //---------------------------------------------------------------------------
   // Internal methods

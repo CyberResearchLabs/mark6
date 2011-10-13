@@ -12,6 +12,7 @@ net2raid_LDADD	= 	-L. \
 			-lboost_thread-mt \
 			-lm \
 			-lpthread \
+			-lpcap \
 			@PFRING_ROOT@/userland/libpcap-1.1.1-ring/libpcap.a \
 			@PFRING_ROOT@/userland/lib/libpfring.a
 
@@ -26,6 +27,7 @@ net2raidtest_LDADD= 	-L. \
 			-lboost_thread-mt \
 			-lm \
 			-lpthread \
+			-lpcap \
 			@PFRING_ROOT@/userland/libpcap-1.1.1-ring/libpcap.a \
 			@PFRING_ROOT@/userland/lib/libpfring.a
 

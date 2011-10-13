@@ -57,7 +57,7 @@ PFileWriter::PFileWriter(const int id,
 			 const bool directio):
   FileWriter(id, write_block_size, write_blocks, std::string(""),
 	     poll_timeout, sw, command_interval, file_size, preallocated,
-	     directio),
+	     directio, false),
   _capture_files(capture_files),
   _pfds(0),
   _fds(0),
