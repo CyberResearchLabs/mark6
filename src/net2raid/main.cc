@@ -78,6 +78,7 @@ const int DEFAULT_PAYLOAD_LENGTH(8268);
 const int DEFAULT_SMP_AFFINITY(0);
 const int DEFAULT_WRITE_BLOCKS(128);
 const int DEFAULT_RATE(4000);
+const int DEFAULT_TRANSLATE(false);
 
 // Other constants.
 const int MAX_SNAPLEN(9014);
@@ -147,6 +148,7 @@ main (int argc, char* argv[]) {
   vector<int> smp_affinities;
   int ring_buffers;
   int write_blocks;
+  bool translate;
 
   // Declare supported options, defaults, and variable bindings.
   po::options_description desc("Allowed options");
@@ -190,6 +192,10 @@ main (int argc, char* argv[]) {
     ("write_blocks",
      po::value<int>(&write_blocks)->default_value(DEFAULT_WRITE_BLOCKS),
      "per thread number of write blocks")
+
+    ("translate",
+     po::value<bool>(&translate)->default_value(DEFAULT_TRANSLATE),
+     "enable payload translation/extraction")
     ;
 
   // Parse options.
@@ -242,7 +248,8 @@ main (int argc, char* argv[]) {
     << setw(20) << left << "time:" << time << endl
     << setw(20) << left << "log_config:" << log_config << endl
     << setw(20) << left << "write_blocks:" << write_blocks << endl
-    << setw(20) << left << "num_interfaces:" << NUM_INTERFACES << endl;
+    << setw(20) << left << "num_interfaces:" << NUM_INTERFACES << endl
+    << setw(20) << left << "translate:" << translate << endl;
 
   // Start processing.
   vector<pid_t> child_pids;
@@ -309,7 +316,7 @@ main (int argc, char* argv[]) {
 			   FILE_SIZE,
 			   PREALLOCATED,
 			   DIRECTIO,
-			   TRANSLATE);
+			   translate);
 	FileWriter * const FW(FILE_WRITER);
 
 	// Create NetReader threads.
