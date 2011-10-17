@@ -1,6 +1,8 @@
 check_PROGRAMS	=	commontest
 
 commontest_SOURCES=	test_main.cc \
+			disk2vlbi.cc \
+			disk2vlbi.h \
 			file_writer.h \
 			file_writer.cc \
 			net_reader.h \
@@ -29,6 +31,8 @@ commontest_LDADD= 	-L. \
 noinst_LIBRARIES=	libcommon.a
 
 libcommon_a_SOURCES	= \
+			disk2vlbi.cc \
+			disk2vlbi.h \
 			pfr.h \
 			pfr.cc \
 			file_writer.h \

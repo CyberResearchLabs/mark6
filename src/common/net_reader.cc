@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <netinet/udp.h>
 
 // C++ includes.
 #include <iostream>
@@ -39,6 +40,9 @@
 #include <file_writer.h>
 #include <net_reader.h>
 #include <stats_writer.h>
+
+using namespace std;
+
 
 NetReader::NetReader(const int id,
 		     const std::string interface,
@@ -59,7 +63,10 @@ NetReader::NetReader(const int id,
   _sw(sw),
   _ring(0),
   _net_buf(0),
-  _state(IDLE) {
+  _state(IDLE),
+  _frame_drop_log(),
+  _frame_drops(0),
+  _frames_received(0) {
   _ring = new PFR(interface.c_str(), snaplen, _promiscuous);
   _net_buf = new boost::uint8_t[snaplen];
 }
@@ -134,6 +141,9 @@ void NetReader::cmd_read_from_network() {
 
 void NetReader::handle_stop() {
   _running = false;
+  BOOST_FOREACH(std::string& s, _frame_drop_log) {
+    LOG4CXX_INFO(logger, "fdl: intf=" << _interface << "," << s);
+  }
 }
 
 void NetReader::handle_idle() {
@@ -163,10 +173,10 @@ boost::uint8_t PCAP_HEADER[] = {
 const int PCAP_HEADER_LENGTH = 24;
 
 struct PcapPacketHeader {         
-  boost::uint32_t ts_sec;         /* timestamp seconds */         
-  boost::uint32_t ts_usec;        /* timestamp microseconds */         
-  boost::uint32_t incl_len;       /* number of octets of packet saved in file */         
-  boost::uint32_t orig_len;       /* actual length of packet */
+  boost::uint32_t ts_sec;         // timestamp seconds
+  boost::uint32_t ts_usec;        // timestamp microseconds
+  boost::uint32_t incl_len;       // number of octets of packet saved in file
+  boost::uint32_t orig_len;       // actual length of packet
 };
 
 const int PCAP_PACKET_HEADER_LENGTH = 16;
@@ -183,7 +193,9 @@ void NetReader::handle_read_from_network() {
   static int start_second = 0;
   static boost::uint8_t net_buf[9000];
   static PcapPacketHeader pph;
-
+  static ProtocolMap pmap;
+  static ProtocolMap::iterator curr;
+  
 #define DYNAMIC_BUFFER
 #ifdef DYNAMIC_BUFFER
   int bytes_left = _buffer_size;
@@ -217,11 +229,11 @@ void NetReader::handle_read_from_network() {
   }
 
   // Fill the new file_buf;
+  int dport = 0;
   while (bytes_left > 0) {
     if (_ring->get_next_packet(&hdr, &net_buf[PCAP_PACKET_HEADER_LENGTH],
 			       _snaplen) > 0) {
       // Successful read.
-
       if (start_second == 0) {
 	start_second = hdr.ts.tv_sec;
 	continue;
@@ -239,11 +251,62 @@ void NetReader::handle_read_from_network() {
       const boost::uint16_t l4_offset(po.l4_offset);
       const boost::uint16_t payload_offset(po.payload_offset);
 
+      struct udphdr* udp_hdr = (struct udphdr*)net_buf + l4_offset;
+      dport = ntohs(udp_hdr->dest);
+
       // Get payload information.
       // FIXME payload_ptr = &_net_buf[payload_offset];
       payload_ptr = net_buf;
       // FIXME payload_length = hdr.caplen - payload_offset;
       payload_length = hdr.len + PCAP_PACKET_HEADER_LENGTH;
+
+#define PRINT_HEADER
+#ifdef PRINT_HEADER
+      const unsigned int eps = VDH::epoch_seconds(net_buf + payload_offset + 16);
+      const unsigned int daf = VDH::data_frame(net_buf + payload_offset + 16);
+      // unsigned int len = VDH::length(net_buf + payload_offset + 16);
+      // unsigned int sid = VDH::station_id(net_buf + payload_offset + 16);
+      const unsigned int tid = VDH::thread_id(net_buf + payload_offset + 16);
+      const unsigned int str = VDH::stream_id(net_buf + payload_offset + 16);
+
+      curr = pmap.find(str);
+      if (curr == pmap.end()) {
+	LOG4CXX_INFO(logger, "New stream identified: stream_id=" << str);
+	VdifStreamState s(str, tid);
+	pmap[str] = s;
+      }
+
+      VdifStreamState& vss(pmap[str]);
+      if (!vss.valid_frame(daf)) {
+	++_frame_drops;
+	_frame_drop_log.push_back(pmap[str].str());
+      }
+      ++_frames_received;
+
+      vss.update(eps, daf);
+
+      // #define DUMP
+#ifdef DUMP
+      cout << "Packet dump.\n";
+      cout << "caplen:         " << hdr.caplen << endl;
+      cout << "len:            " << hdr.len << endl;
+      cout << "parsed_hdr_len: " << pep.parsed_header_len << endl;
+      cout << "eth_offset:     " << eth_offset << endl;
+      cout << "l3_offset:      " << l3_offset << endl;
+      cout << "l4_offset:      " << l4_offset << endl;
+      cout << "payload_offset: " << payload_offset << endl;
+      cout << "payload_length: " << payload_length << endl;
+
+      const int dumplen(128);
+      for (int i=0; i<dumplen; i++) {
+	printf("%02x ", (unsigned char)net_buf[i + payload_offset]);
+	if ((i+1)%4 == 0)
+	  printf("\n");
+      }
+      printf("\n");
+#endif // DUMP
+
+#endif // PRINT_HEADER
 
       pph.ts_sec = hdr.ts.tv_sec;
       pph.ts_usec = hdr.ts.tv_usec;
@@ -282,13 +345,20 @@ void NetReader::handle_read_from_network() {
       remainder_len = payload_length - bytes_left;
       memcpy(remainder_buf, payload_ptr + bytes_left, remainder_len);
 
-#define BUFFERED_WRITE      
+#define WRITE
+#define BUFFERED_WRITE
+
+#ifdef WRITE
 #ifdef BUFFERED_WRITE
-      if (!_fw->write(file_buf))
+      if (!_fw->write(file_buf)) {
+	LOG4CXX_ERROR(logger, "Packet drop on port: " << dport
+		      << " Total dropped: " << dropped_packets);
 	++dropped_packets;
+      }
 #else
       _fw->write_unbuffered(file_buf, BUFFER_SIZE);
-#endif
+#endif // BUFFERED_WRITE
+#endif // WRITE
       // Update stats.
       _sw->update(num_packets, num_bytes, dropped_packets, 0);
       bytes_left = 0;
@@ -298,12 +368,17 @@ void NetReader::handle_read_from_network() {
       memcpy(&file_buf[bytes_read], payload_ptr, payload_length);
       bytes_read += payload_length;
       bytes_left -= payload_length;
+#ifdef WRITE
 #ifdef BUFFERED_WRITE
-      if (!_fw->write(file_buf))
+      if (!_fw->write(file_buf)) {
+	LOG4CXX_ERROR(logger, "Packet drop on port: " << dport
+		      << " Total dropped: " << dropped_packets);
 	++dropped_packets;
+      }
 #else
       _fw->write_unbuffered(file_buf, BUFFER_SIZE);
-#endif
+#endif // BUFFERED_WRITE
+#endif // WRITE
     } else {
       // Copy captured payload to file buffer.
       memcpy(&file_buf[bytes_read], payload_ptr, payload_length);

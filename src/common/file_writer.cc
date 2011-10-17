@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <linux/falloc.h>
 #include <stdlib.h>
+#define TRANSLATE
 #ifdef TRANSLATE
 #include <pcap.h>
 #include <netinet/ip.h>
@@ -47,9 +48,6 @@
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/algorithm/string.hpp> 
-
-// Namespaces.
-namespace po = boost::program_options;
 
 #define ETHER_TYPE_IP (0x0800)
 #define ETHER_TYPE_8021Q (0x8100)
@@ -116,72 +114,6 @@ FileWriter::FileWriter(const int id,
 
 FileWriter::~FileWriter() {
   close();
-}
-
-void FileWriter::start() {
-  _running = true;
-  _thread = boost::thread(&FileWriter::run, this);
-}
-
-void FileWriter::join() {
-  _thread.join();
-}
-
-void FileWriter::run() {
-  LOG4CXX_INFO(logger, "FileWriter Running...");
-
-  Timer run_timer;
-  Timer command_timer;
-  
-  try {
-    // Main processing loop.
-    while (_running) {
-
-      // State machine.
-      switch (_state) {
-      case WRITE_TO_DISK:
-	if (command_timer.elapsed() > _command_interval) {
-	  command_timer.restart();
-	  continue;
-	}
-	handle_write_to_disk();
-	break;
-
-      case IDLE:
-	if (command_timer.elapsed() > _command_interval) {
-	  command_timer.restart();
-	  continue;
-	}
-	handle_idle();
-	break;
-
-      case STOP:
-	handle_stop();
-	break;
-
-      default:
-	LOG4CXX_ERROR(logger, "Unknown state.");
-	break;
-      }
-    }
-    LOG4CXX_DEBUG(logger, "elapsed run time: " << run_timer.elapsed());
-  } catch(std::exception &ex) {
-    LOG4CXX_ERROR(logger, "error: " << ex.what());
-  }
-}
-
-void FileWriter::cmd_stop() {
-  LOG4CXX_INFO(logger, "Received STOP");
-  _state = STOP;
-}
-
-void FileWriter::cmd_write_to_disk() {
-  LOG4CXX_INFO(logger, "Received WRITE_TO_DISK");
-  _state = WRITE_TO_DISK;
-}
-
-void FileWriter::handle_stop() {
-  _running = false;
 #ifdef TRANSLATE
   if (_translate) {
     LOG4CXX_INFO(logger, "Starting translation on : " << _capture_file);
@@ -250,6 +182,72 @@ void FileWriter::handle_stop() {
     }
   }
 #endif // TRANSLATE
+}
+
+void FileWriter::start() {
+  _running = true;
+  _thread = boost::thread(&FileWriter::run, this);
+}
+
+void FileWriter::join() {
+  _thread.join();
+}
+
+void FileWriter::run() {
+  LOG4CXX_INFO(logger, "FileWriter Running...");
+
+  Timer run_timer;
+  Timer command_timer;
+  
+  try {
+    // Main processing loop.
+    while (_running) {
+
+      // State machine.
+      switch (_state) {
+      case WRITE_TO_DISK:
+	if (command_timer.elapsed() > _command_interval) {
+	  command_timer.restart();
+	  continue;
+	}
+	handle_write_to_disk();
+	break;
+
+      case IDLE:
+	if (command_timer.elapsed() > _command_interval) {
+	  command_timer.restart();
+	  continue;
+	}
+	handle_idle();
+	break;
+
+      case STOP:
+	handle_stop();
+	break;
+
+      default:
+	LOG4CXX_ERROR(logger, "Unknown state.");
+	break;
+      }
+    }
+    LOG4CXX_DEBUG(logger, "elapsed run time: " << run_timer.elapsed());
+  } catch(std::exception &ex) {
+    LOG4CXX_ERROR(logger, "error: " << ex.what());
+  }
+}
+
+void FileWriter::cmd_stop() {
+  LOG4CXX_INFO(logger, "Received STOP");
+  _state = STOP;
+}
+
+void FileWriter::cmd_write_to_disk() {
+  LOG4CXX_INFO(logger, "Received WRITE_TO_DISK");
+  _state = WRITE_TO_DISK;
+}
+
+void FileWriter::handle_stop() {
+  _running = false;
 }
 
 void FileWriter::handle_idle() {

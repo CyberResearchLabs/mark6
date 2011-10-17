@@ -90,7 +90,7 @@ echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 # WRITE_BLOCKS=2048
 # WRITE_BLOCKS=8192
 WRITE_BLOCKS=2048
-DURATION=20
+DURATION=60
 SNAPLEN=8266
 VMSTAT_INTERVAL=1
 
@@ -103,13 +103,16 @@ ${EXEC} \
 	eth2 \
 	eth3 \
 	eth4 \
+	eth5 \
     --capture_files \
 	/mnt/disk0/disk0.m6 \
 	/mnt/disk1/disk1.m6 \
 	/mnt/disk2/disk2.m6 \
+	/mnt/disk3/disk3.m6 \
     --smp_affinities \
 	1 \
 	1 \
+	3 \
 	3 \
     --write_blocks ${WRITE_BLOCKS} \
     --snaplen ${SNAPLEN} \

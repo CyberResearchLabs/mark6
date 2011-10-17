@@ -1,4 +1,5 @@
 // C includes.
+#ifdef OLD
 #include <stdlib.h>
 #include <iostream>
 #include <stdio.h>
@@ -9,10 +10,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#endif // OLD
 
 //C++ includes
+#ifdef OLD
 #include <list>
 #include <sstream>
+#endif // OLD
 #include <string>
 
 // Framework includes.
@@ -21,13 +25,11 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/algorithm/string.hpp> 
 
+// Local includes.
+#include <disk2vlbi.h>
+
 // Namespaces.
 namespace po = boost::program_options;
-
-#define ETHER_TYPE_IP (0x0800)
-#define ETHER_TYPE_8021Q (0x8100)
-#define UDP_PROTOCOL_NUMBER (17)
-#define UDP_HEADER_LENGTH (8)
 
 void
 usage(const po::options_description& desc) {
@@ -36,16 +38,17 @@ usage(const po::options_description& desc) {
     << desc;
 }
 
+#ifdef OLD
 // Only look at last two digits of port for demux.
 const int MAX_FDS = 100;
 char fds[MAX_FDS];
+#endif // OLD
 
 int
 main(int argc, char *argv[]) {
   // Variables to store options.
   std::string input_file;
   std::string output_prefix;
-  std::vector<int> thread_ports;
   unsigned int size;
 
   // Declare supported options, defaults, and variable bindings.
@@ -55,12 +58,6 @@ main(int argc, char *argv[]) {
     ("input_file",
      po::value<std::string>(&input_file),
      "input file")
-    ("output_prefix",
-     po::value<std::string>(&output_prefix),
-     "output prefix")
-    ("thread_ports",
-     po::value< std::vector<int> >(&thread_ports)->multitoken(),
-     "thread udp ports")
     ("size",
      po::value<unsigned int>(&size),
      ("Total number of megabytes to output (across all files).")
@@ -71,11 +68,14 @@ main(int argc, char *argv[]) {
   po::store(po::parse_command_line(argc, argv, desc), vm);
   po::notify(vm);
 
-  if (vm.count("help") || argc < 4) {
+  if (vm.count("help") || argc < 3) {
     usage(desc);
     return 1;
   }
-  
+
+  Disk2vlbi d2v(input_file);
+
+#ifdef OLD 
   BOOST_FOREACH(int port, thread_ports) {
     std::cout << port << " ";
     std::ostringstream oss (std::ostringstream::out);
@@ -139,6 +139,8 @@ main(int argc, char *argv[]) {
   BOOST_FOREACH(unsigned int port, thread_ports) {
     close(fds[port % MAX_FDS]);
   }
+#endif // OLD
+
   return(0);
 }
 
