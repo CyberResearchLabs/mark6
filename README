@@ -34,8 +34,8 @@ Prior to installation, you will need to install git-core as follows:
 	# upload id_rsa.pub to git repository for access
 	git clone git@github.com:CyberResearchLabs/mark6.git
 	cd mark6
-	sudo ./setup -b
-	sudo ./setup -p
+	./setup -b
+	./setup -p
 
 System configuration:
 	/etc/modules:
