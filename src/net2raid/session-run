@@ -1,5 +1,21 @@
 #!/usr/bin/python
 
+# Copyright 2011 MIT Haystack Observatory
+# 
+# This file is part of Mark6.
+# 
+# Mark6 is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2 of the License.
+# 
+# Mark6 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Mark6.  If not, see <http://www.gnu.org/licenses/>.
+
 import subprocess
 import time
 
@@ -14,15 +30,15 @@ class Session:
 		for s in self._scan_list:
 			print s
 			sleep_time = s._duration*1.0/10
-			print s.exec_string()
-			args = [ 'sleep', str(sleep_time) ]
+			print 'args', s.args()
 
 			while time.time() < s._start_time:
 				time.sleep(Session.polling_interval)
+
 			print 'start', time.time(), s._start_time
 
 			start_time = time.time()
-			p = subprocess.Popen(args)
+			p = subprocess.Popen(s.args())
 			p.wait()	
 			duration = time.time() - start_time
 			print 'duration', sleep_time, duration
@@ -49,14 +65,9 @@ class Scan:
 			'/>'
 			])
 
-	def exec_string(self):
-		return ' '.join([
-				Scan.mark6_exec,
-				self._source,
-				self._station,
-				str(self._start_time),
-				str(self._duration)
-				])
+	def args(self):
+		return [ Scan.mark6_exec, self._source, self._station,
+			str(self._start_time), str(self._duration) ]
 
 
 class ScheduleParser:

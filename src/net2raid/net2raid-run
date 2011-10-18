@@ -153,7 +153,7 @@ function testrun() {
 	echo START_TIME=${START_TIME}
 	echo DURATION=${DURATION}
 
-	SCAN_NAME=${STATION}_${SOURCE}_{$START_TIME}
+	SCAN_NAME=${STATION}_${SOURCE}_${START_TIME}
 	echo ${SCAN_NAME}
 	sleep ${DURATION}
 }
