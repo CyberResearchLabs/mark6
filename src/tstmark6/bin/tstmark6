@@ -1,3 +1,21 @@
+#!/usr/bin/env escript
+
+%% Copyright 2011 MIT Haystack Observatory
+%% 
+%% This file is part of Mark6.
+%% 
+%% Mark6 is free software: you can redistribute it and/or modify
+%% it under the terms of the GNU General Public License as published by
+%% the Free Software Foundation, version 2 of the License.
+%% 
+%% Mark6 is distributed in the hope that it will be useful,
+%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%% GNU General Public License for more details.
+%% 
+%% You should have received a copy of the GNU General Public License
+%% along with Mark6.  If not, see <http://www.gnu.org/licenses/>.
+
 %%%-------------------------------------------------------------------
 %%% @author David <dlapsley@lib1-lt.haystack.mit.edu>
 %%% @copyright (C) 2011, MIT Haystack Observatory
@@ -8,24 +26,46 @@
 %%% @end
 %%% Created : 29 Mar 2011 by David <dlapsley@lib1-lt.haystack.mit.edu>
 %%%-------------------------------------------------------------------
--module(tstmark6).
 -author("dlapsley@haystack.mit.edu").
 -include_lib("xmerl/include/xmerl.hrl").
--include("main.hrl").
+-mode(compile).
 
-%% API
--export([start_server/1, server/1]).
+%%%-------------------------------------------------------------------
+%% Defines
+%%%-------------------------------------------------------------------
+
+%% M6 Server.
+-define(DEFAULT_BLOCK_SIZE, 1024).
+
+%% Xcube connectivity.
+-define(DEFAULT_HOST, "127.0.0.1").
+-define(DEFAULT_PORT, 6050).
+-define(DEFAULT_RCV_TO, 1000).
+-define(DEFAULT_CONNECT_RETRIES, 5).
+
+-define(TCP_OPTIONS,[list,{packet, 0},{active, false},{reuseaddr, true}]).
+
+-define(XML_PROLOG, "").
+-define(XML_PRETTY_PRINTING, true).
+
+%% Enable/disable eunit tests.
+-define(NOTEST, false).
+
+%% Eunit commands.
+-define(TEST_TIMEOUT_MS, 20000).
+-define(INTER_COMMAND_DELAY_MS, 500).
+-define(SETTLING_DELAY_MS, 500).
+
+%% Useful constants.
+-define(HLINE, "------------------------------------------------------------------------------").
 
 trim_whitespace(Input) ->
     LS = re:replace(Input, "^[ \\t\\n]*", "", [{return, list}]),
     RS = re:replace(LS, "[ \\t\\n]*$", "", [{return, list}]),
     RS.
 
-start_server(Test) ->
-    {ok, spawn(?MODULE, server, [false])}.
-
-server(Test) ->
-    error_logger:info_msg("Server start."),
+main([]) ->	
+    Test = false,
     io:format(?HLINE ++ "\n"),
     io:format("Mark6 CLI~n", []),
     io:format("Copyright 2011 MIT Haystack Observatory~n", []),
@@ -45,8 +85,6 @@ server(Test) ->
     end.
 
 loop(Sock, Test) ->
-    % Input = io:get_line("mark6>"),
-    %error_logger:info_msg("~p~n", [Input]),
     case io:get_line("mark6>") of
 	eof ->
 	    error_logger:info_msg("Done");

@@ -1,22 +1,20 @@
-// C includes.
-#ifdef OLD
-#include <stdlib.h>
-#include <iostream>
-#include <stdio.h>
-#include <pcap.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#endif // OLD
+// Copyright 2011 MIT Haystack Observatory
+// 
+// This file is part of Mark6.
+// 
+// Mark6 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 2 of the License.
+// 
+// Mark6 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Mark6.  If not, see <http://www.gnu.org/licenses/>.
 
 //C++ includes
-#ifdef OLD
-#include <list>
-#include <sstream>
-#endif // OLD
 #include <string>
 
 // Framework includes.
