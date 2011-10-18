@@ -153,7 +153,8 @@ function testrun() {
 	echo START_TIME=${START_TIME}
 	echo DURATION=${DURATION}
 
-	SCAN_NAME=${STATION}_${SOURCE}_${START_TIME}
+	DATE_STRING=`date -d @${START_TIME} +%Y%m%d-%H%M%S`
+	SCAN_NAME=${STATION}_${SOURCE}_${DATE_STRING}
 	echo ${SCAN_NAME}
 	sleep ${DURATION}
 }
