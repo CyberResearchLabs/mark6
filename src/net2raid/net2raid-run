@@ -107,37 +107,73 @@ echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 # WRITE_BLOCKS=8192
 WRITE_BLOCKS=2048
 PAGES_PER_BUFFER=256
-WRITE_BLOCKS=4096
-PAGES_PER_BUFFER=128
-DURATION=60
+WRITE_BLOCKS=1024
+PAGES_PER_BUFFER=512
+DURATION=600
 SNAPLEN=8266
 VMSTAT_INTERVAL=1
 
-${VMSTAT} -n ${VMSTAT_INTERVAL} > ${LOG_DIR}/vmstat.log &
+function run() {
+	${VMSTAT} -n ${VMSTAT_INTERVAL} > ${LOG_DIR}/vmstat.log &
 
-sleep 5
+	${EXEC} \
+    		--interfaces \
+			eth2 \
+			eth3 \
+			eth4 \
+			eth5 \
+    		--capture_files \
+			/mnt/disk0/disk0.m6 \
+			/mnt/disk1/disk1.m6 \
+			/mnt/disk2/disk2.m6 \
+			/mnt/disk3/disk3.m6 \
+    		--smp_affinities \
+			1 \
+			1 \
+			3 \
+			3 \
+    		--write_blocks ${WRITE_BLOCKS} \
+    		--snaplen ${SNAPLEN} \
+    		--time ${DURATION} \
+    		--translate=false \
+    		--pages_per_buffer=${PAGES_PER_BUFFER}
 
-${EXEC} \
-    --interfaces \
-	eth2 \
-	eth3 \
-	eth4 \
-	eth5 \
-    --capture_files \
-	/mnt/disk0/disk0.m6 \
-	/mnt/disk1/disk1.m6 \
-	/mnt/disk2/disk2.m6 \
-	/mnt/disk3/disk3.m6 \
-    --smp_affinities \
-	1 \
-	1 \
-	3 \
-	3 \
-    --write_blocks ${WRITE_BLOCKS} \
-    --snaplen ${SNAPLEN} \
-    --time ${DURATION} \
-    --translate=false \
-    --pages_per_buffer=${PAGES_PER_BUFFER}
+	${KILLALL} vmstat
+	${GRAPHS}
+}
 
-${KILLALL} vmstat
-${GRAPHS}
+function testrun() {
+	SOURCE=$1
+	STATION=$2
+	START_TIME=$3
+	DURATION=$4
+
+	echo SOURCE=${SOURCE}
+	echo STATION=${STATION}
+	echo START_TIME=${START_TIME}
+	echo DURATION=${DURATION}
+
+	SCAN_NAME=${STATION}_${SOURCE}_{$START_TIME}
+	echo ${SCAN_NAME}
+	sleep ${DURATION}
+}
+
+function usage() {
+	echo "net2raid-run <source> <station> <start_time> <duration>"
+}
+
+
+# Main
+if [ $# != 4 ]; then
+	usage
+	exit 1
+else
+	SOURCE=$1
+	STATION=$2
+	START_TIME=$3
+	DURATION=$4
+
+	testrun ${SOURCE} ${STATION} ${START_TIME} ${DURATION}
+fi
+
+

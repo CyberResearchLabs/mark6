@@ -1,0 +1,125 @@
+#!/usr/bin/python
+
+import subprocess
+import time
+
+class Session:
+
+	polling_interval = 0.1
+
+	def __init__(self, scan_list):
+		self._scan_list = scan_list
+
+	def execute(self):
+		for s in self._scan_list:
+			print s
+			sleep_time = s._duration*1.0/10
+			print s.exec_string()
+			args = [ 'sleep', str(sleep_time) ]
+
+			while time.time() < s._start_time:
+				time.sleep(Session.polling_interval)
+			print 'start', time.time(), s._start_time
+
+			start_time = time.time()
+			p = subprocess.Popen(args)
+			p.wait()	
+			duration = time.time() - start_time
+			print 'duration', sleep_time, duration
+			print '\n',
+
+
+class Scan:
+
+	mark6_exec = '/opt/mit/mark6/bin/net2raid-run'
+
+	def __init__(self, source, station, start_time, duration):
+		self._source = source
+		self._station = station
+		self._start_time = start_time
+		self._duration = duration
+
+	def __str__(self):
+		return ''.join([
+			'<scan ',
+			'source="%s" '%self._source,
+			'station="%s" '%self._station,
+			'start_time="%s" '%self._start_time,
+			'duration="%s"'%self._duration,
+			'/>'
+			])
+
+	def exec_string(self):
+		return ' '.join([
+				Scan.mark6_exec,
+				self._source,
+				self._station,
+				str(self._start_time),
+				str(self._duration)
+				])
+
+
+class ScheduleParser:
+
+	def __init__(self):
+		input_file = open('r1503.skd', 'r')
+		state = 0
+
+		scans = []
+		station_dict = {}
+		for l in input_file.readlines():
+			l = l.strip()
+			f = l.split()
+
+			if f[0] == '$SKED':
+				state = 1
+				continue
+			if f[0] == '$SOURCES':
+				state = 2
+				continue
+			if f[0] == '$STATIONS':
+				state = 3
+				continue
+			if f[0] == '$CODES':
+				break
+
+			if state == 1:
+				source, t, stations = f[0], f[4], f[9] 
+				num_stations = len(stations)/2
+				offset = 9 + num_stations
+				durations = f[offset+2:]
+				stations = list(stations)
+				stations = [ stations[i] for i in range(0, len(stations)-1, 2) ]
+				for i in range(num_stations):
+					scans.append( Scan(source, stations[i], t, int(durations[i]))  )
+			elif state == 2:
+				pass
+			elif state == 3:
+				if f[0] == 'A':
+					code = f[1]
+					name = f[2]
+					station_dict[code] = name
+
+		# print station_dict
+		for s in scans:
+			s._station = station_dict[s._station]
+
+		westford_scans = [ s for s in scans if s._station == 'WESTFORD' ]
+		westford_scans = []
+
+
+if __name__ == '__main__':
+	TEST_SCANS = [
+		('4242', 'WESTFORD', time.time()+10, 50),
+		('4242', 'WESTFORD', time.time()+20, 70),
+		('4242', 'WESTFORD', time.time()+30, 90),
+		('4242', 'WESTFORD', time.time()+40, 110),
+		]
+
+	scan_list = []
+	for s in TEST_SCANS:
+		source, station, t, d = s
+		scan_list.append(Scan(source, station, t, d))
+
+	session = Session(scan_list)
+	session.execute()

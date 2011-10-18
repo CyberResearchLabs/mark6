@@ -4,6 +4,7 @@ dist_bin_SCRIPTS	=	src/net2raid/net2raid-run \
 				src/net2raid/net2raid-setup \
 				src/net2raid/net2raid \
 				src/net2raid/net2raid-graphs \
+				src/net2raid/run-session \
 				src/disk2vlbi/disk2vlbi \
 				bin/mark6 \
 				bin/tstmark6 \
