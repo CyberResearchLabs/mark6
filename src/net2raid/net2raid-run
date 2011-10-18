@@ -90,6 +90,9 @@ echo cat /proc/irq/${MEGASAS2_IRQ}/smp_affinity
 # WRITE_BLOCKS=2048
 # WRITE_BLOCKS=8192
 WRITE_BLOCKS=2048
+PAGES_PER_BUFFER=256
+WRITE_BLOCKS=4096
+PAGES_PER_BUFFER=128
 DURATION=60
 SNAPLEN=8266
 VMSTAT_INTERVAL=1
@@ -117,7 +120,8 @@ ${EXEC} \
     --write_blocks ${WRITE_BLOCKS} \
     --snaplen ${SNAPLEN} \
     --time ${DURATION} \
-    --translate=true
+    --translate=false \
+    --pages_per_buffer=${PAGES_PER_BUFFER}
 
 ${KILLALL} vmstat
 ${GRAPHS}

@@ -149,6 +149,7 @@ main (int argc, char* argv[]) {
   int ring_buffers;
   int write_blocks;
   bool translate;
+  int pages_per_buffer;
 
   // Declare supported options, defaults, and variable bindings.
   po::options_description desc("Allowed options");
@@ -192,6 +193,10 @@ main (int argc, char* argv[]) {
     ("write_blocks",
      po::value<int>(&write_blocks)->default_value(DEFAULT_WRITE_BLOCKS),
      "per thread number of write blocks")
+
+    ("pages_per_buffer",
+     po::value<int>(&pages_per_buffer)->default_value(LOCAL_PAGES_PER_BUFFER),
+     "size of write blocks in pages(4096B).")
 
     ("translate",
      po::value<bool>(&translate)->default_value(DEFAULT_TRANSLATE),
@@ -297,7 +302,7 @@ main (int argc, char* argv[]) {
 	  LOG4CXX_ERROR(logger, "Unble to set process affinity.");
 
 	// Setup buffer pool.
-	const int BUFFER_SIZE(getpagesize()*LOCAL_PAGES_PER_BUFFER);
+	const int BUFFER_SIZE(getpagesize()*pages_per_buffer);
 
 	// Create FileWriter threads.
 	FILE_WRITER_STATS
