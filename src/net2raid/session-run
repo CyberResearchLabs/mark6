@@ -29,8 +29,12 @@ class Session:
 	def execute(self):
 		for s in self._scan_list:
 			print s
-			sleep_time = s._duration*1.0/10
+			sleep_time = s._duration
 			print 'args', s.args()
+
+			if s.late():
+				print 'skipping late scan ', time.time(), s
+				continue
 
 			while time.time() < s._start_time:
 				time.sleep(Session.polling_interval)
@@ -54,6 +58,7 @@ class Scan:
 		self._station = station
 		self._start_time = start_time
 		self._duration = duration
+		self._end_time = start_time + duration
 
 	def __str__(self):
 		return ''.join([
@@ -68,6 +73,11 @@ class Scan:
 	def args(self):
 		return [ Scan.mark6_exec, self._source, self._station,
 			str(self._start_time), str(self._duration) ]
+
+	def late(self):
+		if time.time() > self._end_time:
+			return True
+		return False	
 
 
 class ScheduleParser:
@@ -120,17 +130,19 @@ class ScheduleParser:
 
 
 if __name__ == '__main__':
+	now = time.time()
 	TEST_SCANS = [
-		('4242', 'WESTFORD', time.time()+10, 50),
-		('4242', 'WESTFORD', time.time()+20, 70),
-		('4242', 'WESTFORD', time.time()+30, 90),
-		('4242', 'WESTFORD', time.time()+40, 110),
+		('4242', 'WESTFORD', now-60, 5),
+		('4242', 'WESTFORD', now+20, 7),
+		('4242', 'WESTFORD', now+30, 9),
+		('4242', 'WESTFORD', now+40, 11),
 		]
 
 	scan_list = []
 	for s in TEST_SCANS:
-		source, station, t, d = s
-		scan_list.append(Scan(source, station, t, d))
+		sr, st, t, d = s
+		print time.time(), t
+		scan_list.append(Scan(source=sr, station=st, start_time=t, duration=d))
 
 	session = Session(scan_list)
 	session.execute()
