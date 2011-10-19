@@ -19,6 +19,7 @@
 import subprocess
 import time
 import datetime
+import calendar
 
 
 class Scan:
@@ -35,10 +36,10 @@ class Scan:
 		self._start_time_string = time.ctime(self._start_time)
 
                 # <exp name>_<station code>_<scan name>[_<data start time>_<aux info1>_<aux info2>...].<file type>
-                d = datetime.datetime.fromtimestamp(self._start_time)
+                d = datetime.datetime.utcfromtimestamp(self._start_time)
                 print d.year, d.month, d.day, d.hour, d.minute, d.second
-                start_time_str = '%d%d%d%d%d%d'%(d.year, d.month, d.day, d.hour, d.minute, d.second)
-                self._scan_name = '%s_%s_%s_%s.m6'%(experiment_name, station, source, start_time_str)
+                start_time_str = '%d%d%d%d%d%02d'%(d.year, d.month, d.day, d.hour, d.minute, d.second)
+                self._scan_name = '%s_%s_%s_%s'%(experiment_name, station, source, start_time_str)
 
         def __str__(self):
                 return ''.join([
@@ -100,9 +101,11 @@ class ScheduleParser:
 					hh = int(t[5:7])
 					mm = int(t[7:9])
 					ss = int(t[9:11])
-					time_offset = datetime.timedelta(ddd-1, hh*3600+mm*60+ss) - datetime.timedelta(0, 3600*5)
+					time_offset = datetime.timedelta(ddd-1, hh*3600+mm*60+ss)
+					#  - datetime.timedelta(0, 3600*5)
 					start_datetime = datetime.datetime(2000 + int(yy), 1, 1, 0, 0, 0, 0) + time_offset
-					start_time = time.mktime(start_datetime.timetuple())
+					# start_time = time.mktime(start_datetime.timetuple())
+					start_time = calendar.timegm(start_datetime.timetuple())
 					scans.append( Scan(experiment_name, source, stations[i], start_time, int(durations[i]))  )
 			elif state == 2:
 				pass
