@@ -138,12 +138,8 @@ if __name__ == '__main__':
 	parser.add_option('-s', '--schedule', dest='schedule', help='Schedule ')
 	parser.add_option('-t', '--test', action='store_true', dest='test', help='Run a test schedule based on current time.',
 			default=False)
-
-	parser.add_option('-d', '--dryrun', action='store_true',
-		dest='dryrun',
-		help='Dryrun of schedule.',
-			default=False)
-
+	parser.add_option('-d', '--dryrun', action='store_true', dest='dryrun',
+		help='Dryrun of schedule.', default=False)
 
 	(o, a) = parser.parse_args()
 
