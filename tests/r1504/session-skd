@@ -25,7 +25,8 @@ class Scan:
 
 	mark6_exec = '/opt/mit/mark6/bin/net2raid-run'
 
-	def __init__(self, source, station, start_time, duration):
+	def __init__(self, experiment_name, source, station, start_time, duration):
+		self._experiment_name = experiment_name
 		self._source = source
 		self._station = station
 		self._start_time = int(start_time)
@@ -33,16 +34,23 @@ class Scan:
 		self._end_time = int(start_time) + int(duration)
 		self._start_time_string = time.ctime(self._start_time)
 
-	def __str__(self):
-		return ''.join([
-			'<scan ',
-			'source="%s" '%self._source,
-			'station="%s" '%self._station,
-			'start_time="%s" '%self._start_time,
-			'start_time_string="%s" '%self._start_time_string,
-			'duration="%s"'%self._duration,
-			'/>'
-			])
+                # <exp name>_<station code>_<scan name>[_<data start time>_<aux info1>_<aux info2>...].<file type>
+                d = datetime.datetime.fromtimestamp(self._start_time)
+                print d.year, d.month, d.day, d.hour, d.minute, d.second
+                start_time_str = '%d%d%d%d%d%d'%(d.year, d.month, d.day, d.hour, d.minute, d.second)
+                self._scan_name = '%s_%s_%s_%s.m6'%(experiment_name, station, source, start_time_str)
+
+        def __str__(self):
+                return ''.join([
+                        '<scan ',
+                        'experiment="%s" '%self._experiment_name,
+                        'source="%s" '%self._source,
+                        'station="%s" '%self._station,
+                        'start_time="%s" '%self._start_time,
+                        'duration="%s" '%self._duration,
+                        'scan_name="%s"'%self._scan_name,
+                        '/>'
+                        ])
 
 	def args(self):
 		return [ Scan.mark6_exec, self._source, self._station,
@@ -56,7 +64,7 @@ class Scan:
 
 class ScheduleParser:
 
-	def __init__(self, schedule_file, experiment_file_name):
+	def __init__(self, schedule_file, experiment_file_name, experiment_name):
 		input_file = open(schedule_file, 'r')
 		state = 0
 
@@ -95,7 +103,7 @@ class ScheduleParser:
 					time_offset = datetime.timedelta(ddd-1, hh*3600+mm*60+ss) - datetime.timedelta(0, 3600*5)
 					start_datetime = datetime.datetime(2000 + int(yy), 1, 1, 0, 0, 0, 0) + time_offset
 					start_time = time.mktime(start_datetime.timetuple())
-					scans.append( Scan(source, stations[i], start_time, int(durations[i]))  )
+					scans.append( Scan(experiment_name, source, stations[i], start_time, int(durations[i]))  )
 			elif state == 2:
 				pass
 			elif state == 3:
@@ -115,6 +123,6 @@ class ScheduleParser:
 		experiment_file.write('</experiment>')
 
 if __name__ == '__main__':
-	sp = ScheduleParser('r1504.skd', 'r1504.xml')
+	sp = ScheduleParser('r1504.skd', 'r1504.xml', 'r1504')
 
 

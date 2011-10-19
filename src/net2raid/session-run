@@ -21,6 +21,7 @@ import time
 import sys
 import optparse
 from xml.etree.ElementTree import ElementTree
+import datetime
 
 class Session:
 
@@ -56,20 +57,29 @@ class Scan:
 
 	mark6_exec = '/opt/mit/mark6/bin/net2raid-run'
 
-	def __init__(self, source, station, start_time, duration):
+	def __init__(self, experiment_name, source, station, start_time, duration):
+		self._experiment_name = experiment_name
 		self._source = source
 		self._station = station
 		self._start_time = start_time
 		self._duration = duration
 		self._end_time = start_time + duration
 
+		# <exp name>_<station code>_<scan name>[_<data start time>_<aux info1>_<aux info2>...].<file type>
+		d = datetime.datetime.fromtimestamp(self._start_time)
+		print d.year, d.month, d.day, d.hour, d.minute, d.second
+		start_time_str = '%d%d%d%d%d%d'%(d.year, d.month, d.day, d.hour, d.minute, d.second)
+		self._scan_name = '%s_%s_%s_%s.m6'%(experiment_name, station, source, start_time_str)
+
 	def __str__(self):
 		return ''.join([
 			'<scan ',
+			'experiment="%s" '%self._experiment_name,
 			'source="%s" '%self._source,
 			'station="%s" '%self._station,
 			'start_time="%s" '%self._start_time,
-			'duration="%s"'%self._duration,
+			'duration="%s" '%self._duration,
+			'scan_name="%s"'%self._scan_name,
 			'/>'
 			])
 
@@ -107,11 +117,14 @@ def run_schedule(schedule):
 	print 'Running schedule:', schedule
 	tree = ElementTree()
 	tree.parse(schedule)
+	experiment = tree.getroot()
+	experiment_name = experiment.attrib['name']
 	scans = list(tree.findall('scan'))
 	scan_list = []
 	for s in scans:
 		a = s.attrib
-		scan_list.append(Scan(source=a['source'],
+		scan_list.append(Scan(experiment_name=experiment_name,
+					source=a['source'],
 					station=a['station'],
 					start_time=int(a['start_time']),
 					duration=int(a['duration'])))
