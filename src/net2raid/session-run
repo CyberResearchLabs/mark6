@@ -30,7 +30,7 @@ class Session:
 	def __init__(self, scan_list):
 		self._scan_list = scan_list
 
-	def execute(self):
+	def execute(self, dryrun=False):
 		for s in self._scan_list:
 			print s
 			sleep_time = s._duration
@@ -46,51 +46,50 @@ class Session:
 			print 'start', time.time(), s._start_time
 
 			start_time = time.time()
-			p = subprocess.Popen(s.args())
-			p.wait()	
+			if not dryrun:
+				p = subprocess.Popen(s.args())
+				p.wait()	
+			else:
+				time.sleep(s._duration)
+
 			duration = time.time() - start_time
 			print 'duration', sleep_time, duration
 			print '\n',
-
 
 class Scan:
 
 	mark6_exec = '/opt/mit/mark6/bin/net2raid-run'
 
-	def __init__(self, experiment_name, source, station, start_time, duration):
+	def __init__(self, experiment_name, source, station_code, start_time, duration, scan_name):
 		self._experiment_name = experiment_name
 		self._source = source
-		self._station = station
-		self._start_time = start_time
-		self._duration = duration
-		self._end_time = start_time + duration
+		self._station_code = station_code
+		self._start_time = int(start_time)
+		self._duration = int(duration)
+		self._end_time = self._start_time + self._duration
+		self._scan_name = scan_name
 
-		# <exp name>_<station code>_<scan name>[_<data start time>_<aux info1>_<aux info2>...].<file type>
-		d = datetime.datetime.fromtimestamp(self._start_time)
-		print d.year, d.month, d.day, d.hour, d.minute, d.second
-		start_time_str = '%d%d%d%d%d%d'%(d.year, d.month, d.day, d.hour, d.minute, d.second)
-		self._scan_name = '%s_%s_%s_%s.m6'%(experiment_name, station, source, start_time_str)
-
-	def __str__(self):
-		return ''.join([
-			'<scan ',
-			'experiment="%s" '%self._experiment_name,
-			'source="%s" '%self._source,
-			'station="%s" '%self._station,
-			'start_time="%s" '%self._start_time,
-			'duration="%s" '%self._duration,
-			'scan_name="%s"'%self._scan_name,
-			'/>'
-			])
+        def __str__(self):
+                return ''.join([
+                        '<scan ',
+                        'experiment="%s" '%self._experiment_name,
+                        'source="%s" '%self._source,
+                        'station_code="%s" '%self._station_code,
+                        'start_time="%d" '%self._start_time,
+                        'duration="%d" '%self._duration,
+                        'scan_name="%s"'%self._scan_name,
+                        '/>'
+                        ])
 
 	def args(self):
-		return [ Scan.mark6_exec, self._source, self._station,
+		return [ Scan.mark6_exec, self._scan_name,
 			str(self._start_time), str(self._duration) ]
 
 	def late(self):
 		if time.time() > self._end_time:
 			return True
 		return False	
+
 
 
 def test():
@@ -113,7 +112,7 @@ def test():
 	session.execute()
 
 
-def run_schedule(schedule):
+def run_schedule(schedule, dryrun):
 	print 'Running schedule:', schedule
 	tree = ElementTree()
 	tree.parse(schedule)
@@ -125,12 +124,13 @@ def run_schedule(schedule):
 		a = s.attrib
 		scan_list.append(Scan(experiment_name=experiment_name,
 					source=a['source'],
-					station=a['station'],
+					station_code=a['station_code'],
 					start_time=int(a['start_time']),
-					duration=int(a['duration'])))
+					duration=int(a['duration']),
+					scan_name=a['scan_name']))
 	
 	session = Session(scan_list)
-	session.execute()
+	session.execute(dryrun)
 	
 
 if __name__ == '__main__':
@@ -139,6 +139,12 @@ if __name__ == '__main__':
 	parser.add_option('-t', '--test', action='store_true', dest='test', help='Run a test schedule based on current time.',
 			default=False)
 
+	parser.add_option('-d', '--dryrun', action='store_true',
+		dest='dryrun',
+		help='Dryrun of schedule.',
+			default=False)
+
+
 	(o, a) = parser.parse_args()
 
 	if o.test:
@@ -146,5 +152,5 @@ if __name__ == '__main__':
 		sys.exit(0)
 
 	if o.schedule:
-		run_schedule(o.schedule)
+		run_schedule(o.schedule, o.dryrun)
 		sys.exit(0)
