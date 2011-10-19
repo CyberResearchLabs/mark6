@@ -18,6 +18,9 @@
 
 import subprocess
 import time
+import sys
+import optparse
+from xml.etree.ElementTree import ElementTree
 
 class Session:
 
@@ -80,62 +83,14 @@ class Scan:
 		return False	
 
 
-class ScheduleParser:
-
-	def __init__(self):
-		input_file = open('r1503.skd', 'r')
-		state = 0
-
-		scans = []
-		station_dict = {}
-		for l in input_file.readlines():
-			l = l.strip()
-			f = l.split()
-
-			if f[0] == '$SKED':
-				state = 1
-				continue
-			if f[0] == '$SOURCES':
-				state = 2
-				continue
-			if f[0] == '$STATIONS':
-				state = 3
-				continue
-			if f[0] == '$CODES':
-				break
-
-			if state == 1:
-				source, t, stations = f[0], f[4], f[9] 
-				num_stations = len(stations)/2
-				offset = 9 + num_stations
-				durations = f[offset+2:]
-				stations = list(stations)
-				stations = [ stations[i] for i in range(0, len(stations)-1, 2) ]
-				for i in range(num_stations):
-					scans.append( Scan(source, stations[i], t, int(durations[i]))  )
-			elif state == 2:
-				pass
-			elif state == 3:
-				if f[0] == 'A':
-					code = f[1]
-					name = f[2]
-					station_dict[code] = name
-
-		# print station_dict
-		for s in scans:
-			s._station = station_dict[s._station]
-
-		westford_scans = [ s for s in scans if s._station == 'WESTFORD' ]
-		westford_scans = []
-
-
-if __name__ == '__main__':
+def test():
+	print 'Running test schedule.'
 	now = time.time()
 	TEST_SCANS = [
 		('4242', 'WESTFORD', now+60, 5),
-		('4242', 'WESTFORD', now+20, 7),
-		('4242', 'WESTFORD', now+30, 9),
-		('4242', 'WESTFORD', now+40, 11),
+		('4243', 'WESTFORD', now+20, 7),
+		('4244', 'WESTFORD', now+30, 9),
+		('4245', 'WESTFORD', now+40, 11),
 		]
 
 	scan_list = []
@@ -146,3 +101,37 @@ if __name__ == '__main__':
 
 	session = Session(scan_list)
 	session.execute()
+
+
+def run_schedule(schedule):
+	print 'Running schedule:', schedule
+	tree = ElementTree()
+	tree.parse(schedule)
+	scans = list(tree.findall('scan'))
+	scan_list = []
+	for s in scans:
+		a = s.attrib
+		scan_list.append(Scan(source=a['source'],
+					station=a['station'],
+					start_time=int(a['start_time']),
+					duration=int(a['duration'])))
+	
+	session = Session(scan_list)
+	session.execute()
+	
+
+if __name__ == '__main__':
+	parser = optparse.OptionParser()
+	parser.add_option('-s', '--schedule', dest='schedule', help='Schedule ')
+	parser.add_option('-t', '--test', action='store_true', dest='test', help='Run a test schedule based on current time.',
+			default=False)
+
+	(o, a) = parser.parse_args()
+
+	if o.test:
+		test()
+		sys.exit(0)
+
+	if o.schedule:
+		run_schedule(o.schedule)
+		sys.exit(0)
