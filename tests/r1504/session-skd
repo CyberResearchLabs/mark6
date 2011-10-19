@@ -56,13 +56,7 @@ class Scan:
 
 class ScheduleParser:
 
-	skd_epoch = datetime.datetime(1950, 1, 1)
-	unix_epoch = datetime.datetime(1970, 1, 1)
-	epoch_delta = unix_epoch - skd_epoch
-	# epoch_delta_seconds = (epoch_delta.microseconds + (epoch_delta.seconds + epoch_delta.days * 24 * 3600) * 10**6) / 10**6
-	epoch_delta_seconds = 0
-
-	def __init__(self, schedule_file):
+	def __init__(self, schedule_file, experiment_file_name):
 		input_file = open(schedule_file, 'r')
 		state = 0
 
@@ -110,18 +104,17 @@ class ScheduleParser:
 					name = f[2]
 					station_dict[code] = name
 
-		# print station_dict
 		for s in scans:
 			s._station = station_dict[s._station]
 
 		westford_scans = [ s for s in scans if s._station == 'WESTFORD' ]
-		print '<experiment name="r1504" station="westford">'
+		experiment_file = open(experiment_file_name, 'w')
+		experiment_file.write('<experiment name="r1504" station="westford" start="2011297170000" end="2011298170000">\n')
 		for s in westford_scans:
-			print '\t', s
-		print '</experiment>'
-
+			experiment_file.write('\t' + str(s) + '\n')
+		experiment_file.write('</experiment>')
 
 if __name__ == '__main__':
-	sp = ScheduleParser('r1504.skd')
+	sp = ScheduleParser('r1504.skd', 'r1504.xml')
 
 
