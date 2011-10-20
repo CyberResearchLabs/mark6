@@ -6,6 +6,8 @@ dist_bin_SCRIPTS	=	src/net2raid/net2raid-run \
 				src/net2raid/net2raid-graphs \
 				src/net2raid/session-run \
 				src/disk2vlbi/disk2vlbi \
+				src/disk2vlbi/scan-convert \
+				src/disk2vlbi/scan-check \
 				bin/mark6 \
 				bin/tstmark6 \
 				src/vdif/bin/vdif \
@@ -13,7 +15,8 @@ dist_bin_SCRIPTS	=	src/net2raid/net2raid-run \
 				tools/disk/fio 
 sysconf_DATA		=	src/net2raid/net2raid-log.cfg \
 				tools/disk/disktool.fio \
-				tools/disk/disktool.rc
+				tools/disk/disktool.rc \
+				rc.mark6
 logdir 			= 	log
 DISTCHECK_CONFIGURE_FLAGS=\
 				BOOST_LIBDIR=/usr/lib64/boost141 \

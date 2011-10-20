@@ -140,7 +140,8 @@ function run() {
     ${KILLALL} vmstat
     ${GRAPHS}
     TARBALL=${INSTALL_ROOT}/log/${SCAN_NAME}.tar
-    cd ${INSTALL_ROOT}/log && /bin/tar cf ${TARBALL} \
+    cd ${INSTALL_ROOT}/log
+    /bin/tar cf ${TARBALL} \
 	${INSTALL_ROOT}/log/*.sts \
 	${INSTALL_ROOT}/log/*.csv \
 	${INSTALL_ROOT}/log/*.pdf \
@@ -164,7 +165,8 @@ function testrun() {
     sleep ${DURATION}
 
     TARBALL=${INSTALL_ROOT}/log/${SCAN_NAME}.tar
-    cd ${INSTALL_ROOT}/log && /bin/tar cf ${TARBALL} \
+    cd ${INSTALL_ROOT}/log
+    /bin/tar cf ${TARBALL} \
 	${INSTALL_ROOT}/log/*.sts \
 	${INSTALL_ROOT}/log/*.csv \
 	${INSTALL_ROOT}/log/*.pdf \
@@ -191,5 +193,5 @@ else
     SCAN_NAME=$1
     DURATION=$2
 
-    testrun ${SCAN_NAME} ${DURATION}
+    run ${SCAN_NAME} ${DURATION}
 fi

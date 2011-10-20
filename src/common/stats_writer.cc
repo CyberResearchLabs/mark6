@@ -86,7 +86,7 @@ void StatsWriter::join() {
 }
 
 void StatsWriter::run() {
-  LOG4CXX_INFO(logger, "StatsWriter Running...");
+  LOG4CXX_DEBUG(logger, "StatsWriter Running...");
 
   Timer run_timer;
   Timer command_timer;
@@ -134,7 +134,7 @@ void StatsWriter::cmd_stop() {
 }
 
 void StatsWriter::cmd_write_to_disk() {
-  LOG4CXX_INFO(logger, "Received WRITE_TO_DISK");
+  LOG4CXX_DEBUG(logger, "Received WRITE_TO_DISK");
   _state = WRITE_TO_DISK;
 }
 

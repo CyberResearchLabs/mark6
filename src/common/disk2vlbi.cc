@@ -43,7 +43,8 @@ namespace fs = boost::filesystem;
 
 typedef std::map<int, int> map_t;
 
-Disk2vlbi::Disk2vlbi(const std::string capture_file) {
+Disk2vlbi::Disk2vlbi(const std::string capture_file,
+		     const unsigned long long size) {
   LOG4CXX_INFO(logger, "Starting translation on : " << capture_file);
 
   // open the pcap file 
@@ -65,7 +66,12 @@ Disk2vlbi::Disk2vlbi(const std::string capture_file) {
   map_t fd_map;
 
   // Packet processing loop.
+  unsigned long long mbytes_written = 0;
+  unsigned long long bytes_written = 0;
   while (packet = pcap_next(handle, &header) ) {
+    if ( (size>0) && (mbytes_written>size) )
+      break;
+
     int fd = -1;
     u_char *pkt_ptr = (u_char *)packet;
     int ether_type = ((int)(pkt_ptr[12]) << 8) | (int)pkt_ptr[13]; 
@@ -100,6 +106,14 @@ Disk2vlbi::Disk2vlbi(const std::string capture_file) {
       pkt_ptr += UDP_HEADER_LENGTH;
       u_char* data = pkt_ptr;
       int nb = ::write(fd, data, udp_length);
+      if (nb>0) {
+	bytes_written += nb;
+
+	if (bytes_written > 1048576) {
+	  ++mbytes_written;
+	  bytes_written = 0;
+	}
+      }
     }
   }
     

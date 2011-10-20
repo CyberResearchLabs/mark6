@@ -26,7 +26,7 @@
 
 class Disk2vlbi {
  public:
-  Disk2vlbi(const std::string capture_file);
+  Disk2vlbi(const std::string capture_file, const unsigned long long size);
 };
 
 #endif // DISK2VLBI_H

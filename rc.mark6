@@ -1,0 +1,3 @@
+export MANPATH=/opt/mit/mark6/man:${MANPATH}
+export PATH=/opt/mit/mark6/bin:${PATH}
+export PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\ m6>'

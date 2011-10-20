@@ -46,7 +46,8 @@ class Session:
 			while time.time() < s._start_time:
 				time.sleep(Session.polling_interval)
 
-			print ljust('start', 20), time.time(), s._start_time
+			print ljust('now/start_time:', 20),
+			print time.time(), s._start_time
 
 			start_time = time.time()
 			if not dryrun:
@@ -56,7 +57,7 @@ class Session:
 				time.sleep(s._duration)
 
 			duration = time.time() - start_time
-			print ljust('duration', 20), s._duration, duration
+			print ljust('scan/actual duration:', 20), s._duration, duration
 			print '\n'
 			
 class Scan:
@@ -100,11 +101,11 @@ def test():
 	now = time.time()
 	experiment_name='TEST'
 	TEST_SCANS = [
-		('4242', 'Wf', now-5, 5, 'SN-1'),
-		('4242', 'Wf', now+5, 5, 'SN-1'),
-		('4243', 'Wf', now+15, 7, 'SN-2'),
-		('4244', 'Wf', now+24, 3, 'SN-3'),
-		('4245', 'Wf', now+29, 10,'SN-4'),
+		('4242', 'Wf', now-5, 43, 'SCAN_0_43'),
+		('4242', 'Wf', now+53, 43, 'SCAN_1_43'),
+		('4243', 'Wf', now+106, 43, 'SCAN_2_43'),
+		('4244', 'Wf', now+159, 43, 'SCAN_3_43'),
+		('4245', 'Wf', now+212, 120,'SCAN_4_120'),
 		]
 
 	scan_list = []
