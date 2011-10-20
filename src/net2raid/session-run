@@ -20,6 +20,7 @@ import subprocess
 import time
 import sys
 import optparse
+from string import ljust
 from xml.etree.ElementTree import ElementTree
 import datetime
 
@@ -33,17 +34,19 @@ class Session:
 	def execute(self, dryrun=False):
 		for s in self._scan_list:
 			if s.late():
-				print 'skipping late scan ', time.time(), s
+				print ljust('late scan:', 20),
+				print time.time(), s
+				print '\n'
 				continue
 
-			print s
-			sleep_time = s._duration
-			print 'args', s.args()
+			print ljust('running scan:', 20), s
+			print ljust('scan start:', 20),
+			print time.ctime(s._start_time)
 
 			while time.time() < s._start_time:
 				time.sleep(Session.polling_interval)
 
-			print 'start', time.time(), s._start_time
+			print ljust('start', 20), time.time(), s._start_time
 
 			start_time = time.time()
 			if not dryrun:
@@ -53,9 +56,9 @@ class Session:
 				time.sleep(s._duration)
 
 			duration = time.time() - start_time
-			print 'duration', sleep_time, duration
-			print '\n',
-
+			print ljust('duration', 20), s._duration, duration
+			print '\n'
+			
 class Scan:
 
 	mark6_exec = '/opt/mit/mark6/bin/net2raid-run'
@@ -90,7 +93,6 @@ class Scan:
 		if time.time() > self._end_time:
 			return True
 		return False	
-
 
 
 def test():
