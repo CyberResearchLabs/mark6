@@ -31,25 +31,26 @@ class Scan:
 
 	mark6_exec = '/opt/mit/mark6/bin/net2raid-run'
 
-	def __init__(self, experiment_name, source, station, start_time, duration, doy):
-		print station
+	def __init__(self, experiment_name, source, station, start_time,
+		     duration, doy):
 		self._experiment_name = experiment_name
 		self._source = source
 		self._station = station
+
 		try:
 			self._station_code = Station.station_dict[station]
 		except:
 			self._station_code = station
+
 		self._start_time = int(start_time)
 		self._duration = int(duration)
 		self._end_time = int(start_time) + int(duration)
-		self._start_time_string = time.ctime(self._start_time)
 
-                # <exp name>_<station code>_<scan name>[_<data start time>_<aux info1>_<aux info2>...].<file type>
                 d = datetime.datetime.utcfromtimestamp(self._start_time)
-                print d.year, d.month, d.day, d.hour, d.minute, d.second
-                start_time_str = '%d%d%d%d%d%02d'%(d.year, d.month, d.day, d.hour, d.minute, d.second)
-                self._scan_name = '%s_%s_%3d-%02d%02d%02d'%(experiment_name, self._station_code, doy, d.hour, d.minute, d.second)
+                self._scan_name = '%s_%s_%3d-%02d%02d'%(experiment_name,
+							    self._station_code,
+							    doy, d.hour,
+							    d.minute)
 
         def __str__(self):
                 return ''.join([
@@ -114,7 +115,6 @@ class ScheduleParser:
 					time_offset = datetime.timedelta(ddd-1, hh*3600+mm*60+ss)
 					#  - datetime.timedelta(0, 3600*5)
 					start_datetime = datetime.datetime(2000 + int(yy), 1, 1, 0, 0, 0, 0) + time_offset
-					# start_time = time.mktime(start_datetime.timetuple())
 					start_time = calendar.timegm(start_datetime.timetuple())
 					scans.append( Scan(experiment_name, source, stations[i], start_time, int(durations[i]), ddd)  )
 			elif state == 2:
@@ -128,8 +128,10 @@ class ScheduleParser:
 		for s in scans:
 			s._station = station_dict[s._station]
 
-		westford_scans = [ s for s in scans if s._station == 'WESTFORD' ]
+		westford_scans = [ s for s in scans
+				   if s._station == 'WESTFORD' ]
 		experiment_file = open(experiment_file_name, 'w')
+
 		experiment_file.write('<experiment name="r1504" station="westford" start="2011297170000" end="2011298170000">\n')
 		for s in westford_scans:
 			experiment_file.write('\t' + str(s) + '\n')
