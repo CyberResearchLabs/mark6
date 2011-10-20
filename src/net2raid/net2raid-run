@@ -143,38 +143,29 @@ function run() {
 }
 
 function testrun() {
-	SOURCE=$1
-	STATION=$2
-	START_TIME=$3
-	DURATION=$4
+    SCAN_NAME=$1
+    DURATION=$2
 
-	echo SOURCE=${SOURCE}
-	echo STATION=${STATION}
-	echo START_TIME=${START_TIME}
-	echo DURATION=${DURATION}
-
-	DATE_STRING=`date -d @${START_TIME} +%Y%m%d-%H%M%S`
-	SCAN_NAME=${STATION}_${SOURCE}_${DATE_STRING}
-	echo ${SCAN_NAME}
-	sleep ${DURATION}
+    echo SCAN_NAME=$SCAN_NAME
+    echo DURATION=$DURATION
+    
+    sleep ${DURATION}
 }
 
 function usage() {
-	echo "net2raid-run <source> <station> <start_time> <duration>"
+    echo "net2raid-run <scan_name> <duration>"
 }
 
 
 # Main
-if [ $# != 4 ]; then
-	usage
-	exit 1
+if [ $# != 2 ]; then
+    usage
+    exit 1
 else
-	SOURCE=$1
-	STATION=$2
-	START_TIME=$3
-	DURATION=$4
+    SCAN_NAME=$1
+    DURATION=$2
 
-	testrun ${SOURCE} ${STATION} ${START_TIME} ${DURATION}
+    testrun ${SCAN_NAME} ${DURATION}
 fi
 
 

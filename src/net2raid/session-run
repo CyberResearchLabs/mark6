@@ -84,7 +84,7 @@ class Scan:
 
 	def args(self):
 		return [ Scan.mark6_exec, self._scan_name,
-			str(self._start_time), str(self._duration) ]
+			 str(self._duration) ]
 
 	def late(self):
 		if time.time() > self._end_time:
@@ -96,19 +96,24 @@ class Scan:
 def test():
 	print 'Running test schedule.'
 	now = time.time()
+	experiment_name='TEST'
 	TEST_SCANS = [
-		('4242', 'WESTFORD', now+60, 5),
-		('4243', 'WESTFORD', now+20, 7),
-		('4244', 'WESTFORD', now+30, 9),
-		('4245', 'WESTFORD', now+40, 11),
+		('4242', 'Wf', now-5, 5, 'SN-1'),
+		('4242', 'Wf', now+5, 5, 'SN-1'),
+		('4243', 'Wf', now+15, 7, 'SN-2'),
+		('4244', 'Wf', now+24, 3, 'SN-3'),
+		('4245', 'Wf', now+29, 10,'SN-4'),
 		]
 
 	scan_list = []
 	for s in TEST_SCANS:
-		sr, st, t, d = s
-		print time.time(), t
-		scan_list.append(Scan(source=sr, station=st, start_time=t,
-				      duration=d))
+		sr, st, t, d, sn = s
+		scan_list.append(Scan(experiment_name=experiment_name,
+				      source=sr,
+				      station_code=st,
+				      start_time=t,
+				      duration=d,
+				      scan_name=sn))
 
 	session = Session(scan_list)
 	session.execute()
