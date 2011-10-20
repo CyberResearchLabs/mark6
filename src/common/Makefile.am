@@ -9,6 +9,8 @@ commontest_SOURCES=	test_main.cc \
 			net_reader.cc \
 			pfile_writer.h \
 			pfile_writer.cc \
+			scan_check.h \
+			scan_check.cc \
 			stats_writer.h \
 			stats_writer.cc \
 			test_file_writer.h \
@@ -43,6 +45,8 @@ libcommon_a_SOURCES	= \
 			net_reader.cc \
 			pfile_writer.h \
 			pfile_writer.cc \
+			scan_check.h \
+			scan_check.cc \
 			stats_writer.h \
 			stats_writer.cc \
 			threaded.h

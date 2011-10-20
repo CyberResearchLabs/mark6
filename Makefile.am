@@ -8,6 +8,7 @@ dist_bin_SCRIPTS	=	src/net2raid/net2raid-run \
 				src/disk2vlbi/disk2vlbi \
 				src/disk2vlbi/scan-convert \
 				src/disk2vlbi/scan-check \
+				src/scancheck/scancheck \
 				bin/mark6 \
 				bin/tstmark6 \
 				src/vdif/bin/vdif \
