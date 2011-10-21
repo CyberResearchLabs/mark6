@@ -33,7 +33,7 @@ function capture() {
 	net2raid-run ${SCAN_NAME} ${DURATION}
 	scan-convert ${SCAN_NAME}
 	scan-check ${SCAN_NAME}
-	scan-split ${SCAN_NAME}
+	# scan-split ${SCAN_NAME}
 }
 
 function usage() {
@@ -42,7 +42,7 @@ function usage() {
 
 
 # Main
-if [ $# != 1 ]; then
+if [ $# != 2 ]; then
     usage
     exit 1
 else

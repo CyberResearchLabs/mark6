@@ -30,7 +30,7 @@ function convert() {
 	do
 		echo Converting ${SCAN} on ${m}
 		echo ${EXEC} --input_file ${m}/${SCAN} --size ${SIZE}
-		${EXEC} --input_file ${m}/${SCAN} --size ${SIZE}
+		${EXEC} --input_file ${m}/${SCAN}.m6 --size ${SIZE}
 		chmod a+rwx ${m}/*.vdif
 	done
 }
