@@ -24,10 +24,13 @@
 #include <boost/algorithm/string.hpp> 
 
 // Local includes.
+#include <logger.h>
 #include <disk2vlbi.h>
 
 // Namespaces.
 namespace po = boost::program_options;
+
+std::string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2raid-log.cfg");
 
 void
 usage(const po::options_description& desc) {
@@ -57,6 +60,9 @@ main(int argc, char *argv[]) {
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
   po::notify(vm);
+
+  // Configure log subsystem.
+  init_logger(DEFAULT_LOG_CONFIG);
 
   if (vm.count("help") || argc < 3) {
     usage(desc);
