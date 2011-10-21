@@ -46,6 +46,7 @@ AC_CONFIG_FILES([Makefile
 		src/net2raid/Makefile
 		src/disk2vlbi/Makefile
 		src/scancheck/Makefile
+		src/demo/Makefile
 		])
 
 AC_SUBST(BOOST_LIBDIR)

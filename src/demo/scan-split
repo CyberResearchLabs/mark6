@@ -20,35 +20,34 @@ export LD_LIBRARY_PATH=/opt/mit/mark6/lib
 
 # Globals
 INSTALL_ROOT=/opt/mit/mark6
-EXEC=${INSTALL_ROOT}/bin/disk2vlbi
 MOUNT_POINTS="/mnt/disk0 /mnt/disk1 /mnt/disk2 /mnt/disk3"
+PACKETS=1000000
 
-function convert() {
-	SCAN=$1
-	SIZE=$2
+function check() {
+	SCAN_NAME=$1
 	for m in ${MOUNT_POINTS}
 	do
-		echo Converting ${SCAN} on ${m}
-		echo ${EXEC} --input_file ${m}/${SCAN} --size ${SIZE}
-		${EXEC} --input_file ${m}/${SCAN} --size ${SIZE}
+		cd ${m}
+		for f in ${m}/${SCAN_NAME}*.vdif
+		do
+        		echo split -b 822400000 ${f}
+        		split -b 8224 ${f}
+		done
+		cd ..
 	done
 }
 
 function usage() {
-    echo "scan-convert <scan_name> <size>"
+    echo "scan-check <scan_name>"
 }
 
 
 # Main
-if [ $# == 1 ]; then
-	SCAN_NAME=$1
-	SIZE=0
-elif [ $# == 2 ]; then
-	SCAN_NAME=$1
-	SIZE=$2
-elif [ $# != 2 ]; then
+if [ $# != 1 ]; then
     usage
     exit 1
-fi
+else
+    SCAN_NAME=$1
 
-convert ${SCAN_NAME} ${SIZE}
+    check ${SCAN_NAME}
+fi

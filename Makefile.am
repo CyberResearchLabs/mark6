@@ -4,11 +4,7 @@ dist_bin_SCRIPTS	=	src/net2raid/net2raid-run \
 				src/net2raid/net2raid-setup \
 				src/net2raid/net2raid \
 				src/net2raid/net2raid-graphs \
-				src/net2raid/session-run \
-				src/net2raid/tigress2sc02 \
 				src/disk2vlbi/disk2vlbi \
-				src/disk2vlbi/scan-convert \
-				src/disk2vlbi/scan-check \
 				src/scancheck/scancheck \
 				bin/mark6 \
 				bin/tstmark6 \
