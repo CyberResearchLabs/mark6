@@ -25,19 +25,37 @@ MOUNT_POINTS="/mnt/disk0 /mnt/disk1 /mnt/disk2 /mnt/disk3"
 PACKETS=1000000
 
 
+echo ${SCAN}
 
 function capture() {
-	SCAN_NAME=$1
+	START_TIME=$1
 	DURATION=$2
 
-	net2raid-run ${SCAN_NAME} ${DURATION}
+	EXPERIMENT=DEMO
+	if [ `hostname` == "tigress" ]; then
+		STATION=Wf
+	elif [ `hostname` == "mark6-002" ]; then
+		STATION=Gg
+	else
+		STATION=Uk
+	fi
+
+	DOY=`date -d @${START_TIME} +%j`
+	TIME=`date -d @${START_TIME} +%H%M`
+	SCAN_NAME=${EXPERIMENT}_${STATION}_${DOY}-${TIME}
+
+	echo ${SCAN_NAME}
+	echo ${DOY}
+	echo ${TIME}
+
+	# net2raid-run ${SCAN_NAME} ${DURATION}
+	scan-run -e ${EXPERIMENT} -s ${SOURCE} -S ${STATION} -T ${START_TIME} -n ${SCAN_NAME} -d ${DURATION} -D
 	scan-convert ${SCAN_NAME}
 	scan-check ${SCAN_NAME}
-	# scan-split ${SCAN_NAME}
 }
 
 function usage() {
-    echo "single-scan <scan_name> <duration>"
+    echo "single-scan <start_time> <duration>"
 }
 
 
@@ -46,8 +64,8 @@ if [ $# != 2 ]; then
     usage
     exit 1
 else
-    SCAN_NAME=$1
+    START_TIME=$1
     DURATION=$2
 
-    capture ${SCAN_NAME} ${DURATION}
+    capture ${START_TIME} ${DURATION}
 fi

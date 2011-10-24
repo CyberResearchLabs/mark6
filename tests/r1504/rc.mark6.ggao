@@ -21,7 +21,7 @@ INSTALL_ROOT=/opt/mit/mark6
 # Change these variables to point to the IRQs of the LSI Logic 
 # RAID controllers.
 MEGASAS1_IRQ=24
-MEGASAS2_IRQ=35
+MEGASAS2_IRQ=34
 
 # Setup user environment.
 export MANPATH=/opt/mit/mark6/man:${MANPATH}

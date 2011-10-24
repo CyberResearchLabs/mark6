@@ -1,18 +1,15 @@
 MAINTAINERCLEANFILES	=	Makefile.in
 SUBDIRS			=	src doc
-dist_bin_SCRIPTS	=	src/net2raid/net2raid-run \
-				src/net2raid/net2raid-setup \
-				src/net2raid/net2raid \
-				src/net2raid/net2raid-graphs \
-				src/disk2vlbi/disk2vlbi \
-				src/scancheck/scancheck \
-				bin/mark6 \
+dist_bin_SCRIPTS	=	bin/mark6 \
 				bin/tstmark6 \
 				src/vdif/bin/vdif \
 				tools/disk/disktool \
-				tools/disk/fio 
-sysconf_DATA		=	src/net2raid/net2raid-log.cfg \
-				tools/disk/disktool.fio \
+				tools/disk/fio  \
+				tools/disk/condition-modules \
+				tools/disk/mount-modules \
+				tools/disk/unmount-modules
+
+sysconf_DATA		=	tools/disk/disktool.fio \
 				tools/disk/disktool.rc \
 				rc.mark6
 logdir 			= 	log
@@ -36,8 +33,4 @@ distclean-local:
 		config.status \
 		stamp-h1 \
 		src/Makefile \
-		src/Makefile.in \
-		src/dim/Makefile \
-		src/extern/apache-log4cxx-0.10.0 \
-		src/extern/apr-1.4.5 \
-		src/extern/apr-util-1.3.12
+		src/Makefile.in 

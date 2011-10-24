@@ -1,4 +1,5 @@
 bin_PROGRAMS	=	disk2vlbi
+dist_bin_SCRIPTS=	disk2vlbi
 
 disk2vlbi_SOURCES	= 	main.cc
 disk2vlbi_LDADD	= 	-L../common \

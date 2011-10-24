@@ -1,5 +1,9 @@
 bin_PROGRAMS	=	net2raid
 check_PROGRAMS	=	net2raidtest
+dist_bin_SCRIPTS=	net2raid-run \
+			net2raid \
+			net2raid-graphs
+sysconf_DATA	=	net2raid-log.cfg
 
 net2raid_SOURCES= 	main.cc
 net2raid_LDADD	= 	-L. \

@@ -1,4 +1,5 @@
 bin_PROGRAMS	=	scancheck
+dist_bin_SCRIPTS=	scancheck
 
 scancheck_SOURCES	= 	main.cc
 scancheck_LDADD	= 	-L../common \
