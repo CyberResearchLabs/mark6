@@ -39,7 +39,7 @@ automake autoconf build-essential flex linux-headers-2.6-amd64 git-core
 byacc iperf texinfo texi2html subversion
 libboost-all-dev libcppunit-dev libapr1-dev libaprutil1-dev liblog4cxx10-dev
 erlang erlang-os-mon libreadline5-dev
-fio
+fio tree parted
 EOP
 )
 

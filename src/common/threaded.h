@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Mark6.  If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Author: David Lapsley <dlapsley@haystack.mit.edu>
+//
+
 #ifndef _THREADED_H_
 #define _THREADED_H_
 
