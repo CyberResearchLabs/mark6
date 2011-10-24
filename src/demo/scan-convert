@@ -29,9 +29,13 @@ function convert() {
 	for m in ${MOUNT_POINTS}
 	do
 		echo Converting ${SCAN} on ${m}
-		echo ${EXEC} --input_file ${m}/${SCAN} --size ${SIZE}
-		${EXEC} --input_file ${m}/${SCAN}.m6 --size ${SIZE}
-		chmod a+rwx ${m}/*.vdif
+		if [ -e ${m}/${SCAN} ]; then
+			echo ${EXEC} --input_file ${m}/${SCAN} --size ${SIZE}
+			${EXEC} --input_file ${m}/${SCAN}.m6 --size ${SIZE}
+			chmod a+rwx ${m}/*.vdif
+		else
+			echo Scan ${m}/${SCAN} does not appear to exist...
+		fi
 	done
 }
 

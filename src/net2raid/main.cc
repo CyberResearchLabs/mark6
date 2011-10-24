@@ -66,6 +66,7 @@ const string DEFAULT_INTERFACES("eth0");
 const int DEFAULT_SNAPLEN(8224);
 const bool DEFAULT_PROMISCUOUS(true);
 const int DEFAULT_TIME(30);
+// TODO: make environment variable.
 const string DEFAULT_LOG_CONFIG("/opt/mit/mark6/etc/net2raid-log.cfg");
 // const int DEFAULT_PAYLOAD_LENGTH(8224);
 const int DEFAULT_PAYLOAD_LENGTH(8268);
@@ -78,6 +79,7 @@ const int DEFAULT_TRANSLATE(false);
 const int MAX_SNAPLEN(9014);
 const int STATS_SLEEP(1);
 const int PAYLOAD_LENGTH(DEFAULT_PAYLOAD_LENGTH);
+// TODO: make environment variable.
 const string LOG_PREFIX("/opt/mit/mark6/log/");
 const int DISK_RAMP_UP_TIME(2);
 
@@ -320,7 +322,7 @@ main (int argc, char* argv[]) {
 
 	// Create NetReader threads.
 	NET_READER_STATS
-	  = new StatsWriter(i+1, // TODO: fix index.
+	  = new StatsWriter(i+1,
 			    LOG_PREFIX + string("nr_") + interfaces[i],
 			    STATS_INTERVAL,
 			    COMMAND_INTERVAL);
@@ -383,72 +385,6 @@ void main_cli(const int time, const vector<pid_t>& child_pids,
   }
 }
 
-#ifdef INTERACTIVE_MAIN_CLI
-void main_cli(const vector<pid_t>& child_pids,
-	      const vector<int>& child_fds) {
-  // Command line interpreter.
-  const int nbytes(256);
-  char line[nbytes];
-
-  while (true) {
-    cout << "mark6>";
-    if (!cin.good()) {
-      LOG4CXX_ERROR(logger, "CLI input stream closed. Exiting...");
-      break;
-    }
-
-    cin.getline(line, nbytes);
-    string line_read(line);
-    trim(line_read);
-    if (line_read.size() == 0) {
-      continue;
-    }
-
-    vector<string> results;
-    string cmd;
-    split(results, line_read, is_any_of(" \t"));
-    if (results.size() > 0) {
-      cmd = results[0];
-
-      if (cmd.compare("quit") == 0) {
-	exit(0);
-      } else if (cmd.compare("help") == 0) {
-	cout
-	  << endl
-	  << "This is the online help system." << endl
-	  << "The following commands are available:" << endl
-	  << setw(20) << " " << "start" << endl
-	  << setw(20) << " " << "stop" << endl
-	  << "Type 'help <command>' to see a description of that command." 
-	  << endl
-	  << endl;
-      } else if (cmd.compare("start") == 0) {
-	cout << "Received start()";
-	BOOST_FOREACH(int fd, child_fds) {
-	  LOG4CXX_DEBUG(logger, "Starting fd: " << fd);
-	  write(fd, "start\n", 6);
-	}
-      } else if (cmd.compare("stop") == 0) {
-	cout << "Received stop()";
-	BOOST_FOREACH(int fd, child_fds)
-	  write(fd, "stop\n", 5);
-
-	BOOST_FOREACH(pid_t p, child_pids) {
-	  waitpid(p, NULL, 0);
-	  cout << "PID: " << (int)p << " terminated..." << endl;
-	}
-      } else {
-	cout
-	  << endl
-	  << "Unknown command. Please try again or type 'help'"
-	  << endl
-	  << endl;
-      }
-    }
-  }
-}
-#endif // INTERACTIVE_MAIN_CLI
-
 void child_cli(int parent_fd) {
   LOG4CXX_DEBUG(logger, "Started child_cli");
 
@@ -480,40 +416,30 @@ void child_cli(int parent_fd) {
       cmd = results[0];
       trim(cmd);
       if (cmd.compare("start") == 0) {
-	// cout << "Starting file writer stats...\n";
 	FILE_WRITER_STATS->start();
 	FILE_WRITER_STATS->cmd_write_to_disk();
-	// cout << "Started.\n";
 
-	// cout << "Starting file writer...\n";
 	FILE_WRITER->open();
 	FILE_WRITER->start();
 	FILE_WRITER->cmd_write_to_disk();
-	// cout << "Started.\n";
 
-	// cout << "Starting net reader stats...\n";
 	NET_READER_STATS->start();
 	NET_READER_STATS->cmd_write_to_disk();
-	// cout << "Started.\n";
 
 	// sleep(DISK_RAMP_UP_TIME);
 
-	// cout << "Starting net reader...\n";
 	NET_READER->start();
 	NET_READER->cmd_read_from_network();
 	LOG4CXX_INFO(logger, "Started capture process.");
       } else if (cmd.compare("stop") == 0) {
 	NET_READER_STATS->cmd_stop();
 	NET_READER_STATS->join();
-	// cout << "Stopped net reader stats.\n";
 
 	NET_READER->cmd_stop();
 	NET_READER->join();
-	// cout << "Stopped net reader.\n";
 
 	FILE_WRITER_STATS->cmd_stop();
 	FILE_WRITER_STATS->join();
-	// cout << "Stopped file writer stats.\n";
 
 	FILE_WRITER->cmd_stop();
 	FILE_WRITER->join();
@@ -528,11 +454,11 @@ void banner() {
     << HLINE
     << endl
     << "|                                                                              |\n"
-    << "|                              Net2disk v0.1                                   |\n"
+    << "|                              Net2disk v0.5                                   |\n"
     << "|                                                                              |\n"
     << "|                                                                              |\n"
     << "|                  Copyright 2011 MIT Haystack Observatory                     |\n"
-    << "|                            del@haystack.mit.edu                              |\n"
+    << "|                          dlapsley@haystack.mit.edu                           |\n"
     << "|                                                                              |\n"
     << HLINE
     << endl

@@ -30,8 +30,12 @@ function check() {
 	do
 		for f in ${m}/${SCAN_NAME}*.vdif
 		do
-        		echo ${EXEC} -v -cf=4vdx -cs=8224 -cg=${PACKETS} ${f}
-        		${EXEC} -v -cf=4vdx -cs=8224 -cg=${PACKETS} ${f}
+			if [ -e ${f} ]; then
+        			echo ${EXEC} -v -cf=4vdx -cs=8224 -cg=${PACKETS} ${f}
+        			${EXEC} -v -cf=4vdx -cs=8224 -cg=${PACKETS} ${f}
+			else
+				echo File ${f} does not appear to exist...
+			fi
 		done
 	done
 }
