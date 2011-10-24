@@ -29,8 +29,8 @@ function convert() {
 	for m in ${MOUNT_POINTS}
 	do
 		echo Converting ${SCAN} on ${m}
-		if [ -e ${m}/${SCAN} ]; then
-			echo ${EXEC} --input_file ${m}/${SCAN} --size ${SIZE}
+		if [ -e ${m}/${SCAN}.m6 ]; then
+			echo ${EXEC} --input_file ${m}/${SCAN}.m6 --size ${SIZE}
 			${EXEC} --input_file ${m}/${SCAN}.m6 --size ${SIZE}
 			chmod a+rwx ${m}/*.vdif
 		else
