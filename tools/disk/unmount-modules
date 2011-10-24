@@ -42,7 +42,7 @@
 
 
 # Executables
-UNMOUNT=/bin/unmount
+UNMOUNT=/bin/umount
 
 DEV_MAP[0]="/dev/sda:/mnt/disk0"
 DEV_MAP[1]="/dev/sdb:/mnt/disk1"

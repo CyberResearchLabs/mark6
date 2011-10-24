@@ -30,6 +30,7 @@ echo ${SCAN}
 function capture() {
 	START_TIME=$1
 	DURATION=$2
+	SOURCE=$3
 
 	EXPERIMENT=DEMO
 	if [ `hostname` == "tigress" ]; then
@@ -48,24 +49,25 @@ function capture() {
 	echo ${DOY}
 	echo ${TIME}
 
-	# net2raid-run ${SCAN_NAME} ${DURATION}
-	scan-run -e ${EXPERIMENT} -s ${SOURCE} -S ${STATION} -T ${START_TIME} -n ${SCAN_NAME} -d ${DURATION} -D
+	echo scan-run -e ${EXPERIMENT} -s ${SOURCE} -S ${STATION} -T ${START_TIME} -n ${SCAN_NAME} -d ${DURATION} 
+	scan-run -e ${EXPERIMENT} -s ${SOURCE} -S ${STATION} -T ${START_TIME} -n ${SCAN_NAME} -d ${DURATION} 
 	scan-convert ${SCAN_NAME}
 	scan-check ${SCAN_NAME}
 }
 
 function usage() {
-    echo "single-scan <start_time> <duration>"
+    echo "single-scan <start_time> <duration> <source>"
 }
 
 
 # Main
-if [ $# != 2 ]; then
+if [ $# != 3 ]; then
     usage
     exit 1
 else
     START_TIME=$1
     DURATION=$2
+    SOURCE=$3
 
-    capture ${START_TIME} ${DURATION}
+    capture ${START_TIME} ${DURATION} ${SOURCE}
 fi
