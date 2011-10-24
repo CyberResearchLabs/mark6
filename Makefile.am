@@ -11,7 +11,11 @@ dist_bin_SCRIPTS	=	bin/mark6 \
 
 sysconf_DATA		=	tools/disk/disktool.fio \
 				tools/disk/disktool.rc \
-				rc.mark6
+				rc.mark6 \
+				tests/r1504/rc.mark6.ggao \
+				tests/r1504/rc.mark6.tigress \
+				tests/r1504/r1504-gg.xml \
+				tests/r1504/r1504-wf.xml 
 logdir 			= 	log
 DISTCHECK_CONFIGURE_FLAGS=\
 				BOOST_LIBDIR=/usr/lib64/boost141 \
