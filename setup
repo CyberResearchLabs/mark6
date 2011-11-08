@@ -82,8 +82,7 @@ install_pfring() {
 
     cd kernel
     make
-    # FIXME
-    # sudo make install
+    sudo make install
     cd ..
 
     cd userland

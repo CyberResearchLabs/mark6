@@ -1,3 +1,9 @@
+MARK6 README
+============
+v0.1, 7 Nov 2011, David Lapsley
+
+= INTRODUCTION
+
 This directory contains the source code and documentation
 for the MIT Haystack Mark6 data acquisition software.
 
@@ -16,7 +22,7 @@ Makefile	Build, test, release managemement.
 src		mark6 source in here.
 include		mark6 include files in here.
 
-This program is written in a combination of the C and Erlang programming
+This program is written in a combination of the C, Python and Erlang programming
 languages (www.erlang.org).  Erlang is a highly available, concurrent,
 distributed, functional programming language designed for massively
 distributed systems.
@@ -24,39 +30,60 @@ distributed systems.
 Please direct any questions, comments, suggestions, or bug reports to 
 <del@haystack.mit.edu>.
 
-Install debian squeeze (6.0.4) from netinst image:
+= INSTALLATION
 
-	wget http://cdimage.debian.org/debian-cd/6.0.3/amd64/iso-cd/debian-6.0.3-amd64-netinst.iso
+Installation in the field will be via binary, USB "kick-start" flash drives.
 
-Prior to installation, you will need to install git-core as follows:
-	sudo apt-get install git-core
-	ssh-keygen
-	# upload id_rsa.pub to git repository for access
-	git clone git@github.com:CyberResearchLabs/mark6.git
-	cd mark6
-	./setup -b
-	./setup -p
+The steps below are for developers interested in installing this software on their
+own computers.
 
-System configuration:
-	/etc/modules:
+
+1. Download and install debian squeeze (6.0.4) from netinst image. The iso image
+   is available from:
+
+    http://cdimage.debian.org/debian-cd/6.0.3/amd64/iso-cd/debian-6.0.3-amd64-netinst.iso
+
+2. Install git-core (as root user):
+-------------------------------------------------------------------------------
+	# apt-get install git-core
+	# git clone git@github.com:CyberResearchLabs/mark6.git
+	# cd mark6
+	# ./setup -b
+	# ./setup -p
+-------------------------------------------------------------------------------
+
+3. Add the following line to /etc/modules:
+-------------------------------------------------------------------------------
 	pf_ring transparent_mode=0 min_num_slots=16384 enable_ip_defrag=1
-	
-Edit /etc/apt/sources.list:
+-------------------------------------------------------------------------------
+
+4. Add the following to /etc/apt/sources.list:
+-------------------------------------------------------------------------------
 	deb http://debian.lcs.mit.edu/debian/ squeeze main non-free contrib
 	deb-src http://debian.lcs.mit.edu/debian/ squeeze main non-free contrib
 	deb http://hwraid.le-vert.net/debian squeeze main
+-------------------------------------------------------------------------------
 
-update apt-get:
-	apt-get update
+5. Update apt-get and install RAID packages:
+-------------------------------------------------------------------------------
+	# apt-get update
+	# apt-get install megacli
+	# apt-get install megactl
+	# apt-get install lshw
+-------------------------------------------------------------------------------
 
-Install RAID:
-	apt-get install megacli
-	apt-get install megactl
-	apt-get install lshw
+6. Setup the build environment.
+-------------------------------------------------------------------------------
+	# export MARK6_ROOT=<root of source directory> 
+	# export MARK6_USER=<owner of mark6 files> 
+    # ./setup --build
+    # ./setup --install
+-------------------------------------------------------------------------------
 
-Setup environment:
-	export MARK6_ROOT=<root of source directory> 
-
-After installation, add the following to your .bashrc:
+7. After installation, add the following to the .bashrc of the ${MARK6_USER}
+-------------------------------------------------------------------------------
 	export MANPATH=/opt/mit/mark6/man:${MANPATH}
 	export PATH=/opt/mit/mark6/bin:${PATH}
+-------------------------------------------------------------------------------
+
+
