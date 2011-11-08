@@ -69,14 +69,15 @@ TestFileWriter::basic(void)
   const unsigned long file_size(0);
   const bool preallocated(false);
   const bool directio(true);
+  const bool translate(false);
 
-  const std::string stats_file("/tmp/test_pfile_write-stats.dat");
+  const std::string stats_file("/tmp/test_file_write-stats.dat");
   const int stats_interval(1);
 
   StatsWriter sw(id, stats_file, stats_interval, command_interval);
   FileWriter fw(id, write_block_size, write_blocks, capture_file,
 		poll_timeout, &sw, command_interval, file_size,
-		preallocated, directio);
+		preallocated, directio, translate);
 
   sw.start();
   sw.cmd_write_to_disk();

@@ -119,6 +119,14 @@ class PFileWriter: public FileWriter {
   //! \param buf_len The length of the buffer.
   //! return true if successful, false if not.
   virtual bool write(boost::uint8_t* buf, const int buf_len);
+
+ public:
+  //! Test method to write n blocks to disk.
+  //! \param buf The buffer to write to disk.
+  //! \param buf_len The length of the buffer.
+  //! \param n Number of times to write buffer.
+  //! return true if successful, false if not.
+  bool test_write(boost::uint8_t* buf, const int buf_len, const int n);
 };
 
 #endif // _PFILEWRITER_H_
