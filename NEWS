@@ -132,3 +132,13 @@ FEATURES
 - Incorporation of disk tools into distributed application (eventually will
   be integrated into control plane as conditioning/test scripts).
 
+Release 0.5.0	10/24/2011	David Lapsley<del@haystack.mit.edu>
+-------------------------------------------------------------------
+
+DESCRIPTION
+
+- Version to be used for 16 Gbps demonstration.
+
+FEATURES
+
+- To be listed in official release.
